@@ -1,0 +1,13 @@
+                        std::cout << "\n +++++M: \n" << M << "\n +++++ \n" << std::endl;
+                        M(n,n) = 1.0/(M(n-1,n-1) * R * M.topLeftCorner(n,n) * Q);       // (8.40)
+                        std::cout << "\n\n----------M(n,n):\n" << M(n,n) << std::endl;
+                        std::cout << M.block(n-1,0,1,n) << "\n" << -M(n,n)*R*M.topLeftCorner(n,n) << std::endl;
+                        std::cout << "\n ===========" << std::endl;
+                        M.block(0,n,n,1) = -M.topLeftCorner(n,n)*Q*M(n,n);         // -[M_n Q] Sp       (8.41)  
+                        M.block(n,0,1,n)= -M(n,n)*R*M.topLeftCorner(n,n);       // -Sp*R*M      (8.42)
+                        std::cout << M.topLeftCorner(n+1,n+1) << "\n" << M.topLeftCorner(n,n)*Q *M(n,n)* R*M.topLeftCorner(n,n) << std::endl;
+                        M.topLeftCorner(n,n) += M.topLeftCorner(n,n)*Q *M(n,n)* R*M.topLeftCorner(n,n);
+                        pushConfig(confs,std::make_pair(t_n, s_n));
+                        std::cout << "\n +++++M: \n" << M << "\n +++++ \n" << std::endl;
+                        n += 1;
+

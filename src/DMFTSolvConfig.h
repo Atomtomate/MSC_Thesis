@@ -1,0 +1,2 @@
+#define DMFTSolv_VERSION_MAJOR 0
+#define DMFTSolv_VERSION_MINOR 10

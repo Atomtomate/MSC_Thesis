@@ -1,0 +1,9 @@
+MKL version:            ParallelStudioXE2016Update2
+OS:                     lnx
+Architecture:           intel64
+MIC:                    native
+Compiler:               intel_c
+Linking:                dynamic
+Interface layer:        lp64
+Parallel:               yes
+OpenMP library:         iomp5

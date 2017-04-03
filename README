@@ -1,0 +1,19 @@
+compile with make debug | profile | release
+
+test_*.cpp files are ignored
+
+
+run with ./ImpSolv_TARGET
+flags:
+	--v=n: n=[1,..,9] enables verbose logging
+
+
+
+
+
+
+
+code remarks:
+
+- spins start with 0 TODO: use enums
+- all eigen storages are used with col major (inner loop ofer left index)

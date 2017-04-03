@@ -1,0 +1,28 @@
+#include <petscsys.h>
+#include "DataStructs.h"
+
+
+bool testRandomNumer(void){
+	PetscReal rndReal;
+	PetscInt  rndConfPos;
+	PetscRandom unifContext;
+	int zero=0;
+	int ten=0;
+
+	PetscRandomCreate(PETSC_COMM_WORLD, &unifContext);
+	PetscRandomSetType(unifContext, PETSCRAND48);
+	PetscRandomSetSeed(unifContext, 123456789);
+	PetscRandomSetInterval(unifContext, 0.0, 1.0);
+
+	for(int i = 0; i<2000000;i++){
+		PetscRandomGetValueReal(unifContext, &rndReal);				// used for alpha or position gen
+		rndConfPos = static_cast<PetscInt>((10+1) * rndReal);
+		//PetscPrintf(PETSC_COMM_WORLD,"rndConPos: %d\n",rndConfPos);
+		if (rndConfPos == 0) zero += 1;
+		if (rndConfPos == 10) ten += 1;
+	}
+
+	PetscPrintf(PETSC_COMM_WORLD,"zero: %d,ten %d\n",zero, ten);
+	PetscRandomDestroy(&unifContext);
+	return true;
+}
