@@ -52,7 +52,6 @@ namespace DMFT
                         MatG sImp = (g0.getMGF().cwiseInverse() - gImp.getMGF().cwiseInverse());
                         sImpGF.setByMFreq(sImp);
                         sImpGF.transformMtoT();
-
                         //TODO this breaks for large N
                         for(long unsigned int i=0; i <= 20; i++){
                             iSolver.update(updates/20.0);

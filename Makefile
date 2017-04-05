@@ -53,12 +53,12 @@ FFTW_L  := ./libs/fftw/lib
 MPI_H   := $(MPI_INCLUDE)
 MPI_L   := $(MPI_LIB)
 
-LIBS     := -L/usr/share -L/usr/lib -L$(FFTW_L) -L$(BOOST_L) -L$(PREFIX_DIR)
+LIBS     := -L/usr/share -L/usr/lib -L/usr/local/lib -L$(FFTW_L) -L$(BOOST_L) -L$(PREFIX_DIR)
 #  -I$(MKL_ROOT)/include-L$(MKLROOT)/lib/intel64    -L/home/julian/intel/compilers_and_libraries_2016.3.210/linux/mkl/lib/mic
 #-L $(SLEPC_DIR)/$(PETSC_ARCH)/lib -L$(PETSC_DIR)/$(PETSC_ARCH)/lib
 INCLUDES := -I./includes -I./src/examples -I./examples -I/usr/include -I$(BOOST_H) -I./$(SRC_DIR) -I$(EIGEN_H) -I$(FFTW_H) -I$(PREFIX_DIR)/include
 # -I$(SLEPC_DIR)/include -I$(SLEPC_DIR)/$(PETSC_ARCH)/include -I$(PETSC_DIR)/include -I$(PETSC_DIR)/$(PETSC_ARCH)/include -I/home/julian/intel/compilers_and_libraries_2016.3.210/linux/mkl/include 
-LDFLAGS  :=  -ltrng4 -l:libfftw3.so -lm -lboost_system -lboost_iostreams -lboost_filesystem -lgsl
+LDFLAGS  :=  -ltrng4 -l:libfftw3.so -lm -lboost_system -lboost_iostreams -lboost_filesystem -lboost_mpi -lboost_mpi -lboost_serialization -lgsl
 #-Wl,-rpath,$(SLEPC_DIR)/$(PETSC_ARCH)/lib -Wl,-rpath,$(PETSC_DIR)/$(PETSC_ARCH)/lib  -lpetsc -lslepc -lquadmath  -lmkl_intel_ilp64 -lmkl_intel_thread -lmkl_core  -liomp5 -lpthread -ldl 
 
 # ========== rules ==========

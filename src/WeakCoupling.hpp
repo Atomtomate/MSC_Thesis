@@ -4,6 +4,7 @@
 #include "Config.hpp"
 #include "GreensFct.hpp"
 #include "ImpSolver.hpp"
+#include "MCAccumulator.hpp"
 
 #include "mpi.h"
 
@@ -128,11 +129,11 @@ namespace DMFT
             typedef SConfigSOL SConfigL;
             inline void pushConfig(const SConfig& c){
                 confs.push_back(c);
-                const auto gfSize = gfCacheUp.size();
-                gfCacheUp.conservativeResize(gfSize+1);
-                gfCacheUp(gfSize) = g0(std::get<0>(c),0);
-                gfCacheDown.conservativeResize(gfSize+1);
-                gfCacheDown(gfSize) = g0(std::get<0>(c),1);
+                const auto gfSize = gfCache[UP].size();
+                gfCache[UP].conservativeResize(gfSize+1);
+                gfCache[UP](gfSize) = g0(std::get<0>(c),UP);
+                gfCache[DOWN].conservativeResize(gfSize+1);
+                gfCache[DOWN](gfSize) = g0(std::get<0>(c),DOWN);
             }
             //TODO: erase requires non const lvalue, implement cache
             inline void deleteConfig(const int pos){
@@ -141,20 +142,20 @@ namespace DMFT
             }
             inline void popConfig(void){
                 confs.pop_back();
-                const auto gfSize = gfCacheUp.size();
-                gfCacheUp.conservativeResize(gfSize-1);
-                gfCacheDown.conservativeResize(gfSize-1);
+                const auto gfSize = gfCache[UP].size();
+                gfCache[UP].conservativeResize(gfSize-1);
+                gfCache[DOWN].conservativeResize(gfSize-1);
             }
 
             inline void swapConfigs(const int pos1, const int pos2){
                 std::swap(confs[pos1], confs[pos2]);
                 RealT tmp;
-                tmp = gfCacheUp(pos1);
-                gfCacheUp(pos1) = gfCacheUp(pos2);
-                gfCacheUp(pos2) = tmp;
-                tmp = gfCacheDown(pos1);
-                gfCacheDown(pos1) = gfCacheDown(pos2);
-                gfCacheDown(pos2) = tmp;
+                tmp = gfCache[UP](pos1);
+                gfCache[UP](pos1) = gfCache[UP](pos2);
+                gfCache[UP](pos2) = tmp;
+                tmp = gfCache[DOWN](pos1);
+                gfCache[DOWN](pos1) = gfCache[DOWN](pos2);
+                gfCache[DOWN](pos2) = tmp;
             }
 #endif
             const int MPI_size;
@@ -168,10 +169,13 @@ namespace DMFT
             GreensFct   &gImp;			// sampled impurity GF
 
             const Config& config;
-
-            MatrixT Mup;
-            MatrixT Mdown;
+            std::array<MatrixT,2> M;
+            std::array<VectorT,2> gfCache;	                // cached access to Weiss GF at current vertex points
             SConfigL confs;
+
+            MCAccumulator<1,_CONFIG_maxSBins> mcAccDOWN;
+            MCAccumulator<1,_CONFIG_maxSBins> mcAccUP;
+
             unsigned int steps;					// number of updates
             const unsigned int burninSteps;		// throw away some steps at the start
             int lastSign;						// needed when proposal is rejected
@@ -179,10 +183,9 @@ namespace DMFT
             int n; 					// expansion order (number of used rows/cols)
             const RealT zeroShift;				// auxiliary ising shift
             ImTG	    itBins;
-            VectorT	    gfCacheUp;	// cached access to Weiss GF at current vertex points
-            VectorT	    gfCacheDown;	// cached access to Weiss GF at current vertex points
 
             void updateContribution(int sign);
+            void updateContribution_OLD(int sign);
     };
 
 }
