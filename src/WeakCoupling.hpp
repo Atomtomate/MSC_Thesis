@@ -6,7 +6,7 @@
 #include "ImpSolver.hpp"
 #include "MCAccumulator.hpp"
 
-#include "mpi.h"
+#include <boost/serialization/vector.hpp>
 
 #include <iostream>
 #include <tuple>
@@ -158,9 +158,6 @@ namespace DMFT
                 gfCache[DOWN](pos2) = tmp;
             }
 #endif
-            const int MPI_size;
-            const int MPI_rank;
-
             trng::yarn2 r_time, r_spin, r_insert, r_accept, r_shift; // random number engines
             trng::uniform01_dist<> u; // random number distribution
 
@@ -172,9 +169,6 @@ namespace DMFT
             std::array<MatrixT,2> M;
             std::array<VectorT,2> gfCache;	                // cached access to Weiss GF at current vertex points
             SConfigL confs;
-
-            MCAccumulator<1,_CONFIG_maxSBins> mcAccDOWN;
-            MCAccumulator<1,_CONFIG_maxSBins> mcAccUP;
 
             unsigned int steps;					// number of updates
             const unsigned int burninSteps;		// throw away some steps at the start

@@ -9,7 +9,6 @@
 
 #include "gnuplot-iostream.h"
 
-#include "mpi.h"
 #include <trng/yarn2.hpp>
 #include <trng/uniform01_dist.hpp>
 
@@ -21,6 +20,9 @@
 #include <vector>
 #include <cstddef>		// nullptr
 
+#include <boost/mpi.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/optional.hpp>
 #include <boost/cstdfloat.hpp>
 #include <boost/math/constants/constants.hpp>
 
@@ -48,6 +50,7 @@ namespace DMFT
     // TODO: assert that spins are integeres starting with 0 (indexing!)
     static const    int _CONFIG_spins = 2;
     enum SPIN {DOWN = 0, UP = 1};
+    enum class MPI_MSG_TAGS: char {COMM_END = 0, DATA = 1, BROADCAST = 2};
 
     //#define DEBUG_MODE
 
@@ -112,26 +115,48 @@ namespace DMFT
              *  param  [in]  mu         chemical potential
              *  param  [in]  U          interaction strength
              *  param  [in]  mfCount    number of Matsubara frequencies, a grid with all frequencies will be cosntructed, max floor((mfCount-1)/2) 
+             *  param  [in]  local      MPI communicator for the local (data generator/data accumulator) group
+             *  param  [in]  world      MPI world communicator
+             *  param  [in]  isGen      True if this process generates data, False otherwise 
              */
-            Config(const RealT beta,const RealT mu,const RealT U,const int mfCount): beta(beta), mu(mu), mfCount(mfCount), mfGrid(mfCount) ,U(U)
-        {
-            const int min = static_cast<int>(mfCount/2.0);
-            for(int n= -static_cast<int>(mfCount/2.0); n<static_cast<int>((mfCount-1)/2.0);n+=1)
+            Config(const RealT beta, const RealT mu, const RealT U, const int mfCount, const boost::mpi::communicator local, const boost::mpi::communicator world, bool isGen):
+                beta(beta), mu(mu), mfCount(mfCount), mfGrid(mfCount), U(U), local(local), world(world), isGenerator(isGenerator)
             {
-                mfGrid(n + min) = PI*(2.0*n+1)/beta;
+                const int min = static_cast<int>(mfCount/2.0);
+                for(int n= -static_cast<int>(mfCount/2.0); n<static_cast<int>((mfCount-1)/2.0);n+=1)
+                {
+                    mfGrid(n + min) = PI*(2.0*n+1)/beta;
+                }
             }
-        }
 
             //TODO: sparse mfGrid with interpolation
 
             const RealT beta;
             const RealT mu;
-            const RealT U;
             const int mfCount;
+            const RealT U;
+            const boost::mpi::communicator local;
+            const boost::mpi::communicator world;
+            const bool isGenerator;
             MFGrid mfGrid;
 
     };
 
-
 }   //end namespace DMFT
+
+
+    // ========== BOOST Serialization for Eigen matrices ==========
+/*namespace boost
+{
+    template<class Archive, typename _Scalar, int _Rows, int _Cols, int _Options, int _MaxRows, int _MaxCols>
+        inline void serialize(
+                Archive& ar,
+                Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>& t,
+                const unsigned int file_version
+                )
+        {
+            for(size_t i=0; i<t.size();i++)
+                ar& t.data()[i];
+        }
+}*/
 #endif

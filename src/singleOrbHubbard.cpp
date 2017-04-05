@@ -61,15 +61,15 @@ namespace DMFT
         }
 
 
-        void _run_hysteresis(RealT U){
+        void _run_hysteresis(RealT U, boost::mpi::communicator world, boost::mpi::communicator local){
             const int D = 1.0;          // half bandwidth
             const RealT t	= D/2.0;
             std::string descr = "hysteresis" + std::to_string(static_cast<int>(U)) + "converging";
             std::string descrPT = "hysteresis" + std::to_string(static_cast<int>(U)) + "PT";
             const double beta = 64;
-            Config conf(beta, U/2.0, U, _CONFIG_maxMatsFreq); 
+            Config conf(beta, U/2.0, U, _CONFIG_maxMatsFreq,world,local,0); 
             //Config cU6(beta, 3.0, 6.0, _CONFIG_maxMatsFreq);
-            Config confPT(beta, 1.2, 2.4, _CONFIG_maxMatsFreq);
+            Config confPT(beta, 1.2, 2.4, _CONFIG_maxMatsFreq,world,local,0);
             //Config cPT_U6(beta, 1.2, 2.4, _CONFIG_maxMatsFreq);
             LOG(INFO) << "Using Bethe Lattice (guess and SC condition), computing Gimp for U = " << U << " at beta = 64";
             LOG(INFO) << "Using both converged solution to find solutions near phase transition (U = 2.4)";
@@ -101,14 +101,14 @@ namespace DMFT
             dmftSolverPT.update(30,5000000);
         }
 
-        void _test_hysteresis(void)
+        void _test_hysteresis(boost::mpi::communicator world, boost::mpi::communicator local)
         {
             double U0 = 0.1;
             double U5 = 5.0;
-            std::thread t1(_run_hysteresis,U0);
-            std::thread t2(_run_hysteresis,U5);
-            t1.join();
-            t2.join();
+            /*std::thread t1(_run_hysteresis,U0);
+              std::thread t2(_run_hysteresis,U5);
+              t1.join();
+              t2.join();*/
         }
 
         // =========== 	generate input		============
@@ -149,34 +149,40 @@ namespace DMFT
             //}
             //TODO: overload operators
             /*for(int s=0;s<_CONFIG_spins;s++){
-                for(int n=0;n<_CONFIG_maxMatsFreq;n++){
-                    ComplexT tmp = (1.0/( ComplexT(config.mu - config.U/2.0, mFreq(n,config.beta)) - (D/2.0)*(D/2.0)*g0.getByMFreq(n,s) ));
-                    gImp.setByMFreq(n,s, tmp);
-                }
-            }
-            gImp.transformMtoT();
-            IOhelper::plot(gImp, config.beta, "gImp");
-            */
+              for(int n=0;n<_CONFIG_maxMatsFreq;n++){
+              ComplexT tmp = (1.0/( ComplexT(config.mu - config.U/2.0, mFreq(n,config.beta)) - (D/2.0)*(D/2.0)*g0.getByMFreq(n,s) ));
+              gImp.setByMFreq(n,s, tmp);
+              }
+              }
+              gImp.transformMtoT();
+              IOhelper::plot(gImp, config.beta, "gImp");
+              */
 
-            LOG(INFO) << "initializing";
-            DMFT::WeakCoupling impSolver(g0, gImp, config, 0.1, 200000);
-            if(use_bethe)
+            if(config.isGenerator)
             {
+                LOG(INFO) << "initializing";
+                DMFT::WeakCoupling impSolver(g0, gImp, config, 0.1, 200000);
+                if(use_bethe)
+                {
 
-                DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, config, mixing, impSolver, g0, gImp, D);
-                dmftSolver.update(20,500000);
+                    DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, config, mixing, impSolver, g0, gImp, D);
+                    dmftSolver.update(20,500000);
+                }
+                else
+                {
+                    LOG(WARNING) << "simple cubic lattice DMFT currently disabled!";
+                    //REMARK: paper for type deduction from constructor has been accepted for C++17
+                    //DMFTSolver<WeakCoupling> dmftSolver(descr, config, mixing, impSolver, g0, gImp, gLoc);
+                    //dmftSolver.update(30,1000000);
+                }
+                //Bethe solution: sImp = t_t1*t_t1*gImp.getByMFreq(n,s);
             }
             else
             {
-                LOG(WARNING) << "simple cubic lattice DMFT currently disabled!";
-                //REMARK: paper for type deduction from constructor has been accepted for C++17
-                //DMFTSolver<WeakCoupling> dmftSolver(descr, config, mixing, impSolver, g0, gImp, gLoc);
-                //dmftSolver.update(30,1000000);
+                MCAccumulator<_CONFIG_maxSBins> mcAcc(g0,config);
+                mcAcc.collect();
             }
 
-
-
-            //Bethe solution: sImp = t_t1*t_t1*gImp.getByMFreq(n,s);
 
             return 0;
         }

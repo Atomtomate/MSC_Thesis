@@ -1,15 +1,28 @@
 #include "main.h"
 INITIALIZE_EASYLOGGINGPP
 
+void dataGenerationComm(boost::mpi::communicator local, boost::mpi::communicator world);
+void dataCollectionComm(boost::mpi::communicator local, boost::mpi::communicator world);
 
+//TODO: generate random number stream in collector processes?
 //static const char* help = "Placeholder help string, TODO: set help string\n";
-// TODO: shift mu by - 1/2 U
-// TODO: switch from flat array to hash (template design)
 int main(int argc,char **argv)
 {
+    //TODO: centralize IO over MPI_rank 0
+    START_EASYLOGGINGPP(argc, argv);
+    el::Configurations conf("debug_log.conf");
+    el::Loggers::reconfigureAllLoggers(conf);
+    // MPI stuff
     MPI::Init(argc, argv); 
     boost::mpi::environment env(argc, argv);
     boost::mpi::communicator world;
+    //TODO: for now only world.rank() == 0 collects data. change this after some testing
+    bool isGenerator = world.rank() > 0;
+    boost::mpi::communicator local = world.split(isGenerator ? 0 : 1);
+
+    LOG(INFO) << "This is world rank " << world.rank() << ", local rank: " << local.rank() << ", isGenerator value: " << isGenerator;
+
+
     double U = 2.5;
     double beta = 64.0;
     double mixing = 0;
@@ -17,9 +30,6 @@ int main(int argc,char **argv)
     // ========== configure logging		============
     if(world.rank() == 0)
     {
-        START_EASYLOGGINGPP(argc, argv);
-        el::Configurations conf("debug_log.conf");
-        el::Loggers::reconfigureAllLoggers(conf);
         //std::cout << "give U, beta: ";
         //int lattice,sc;
         //std::cin >> U;
@@ -31,7 +41,7 @@ int main(int argc,char **argv)
         //std::cin >> lattice;
         LOG(INFO) <<"Parameters: \n - beta:\t" <<  beta << "\n - U:\t" << U << "\n - mu:\t" << mu; 
     }
-    DMFT::Config config(beta, mu, U, DMFT::_CONFIG_maxMatsFreq);
+    DMFT::Config config(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, local, world, isGenerator);
 
     //DMFT::examples::_test_hysteresis();
     DMFT::examples::_test_SOH(config,true,mixing);

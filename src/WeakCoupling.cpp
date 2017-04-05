@@ -3,9 +3,10 @@
 namespace DMFT
 {
 
-    WeakCoupling::WeakCoupling(GreensFct &g0, GreensFct &gImp, const Config& config, const RealT zeroShift, const unsigned int burninSteps):
-        config(config), g0(g0), gImp(gImp), zeroShift(zeroShift), burninSteps(burninSteps), MPI_size(MPI::COMM_WORLD.Get_size()), MPI_rank(MPI::COMM_WORLD.Get_rank()), 
-        mcAccDOWN(g0, config),mcAccUP(g0, config)
+    WeakCoupling::WeakCoupling(
+            GreensFct &g0, GreensFct &gImp, const Config& config, const RealT zeroShift, const unsigned int burninSteps
+            ):
+            config(config), g0(g0), gImp(gImp), zeroShift(zeroShift), burninSteps(burninSteps) 
     {
         n 		= 0;
         steps 		= 0;
@@ -17,11 +18,11 @@ namespace DMFT
         r_insert.split(5, 2);
         r_accept.split(5, 3);
         r_shift.split(5, 4);
-        r_time.split(MPI_size, MPI_rank);           // choose sub−stream no. rank out of size streams
-        r_spin.split(MPI_size, MPI_rank);           // choose sub−stream no. rank out of size streams
-        r_insert.split(MPI_size, MPI_rank);         // choose sub−stream no. rank out of size streams
-        r_accept.split(MPI_size, MPI_rank);         // choose sub−stream no. rank out of size streams
-        r_shift.split(MPI_size, MPI_rank);         // choose sub−stream no. rank out of size streams
+        r_time.split(config.local.size() , config.local.rank());           // choose sub−stream no. rank out of size streams
+        r_spin.split(config.local.size() , config.local.rank());           // choose sub−stream no. rank out of size streams
+        r_insert.split(config.local.size() , config.local.rank());         // choose sub−stream no. rank out of size streams
+        r_accept.split(config.local.size() , config.local.rank());         // choose sub−stream no. rank out of size streams
+        r_shift.split(config.local.size() , config.local.rank());         // choose sub−stream no. rank out of size streams
     }
 
 
@@ -70,6 +71,9 @@ namespace DMFT
     //TODO:	do this properly: accumulator, overflow, kahan, SBin not *beta, mats != tbins 
     void WeakCoupling::computeImpGF(void)
     {
+        (config.local.barrier)();           // wait for all MC runners to finish
+        config.world.send(0, static_cast<int>(MPI_MSG_TAGS::COMM_END));// inform accumulators, that we are done
+
         for(int s=0;s<2;s++){
             for(int n=0;n<_CONFIG_maxMatsFreq; n++){
                 RealT t 		= config.beta*static_cast<RealT>(n)/_CONFIG_maxMatsFreq;
@@ -83,9 +87,6 @@ namespace DMFT
                     sumWn += std::exp(ComplexT(0.0, mfreq*tp))*bVal;
                     sumIt += g0(t-tp,s)*bVal;
                 }
-                //TODO: better accumulator
-                //if(std::isnan(std::real(sumWn)) or std::isinf(std::real(sumWn)) or std::isnan(std::imag(sumWn)) or std::isinf(std::imag(sumWn)) ) LOG(ERROR) << "Overflow during computation of G_Imp(i wn)";
-                //if(std::isnan(sumIt) or std::isinf(sumIt)) LOG(ERROR) << "Overflow during computation of G_Imp(tau)";
                 gImp.setByMFreq(n,s, g0.getByMFreq(n,s) - g0.getByMFreq(n,s)*sumWn/static_cast<RealT>(totalSign));
                 gImp.setByT(t,s, g0(t,s) - sumIt/totalSign);
             }
@@ -215,47 +216,38 @@ namespace DMFT
     /*! updates all variables for the MC simulation
      *  @param [in] sign +1/-1 or 0 to replicate the last sign (proposal not accepted => meassure last config again)
      */
-    void WeakCoupling::updateContribution_OLD(int sign)
+    void WeakCoupling::updateContribution(int sign)
     {
         if(steps < burninSteps) return;	    // return while still in burn in period
         if(!n)
         {
-            mcAccDOWN.push(0.0,0.0, sign);
-            mcAccUP.push(0.0,0.0, sign);
-            return;
-        }
-
 #ifdef MEASUREMENT_SHIFT
         const RealT rShift = config.beta*u(r_shift);
 #else
         const RealT rShift = 0.0;
 #endif
+            MatrixT tmp(n,3);
+            //TODO: OPTIMIZE: this is horribly slow
+            for(int i=0;i<n;i++)
+            {
+                tmp(i,0) = std::get<0>(confs[i]) - rShift;
+                tmp(i,1) *= g0(tmp(i,0),UP);
+                tmp(i,2) *= g0(tmp(i,0),DOWN);
+            }
+            tmp.col(1) = (M[UP]*tmp.col(1)).eval();
+            tmp.col(2) = (M[DOWN]*tmp.col(2)).eval();
 
-        VectorT tmpUP(n);
-        VectorT tmpDOWN(n);
-        VectorT times(n);
-        //TODO: OPTIMIZE: this is horribly slow
-        for(int i=0;i<n;i++)
-        {
-            times(i) = std::get<0>(confs[i]) - rShift; 
-            tmpUP(i) *= g0(times(i),UP);
-            tmpDOWN(i) *= g0(times(i),DOWN);
-        }
-        tmpUP = (M[UP]*tmpUP).eval();
-        tmpDOWN = (M[DOWN]*tmpDOWN).eval();
-
-        for(int i=0;i<n;i++)
-        {
-            mcAccUP.push(times(i), tmpUP(i), sign);
-            mcAccDOWN.push(times(i), tmpDOWN(i), sign);
-
+            //TODO: overload boost serialize to directly send eigen arrays
+            std::vector<RealT> tmpVec(tmp.data(), tmp.data() + tmp.rows()*tmp.cols());
+            config.world.send(0, static_cast<int>(MPI_MSG_TAGS::DATA), tmpVec );
+            return;
         }
     }
 
     /*! updates all variables for the MC simulation
      *  @param [in] sign +1/-1 or 0 to replicate the last sign (proposal not accepted => meassure last config again)
      */
-    void WeakCoupling::updateContribution(int sign)
+    void WeakCoupling::updateContribution_OLD(int sign)
     {
         VLOG(3) << "entering update";
         if(steps < burninSteps) return;	    // return while still in burn in period
@@ -292,7 +284,6 @@ namespace DMFT
             }
         }
 #else
-        //TODO: accumulator with arbitrary precision
         for(int k=0;k<n;k++){		    // itBins(t)   = G0(t-t_k) * A_k
             RealT tau = std::get<0>(confs[k]) - rShift;
             const int sign2 = 2*(tau>0)-1;

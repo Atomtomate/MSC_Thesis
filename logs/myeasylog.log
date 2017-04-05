@@ -1,2 +1,132 @@
 2016-10-06 13:52:49,683 INFO  [default] Testing
 2016-10-06 13:52:49,684 INFO  [default] sConfig generated
+2017-04-05 12:53:22,343 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 12:53:22,343 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 12:53:22,343 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 12:53:22,344 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 12:53:22,344 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 12:53:22,344 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 12:53:22,345 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 12:53:22,345 INFO  [default] using bethe lattice guess
+2017-04-05 12:53:22,345 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 12:53:22,345 INFO  [default] using bethe lattice guess
+2017-04-05 12:53:22,345 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 12:53:22,345 INFO  [default] using bethe lattice guess
+2017-04-05 12:53:27,129 INFO  [default] initializing
+2017-04-05 12:53:27,140 INFO  [default] Computing new Weiss Green's function
+2017-04-05 12:53:27,690 INFO  [default] initializing
+2017-04-05 12:53:27,709 INFO  [default] Computing new Weiss Green's function
+2017-04-05 12:53:27,929 INFO  [default] initializing
+2017-04-05 12:53:27,948 INFO  [default] Computing new Weiss Green's function
+2017-04-05 12:53:34,042 INFO  [default] U=2.5, beta=64 at iteration: 1(0%) order: 68
+2017-04-05 12:53:34,431 INFO  [default] U=2.5, beta=64 at iteration: 1(0%) order: 77
+2017-04-05 12:53:34,668 INFO  [default] U=2.5, beta=64 at iteration: 1(0%) order: 86
+2017-04-05 12:53:35,554 INFO  [default] U=2.5, beta=64 at iteration: 1(5%) order: 78
+2017-04-05 12:53:35,728 INFO  [default] U=2.5, beta=64 at iteration: 1(5%) order: 87
+2017-04-05 12:53:35,738 INFO  [default] U=2.5, beta=64 at iteration: 1(5%) order: 80
+2017-04-05 12:53:36,763 INFO  [default] U=2.5, beta=64 at iteration: 1(10%) order: 75
+2017-04-05 12:53:36,865 INFO  [default] U=2.5, beta=64 at iteration: 1(10%) order: 99
+2017-04-05 12:53:37,326 INFO  [default] U=2.5, beta=64 at iteration: 1(10%) order: 93
+2017-04-05 12:53:37,927 INFO  [default] U=2.5, beta=64 at iteration: 1(15%) order: 96
+2017-04-05 12:53:38,055 INFO  [default] U=2.5, beta=64 at iteration: 1(15%) order: 88
+2017-04-05 12:53:38,812 INFO  [default] U=2.5, beta=64 at iteration: 1(15%) order: 91
+2017-04-05 12:53:39,126 INFO  [default] U=2.5, beta=64 at iteration: 1(20%) order: 61
+2017-04-05 12:53:39,208 INFO  [default] U=2.5, beta=64 at iteration: 1(20%) order: 86
+2017-04-05 12:53:39,935 INFO  [default] U=2.5, beta=64 at iteration: 1(20%) order: 79
+2017-04-05 12:53:40,226 INFO  [default] U=2.5, beta=64 at iteration: 1(25%) order: 86
+2017-04-05 12:53:40,228 INFO  [default] U=2.5, beta=64 at iteration: 1(25%) order: 81
+2017-04-05 12:53:41,022 INFO  [default] U=2.5, beta=64 at iteration: 1(25%) order: 76
+2017-04-05 12:53:41,332 INFO  [default] U=2.5, beta=64 at iteration: 1(30%) order: 77
+2017-04-05 12:53:41,338 INFO  [default] U=2.5, beta=64 at iteration: 1(30%) order: 98
+2017-04-05 12:53:42,168 INFO  [default] U=2.5, beta=64 at iteration: 1(30%) order: 84
+2017-04-05 12:53:42,482 INFO  [default] U=2.5, beta=64 at iteration: 1(35%) order: 88
+2017-04-05 12:53:42,666 INFO  [default] U=2.5, beta=64 at iteration: 1(35%) order: 75
+2017-04-05 12:55:08,062 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 12:55:08,062 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 12:55:08,062 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 12:55:08,062 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 12:55:08,062 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 12:55:08,063 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 12:55:08,063 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 12:55:08,063 INFO  [default] using bethe lattice guess
+2017-04-05 12:55:08,063 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 12:55:08,063 INFO  [default] using bethe lattice guess
+2017-04-05 12:55:08,063 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 12:55:08,063 INFO  [default] using bethe lattice guess
+2017-04-05 13:14:14,991 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 13:14:14,991 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 13:14:14,991 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 13:14:14,991 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 13:14:14,991 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 13:14:14,991 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 13:14:14,991 INFO  [default] using bethe lattice guess
+2017-04-05 13:14:14,991 INFO  [default] using bethe lattice guess
+2017-04-05 13:14:14,992 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 13:14:14,992 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 13:14:14,993 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 13:14:14,993 INFO  [default] using bethe lattice guess
+2017-04-05 13:14:19,624 INFO  [default] initializing
+2017-04-05 13:14:19,635 INFO  [default] Computing new Weiss Green's function
+2017-04-05 13:14:20,052 INFO  [default] initializing
+2017-04-05 13:14:20,063 INFO  [default] Computing new Weiss Green's function
+2017-04-05 13:14:20,240 INFO  [default] initializing
+2017-04-05 13:14:20,251 INFO  [default] Computing new Weiss Green's function
+2017-04-05 13:15:42,587 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 13:15:42,587 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 13:15:42,587 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 13:15:42,587 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 13:15:42,587 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 13:15:42,587 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 13:15:42,588 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 13:15:42,588 INFO  [default] using bethe lattice guess
+2017-04-05 13:15:42,588 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 13:15:42,588 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 13:15:42,588 INFO  [default] using bethe lattice guess
+2017-04-05 13:15:42,588 INFO  [default] using bethe lattice guess
+2017-04-05 13:33:32,803 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 13:33:32,803 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 13:33:32,803 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 13:33:32,803 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 13:33:32,803 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 13:33:32,803 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 13:33:32,804 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 13:33:32,804 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 13:33:32,804 INFO  [default] using bethe lattice guess
+2017-04-05 13:33:32,804 INFO  [default] using bethe lattice guess
+2017-04-05 13:33:32,804 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 13:33:32,804 INFO  [default] using bethe lattice guess
+2017-04-05 13:34:18,184 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 13:34:18,184 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 13:34:18,184 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 13:34:18,184 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 13:34:18,184 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 13:34:18,184 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 13:34:18,185 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 13:34:18,185 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 13:34:18,185 INFO  [default] using bethe lattice guess
+2017-04-05 13:34:18,185 INFO  [default] using bethe lattice guess
+2017-04-05 13:34:18,185 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 13:34:18,185 INFO  [default] using bethe lattice guess
+2017-04-05 16:30:42,930 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 16:30:42,930 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 16:30:42,930 INFO  [default] Testing with Bethe lattice guess, sc energy density, U = 2.5
+2017-04-05 16:30:42,930 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 16:30:42,930 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 16:30:42,930 INFO  [default] Setting D = 1, t = D/2.0, a = 1
+2017-04-05 16:30:42,931 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 16:30:42,931 INFO  [default] using bethe lattice guess
+2017-04-05 16:30:42,931 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 16:30:42,931 INFO  [default] computing analytical solution for G_wn for U=0
+2017-04-05 16:30:42,931 INFO  [default] using bethe lattice guess
+2017-04-05 16:30:42,931 INFO  [default] using bethe lattice guess
+2017-04-05 16:30:47,963 INFO  [default] initializing
+2017-04-05 16:30:47,982 INFO  [default] Computing new Weiss Green's function
+2017-04-05 16:30:48,492 INFO  [default] initializing
+2017-04-05 16:30:48,511 INFO  [default] Computing new Weiss Green's function
+2017-04-05 16:30:55,518 INFO  [default] U=2.5, beta=64 at iteration: 1(0%) order: -1717986918
+2017-04-05 16:30:55,604 INFO  [default] U=2.5, beta=64 at iteration: 1(0%) order: -1717986918
+2017-04-05 16:30:56,637 INFO  [default] U=2.5, beta=64 at iteration: 1(5%) order: -1717986918
+2017-04-05 16:30:57,234 INFO  [default] U=2.5, beta=64 at iteration: 1(5%) order: -1717986918
+2017-04-05 16:30:57,793 INFO  [default] U=2.5, beta=64 at iteration: 1(10%) order: -1717986918
+2017-04-05 16:30:58,852 INFO  [default] U=2.5, beta=64 at iteration: 1(15%) order: -1717986918
+2017-04-05 16:30:59,024 INFO  [default] U=2.5, beta=64 at iteration: 1(10%) order: -1717986918

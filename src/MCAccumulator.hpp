@@ -16,7 +16,7 @@
 namespace DMFT
 {
 
-    template <int NBins, int BinSize> //TODO: do a template version of this
+    template <int BinSize> //TODO: do a template version of this
         class MCAccumulator
         {
             private:
@@ -30,9 +30,26 @@ namespace DMFT
                 // list of accumulators, one for ech registered process
                 // each accumulator has several (exponential?) bins
             public:
-                MCAccumulator(const GreensFct &g0,const Config& c): g0(g0), config(c), totalSign(0), lastSign(0)
+                MCAccumulator(const GreensFct &g0, const Config& c): g0(g0), config(c), totalSign(0), lastSign(0)
                 {
                 };
+
+                void collect(void)
+                {
+                    while(!config.isGenerator)
+                    {
+                        boost::mpi::status msg = config.world.probe();
+                        if( msg.tag() == static_cast<int>(MPI_MSG_TAGS::DATA))
+                        {
+                            
+                        }
+                        else if (msg.tag() == static_cast<int>(MPI_MSG_TAGS::COMM_END))
+                        {
+                            config.world.recv(msg.source(), msg.tag());
+                            //TODO: sync all collectors
+                        }
+                    }
+                }
 
                 /*! Saves value at imaginary time tau
                  *
