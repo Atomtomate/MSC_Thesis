@@ -17,10 +17,8 @@ int main(int argc,char **argv)
     boost::mpi::environment env(argc, argv);
     boost::mpi::communicator world;
     //TODO: for now only world.rank() == 0 collects data. change this after some testing
-    bool isGenerator = world.rank() > 0;
+    bool isGenerator = (world.rank() > 0);
     boost::mpi::communicator local = world.split(isGenerator ? 0 : 1);
-
-    LOG(INFO) << "This is world rank " << world.rank() << ", local rank: " << local.rank() << ", isGenerator value: " << isGenerator;
 
 
     double U = 2.5;
@@ -43,6 +41,7 @@ int main(int argc,char **argv)
     }
     DMFT::Config config(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, local, world, isGenerator);
 
+    
     //DMFT::examples::_test_hysteresis();
     DMFT::examples::_test_SOH(config,true,mixing);
 

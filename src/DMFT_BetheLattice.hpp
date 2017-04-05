@@ -27,8 +27,8 @@ namespace DMFT
             void update(const unsigned int iterations, const unsigned long long updates)
             {
                 for(unsigned int dmftIt = 1;config.isGenerator && dmftIt < iterations+1; dmftIt++)
-                {
-                    LOG(INFO) << "Computing new Weiss Green's function";
+                {  
+                    if(config.world.rank() == 0) LOG(INFO) << "Computing new Weiss Green's function";
                     //TODO: vectorize
                     for(int n=0;n<_CONFIG_maxMatsFreq;n++){
                         for(int s=0;s<_CONFIG_spins;s++){

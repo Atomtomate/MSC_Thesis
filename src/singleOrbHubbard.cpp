@@ -118,9 +118,10 @@ namespace DMFT
 
         int _test_SOH(DMFT::Config& config, bool use_bethe, double mixing){
 
-
+            if(config.world.rank() == 0){
             LOG(INFO) << "Testing with Bethe lattice guess, sc energy density, U = " << config.U;
             LOG(INFO) << "Setting D = 1, t = D/2.0, a = 1";
+            }
             const int D = 1.0;          // half bandwidth
             const RealT a	= 1.0;
             const RealT t	= D/2.0;
@@ -131,6 +132,7 @@ namespace DMFT
             DMFT::GreensFct gImp(config.beta);
             DMFT::GreensFct gLoc(config.beta);
 
+            if(config.world.rank() == 0){
             LOG(INFO) << "computing analytical solution for G_wn for U=0";
             //std::cout << "G0 guess: 0 for bethe, 1 for SC: ";
             //std::cin >> guess;
@@ -139,6 +141,8 @@ namespace DMFT
             //setSCG0(g0,config);
             //}else{
             LOG(INFO) << "using bethe lattice guess";
+            }
+
             setBetheSemiCirc(gImp, D, config);
             gImp.transformMtoT();
             //TODO: write hilbert transform function
@@ -160,8 +164,8 @@ namespace DMFT
 
             if(config.isGenerator)
             {
-                LOG(INFO) << "initializing";
-                DMFT::WeakCoupling impSolver(g0, gImp, config, 0.1, 200000);
+                if(config.world.rank() == 0) LOG(INFO) << "initializing";
+                DMFT::WeakCoupling impSolver(g0, gImp, config, 0.1, 0);
                 if(use_bethe)
                 {
 

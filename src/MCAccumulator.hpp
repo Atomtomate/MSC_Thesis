@@ -21,11 +21,29 @@ namespace DMFT
         {
             private:
                 using AccT = boost::accumulators::accumulator_set<RealT, boost::accumulators::tag::mean, boost::accumulators::tag::moment<2> >;
-                AccT bins;
+                AccT binsUp;
+                AccT binsDown;
                 int totalSign;
                 int lastSign;
                 const GreensFct &g0;
                 const Config& config;
+
+                /*! Saves value at imaginary time tau
+                 *
+                 *  @param [in]  tau    imaginary time
+                 *  @param [in]  val    measurement at time tau
+                 *  #param [in]  sign   sign of controbution (>0 for bosonic+WeakCoupling)
+                 */
+                void push(RealT tau, RealT valUp, RealT valDown, int sign)
+                {
+                    if(!sign) sign = lastSign;		    // update got rejected, use last sign
+                    lastSign = sign;			    // remember last sign
+                    totalSign += 1;//sign;
+                    const int sign2 = 2*(tau>0)-1;
+                    //[static_cast<int>(BinSize * (tau + (tau<0)*config.beta) )]
+                    binsUp(sign2*sign*valUp);
+                    binsUp(sign2*sign*valDown);
+                }
 
                 // list of accumulators, one for ech registered process
                 // each accumulator has several (exponential?) bins
@@ -34,6 +52,12 @@ namespace DMFT
                 {
                 };
 
+                /*! Colelcts data from MPI processes.
+                 *
+                 *  Data is expected to be formatted as std::vector of length n+1.
+                 *  The first n/3 elements are imaginary time points,  after that n/3 values for spin UP, then spin DOWN.
+                 *  The last element is the sign.
+                 */
                 void collect(void)
                 {
                     while(!config.isGenerator)
@@ -41,7 +65,11 @@ namespace DMFT
                         boost::mpi::status msg = config.world.probe();
                         if( msg.tag() == static_cast<int>(MPI_MSG_TAGS::DATA))
                         {
-                            
+                            std::vector<RealT> data;
+                            config.world.recv(msg.source(), msg.tag(), data);
+                            int dataLength = static_cast<int>((data.size()-1)/3);
+                            for(int i = 0; i < dataLength; i++)
+                                push(data[i],data[dataLength+i],data[2*dataLength+i],data[3*dataLength]);
                         }
                         else if (msg.tag() == static_cast<int>(MPI_MSG_TAGS::COMM_END))
                         {
@@ -51,21 +79,6 @@ namespace DMFT
                     }
                 }
 
-                /*! Saves value at imaginary time tau
-                 *
-                 *  @param [in]  tau    imaginary time
-                 *  @param [in]  val    measurement at time tau
-                 *  #param [in]  sign   sign of controbution (>0 for bosonic+WeakCoupling)
-                 */
-                void push(RealT tau, RealT val, int sign)
-                {
-                    if(!sign) sign = lastSign;		    // update got rejected, use last sign
-                    lastSign = sign;			    // remember last sign
-                    totalSign += 1;//sign;
-                    const int sign2 = 2*(tau>0)-1;
-                    //[static_cast<int>(BinSize * (tau + (tau<0)*config.beta) )]
-                    bins(sign2*sign*val);
-                }
 
                 void computeImpGF(boost::mpi::communicator &c)
                 {

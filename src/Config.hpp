@@ -119,8 +119,8 @@ namespace DMFT
              *  param  [in]  world      MPI world communicator
              *  param  [in]  isGen      True if this process generates data, False otherwise 
              */
-            Config(const RealT beta, const RealT mu, const RealT U, const int mfCount, const boost::mpi::communicator local, const boost::mpi::communicator world, bool isGen):
-                beta(beta), mu(mu), mfCount(mfCount), mfGrid(mfCount), U(U), local(local), world(world), isGenerator(isGenerator)
+            Config(const RealT beta, const RealT mu, const RealT U, const int mfCount, const boost::mpi::communicator local, const boost::mpi::communicator world,const bool isGen):
+                beta(beta), mu(mu), mfCount(mfCount), mfGrid(mfCount), U(U), local(local), world(world), isGenerator(isGen)
             {
                 const int min = static_cast<int>(mfCount/2.0);
                 for(int n= -static_cast<int>(mfCount/2.0); n<static_cast<int>((mfCount-1)/2.0);n+=1)

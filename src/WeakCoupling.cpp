@@ -6,7 +6,7 @@ namespace DMFT
     WeakCoupling::WeakCoupling(
             GreensFct &g0, GreensFct &gImp, const Config& config, const RealT zeroShift, const unsigned int burninSteps
             ):
-            config(config), g0(g0), gImp(gImp), zeroShift(zeroShift), burninSteps(burninSteps) 
+        config(config), g0(g0), gImp(gImp), zeroShift(zeroShift), burninSteps(burninSteps) 
     {
         n 		= 0;
         steps 		= 0;
@@ -71,8 +71,8 @@ namespace DMFT
     //TODO:	do this properly: accumulator, overflow, kahan, SBin not *beta, mats != tbins 
     void WeakCoupling::computeImpGF(void)
     {
-        (config.local.barrier)();           // wait for all MC runners to finish
-        config.world.send(0, static_cast<int>(MPI_MSG_TAGS::COMM_END));// inform accumulators, that we are done
+        (config.local.barrier)();                                           // wait for all MC runners to finish
+        config.world.send(0, static_cast<int>(MPI_MSG_TAGS::COMM_END));     // inform accumulators, that we are done
 
         for(int s=0;s<2;s++){
             for(int n=0;n<_CONFIG_maxMatsFreq; n++){
@@ -221,27 +221,35 @@ namespace DMFT
         if(steps < burninSteps) return;	    // return while still in burn in period
         if(!n)
         {
+            //TODO: implement
+            return;
+        }
 #ifdef MEASUREMENT_SHIFT
         const RealT rShift = config.beta*u(r_shift);
 #else
         const RealT rShift = 0.0;
 #endif
-            MatrixT tmp(n,3);
-            //TODO: OPTIMIZE: this is horribly slow
-            for(int i=0;i<n;i++)
-            {
-                tmp(i,0) = std::get<0>(confs[i]) - rShift;
-                tmp(i,1) *= g0(tmp(i,0),UP);
-                tmp(i,2) *= g0(tmp(i,0),DOWN);
-            }
-            tmp.col(1) = (M[UP]*tmp.col(1)).eval();
-            tmp.col(2) = (M[DOWN]*tmp.col(2)).eval();
-
-            //TODO: overload boost serialize to directly send eigen arrays
-            std::vector<RealT> tmpVec(tmp.data(), tmp.data() + tmp.rows()*tmp.cols());
-            config.world.send(0, static_cast<int>(MPI_MSG_TAGS::DATA), tmpVec );
-            return;
+        MatrixT tmp(n,3);
+        //TODO: OPTIMIZE: this is horribly slow
+        for(int i=0;i<n;i++)
+        {
+            tmp(i,0) = std::get<0>(confs[i]) - rShift;
+            tmp(i,1) = g0(tmp(i,0),UP);
+            tmp(i,2) = g0(tmp(i,0),DOWN);
         }
+        tmp.col(1) = (M[UP]*tmp.col(1)).eval();
+        tmp.col(2) = (M[DOWN]*tmp.col(2)).eval();
+        std::vector<RealT> tmpVec(tmp.data(), tmp.data() + tmp.rows()*tmp.cols());
+        tmpVec.push_back(sign);
+
+        //TODO: overload boost serialize to directly send eigen arrays
+        /*LOG(INFO) << "===================================";
+        LOG(INFO) << "tmp: " << tmp;
+        LOG(INFO) << "-----------";
+        LOG(INFO) << "tmpVec: " << tmpVec;
+        LOG(INFO) << "...................................";*/
+        config.world.send(0, static_cast<int>(MPI_MSG_TAGS::DATA), tmpVec );
+        return;
     }
 
     /*! updates all variables for the MC simulation
