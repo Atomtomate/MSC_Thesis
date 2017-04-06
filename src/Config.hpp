@@ -115,12 +115,13 @@ namespace DMFT
              *  param  [in]  mu         chemical potential
              *  param  [in]  U          interaction strength
              *  param  [in]  mfCount    number of Matsubara frequencies, a grid with all frequencies will be cosntructed, max floor((mfCount-1)/2) 
+             *  param  [in]  itCount    number of bins for imaginary time points 
              *  param  [in]  local      MPI communicator for the local (data generator/data accumulator) group
              *  param  [in]  world      MPI world communicator
              *  param  [in]  isGen      True if this process generates data, False otherwise 
              */
-            Config(const RealT beta, const RealT mu, const RealT U, const int mfCount, const boost::mpi::communicator local, const boost::mpi::communicator world,const bool isGen):
-                beta(beta), mu(mu), mfCount(mfCount), mfGrid(mfCount), U(U), local(local), world(world), isGenerator(isGen)
+            Config(const RealT beta, const RealT mu, const RealT U, const int mfCount, const int itCount, const boost::mpi::communicator local, const boost::mpi::communicator world,const bool isGen):
+                beta(beta), mu(mu), mfCount(mfCount), itCount(itCount), mfGrid(mfCount), U(U), local(local), world(world), isGenerator(isGen)
             {
                 const int min = static_cast<int>(mfCount/2.0);
                 for(int n= -static_cast<int>(mfCount/2.0); n<static_cast<int>((mfCount-1)/2.0);n+=1)
@@ -134,6 +135,7 @@ namespace DMFT
             const RealT beta;
             const RealT mu;
             const int mfCount;
+            const int itCount;
             const RealT U;
             const boost::mpi::communicator local;
             const boost::mpi::communicator world;

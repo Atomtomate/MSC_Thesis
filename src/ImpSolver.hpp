@@ -15,11 +15,11 @@ template <class Implementation>
 class ImpSolver
 {
 	public:
-		inline void update(const unsigned long iterations = 10000l) const { 		this->impl().update(iterations); }
-		inline void computeImpGF(void) 							const { 		this->impl().computeImpGF(); }
-		inline GreensFct& getImpGF(void) 						const { return	this->impl().getImpGF(); }
-		inline GreensFct& getWeissGF(void)                      const { return	this->impl().getWeissGF(); }
-        inline int expansionOrder(void)                         const { return  this->impl().expansionOrder(); }
+		inline void update(const unsigned long iterations = 10000l)     const { 	this->impl().update(iterations); }
+		inline void computeImpGF(void) 					const { 	this->impl().computeImpGF(); }
+		inline GreensFct& getImpGF(void) 				const { return	this->impl().getImpGF(); }
+                inline GreensFct& getWeissGF(void)                              const { return	this->impl().getWeissGF(); }
+                inline int expansionOrder(void)                                 const { return  this->impl().expansionOrder(); }
 
     protected:
 

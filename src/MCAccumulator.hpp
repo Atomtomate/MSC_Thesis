@@ -21,18 +21,20 @@ namespace DMFT
         {
             private:
                 using AccT = boost::accumulators::accumulator_set<RealT, boost::accumulators::tag::mean, boost::accumulators::tag::moment<2> >;
-                AccT binsUp;
-                AccT binsDown;
                 int totalSign;
                 int lastSign;
                 const GreensFct &g0;
                 const Config& config;
+                bool dataReady;
+
+                AccT binsUp;
+                std::vector<AccT> binsDown;
 
                 /*! Saves value at imaginary time tau
                  *
                  *  @param [in]  tau    imaginary time
                  *  @param [in]  val    measurement at time tau
-                 *  #param [in]  sign   sign of controbution (>0 for bosonic+WeakCoupling)
+                 *  @param [in]  sign   sign of controbution (>0 for bosonic+WeakCoupling)
                  */
                 void push(RealT tau, RealT valUp, RealT valDown, int sign)
                 {
@@ -40,23 +42,24 @@ namespace DMFT
                     lastSign = sign;			    // remember last sign
                     totalSign += 1;//sign;
                     const int sign2 = 2*(tau>0)-1;
-                    //[static_cast<int>(BinSize * (tau + (tau<0)*config.beta) )]
+                    int index = static_cast<int>(BinSize * (tau + (tau<0)*config.beta) );
                     binsUp(sign2*sign*valUp);
-                    binsUp(sign2*sign*valDown);
+                    //binsDown[0](sign2*sign*valDown);
                 }
 
                 // list of accumulators, one for ech registered process
                 // each accumulator has several (exponential?) bins
             public:
-                MCAccumulator(const GreensFct &g0, const Config& c): g0(g0), config(c), totalSign(0), lastSign(0)
-                {
+                MCAccumulator(const GreensFct &g0, const Config& c):
+                    g0(g0), config(c), totalSign(0), lastSign(0), dataReady(false)
+                                    {
                 };
 
-                /*! Colelcts data from MPI processes.
+                /*! Collects data from MPI processes.
                  *
                  *  Data is expected to be formatted as std::vector of length n+1.
                  *  The first n/3 elements are imaginary time points,  after that n/3 values for spin UP, then spin DOWN.
-                 *  The last element is the sign.
+                 *  The last element is the sign (+1, -1, 0 to use last sign (sample rejected))
                  */
                 void collect(void)
                 {
@@ -65,20 +68,50 @@ namespace DMFT
                         boost::mpi::status msg = config.world.probe();
                         if( msg.tag() == static_cast<int>(MPI_MSG_TAGS::DATA))
                         {
-                            std::vector<RealT> data;
-                            config.world.recv(msg.source(), msg.tag(), data);
-                            int dataLength = static_cast<int>((data.size()-1)/3);
-                            for(int i = 0; i < dataLength; i++)
-                                push(data[i],data[dataLength+i],data[2*dataLength+i],data[3*dataLength]);
+                            boost::optional<std::vector<RealT> > data;
+                            data = std::vector<RealT>();
+                            config.world.recv(msg.source(), msg.tag(), *data);
+                            do
+                            {
+                                if(data)
+                                {
+                                    std::vector<RealT> vec = *data;
+                                    int dataLength = static_cast<int>((vec.size()-1)/3);
+                                    int sign = vec[3*dataLength]; 
+                                    for(int i = 0; i < dataLength; i++)
+                                        push(vec[i],vec[dataLength+i],vec[2*dataLength+i], sign);
+                                    if(dataLength == 0)
+                                    {
+                                        if(!sign) sign = lastSign;
+                                        lastSign = sign;
+                                        totalSign += 1;
+                                    }
+                                }
+                            } while(data);
                         }
                         else if (msg.tag() == static_cast<int>(MPI_MSG_TAGS::COMM_END))
                         {
                             config.world.recv(msg.source(), msg.tag());
                             //TODO: sync all collectors
+                            dataReady = true;
+                            break;
                         }
                     }
                 }
 
+
+                void computeImpGF(void)
+                {
+                    //TODO: better warning output
+                    if(!dataReady)
+                        LOG(WARNING) << "data computation before all processes finished";
+                    RealT tInc = config.beta/static_cast<RealT>(config.itCount);
+                    for(int i = 0; i < config.itCount; i++)
+                    {
+                        RealT tau = tInc*i;
+                        
+                    }
+                }
 
                 void computeImpGF(boost::mpi::communicator &c)
                 {

@@ -72,6 +72,7 @@ namespace DMFT
     void WeakCoupling::computeImpGF(void)
     {
         (config.local.barrier)();                                           // wait for all MC runners to finish
+        if(config.local.rank() == 0)
         config.world.send(0, static_cast<int>(MPI_MSG_TAGS::COMM_END));     // inform accumulators, that we are done
 
         for(int s=0;s<2;s++){
@@ -221,7 +222,7 @@ namespace DMFT
         if(steps < burninSteps) return;	    // return while still in burn in period
         if(!n)
         {
-            //TODO: implement
+            config.world.send(0, static_cast<int>(MPI_MSG_TAGS::DATA), sign );
             return;
         }
 #ifdef MEASUREMENT_SHIFT
@@ -240,66 +241,11 @@ namespace DMFT
         tmp.col(1) = (M[UP]*tmp.col(1)).eval();
         tmp.col(2) = (M[DOWN]*tmp.col(2)).eval();
         std::vector<RealT> tmpVec(tmp.data(), tmp.data() + tmp.rows()*tmp.cols());
-        tmpVec.push_back(sign);
+        tmpVec.push_back(static_cast<RealT>(sign));
 
         //TODO: overload boost serialize to directly send eigen arrays
-        /*LOG(INFO) << "===================================";
-        LOG(INFO) << "tmp: " << tmp;
-        LOG(INFO) << "-----------";
-        LOG(INFO) << "tmpVec: " << tmpVec;
-        LOG(INFO) << "...................................";*/
         config.world.send(0, static_cast<int>(MPI_MSG_TAGS::DATA), tmpVec );
         return;
-    }
-
-    /*! updates all variables for the MC simulation
-     *  @param [in] sign +1/-1 or 0 to replicate the last sign (proposal not accepted => meassure last config again)
-     */
-    void WeakCoupling::updateContribution_OLD(int sign)
-    {
-        VLOG(3) << "entering update";
-        if(steps < burninSteps) return;	    // return while still in burn in period
-
-        //if(!sign) sign = lastSign;		    // update got rejected, use last sign
-        //lastSign = sign;			    // remember last sign
-        totalSign += 1;//sign;
-
-
-        if(!n) return;
-#ifdef MEASUREMENT_SHIFT
-        const RealT rShift = config.beta*u(r_shift);
-#else
-        const RealT rShift = 0.0;
-#endif
-
-        VectorT gTmpUP(n);
-        VectorT gTmpDOWN(n);
-        for(int i=0;i<n;i++)
-        {
-            gTmpUP(i) = g0(std::get<0>(confs[i]) - rShift,UP);
-            gTmpDOWN(i) = g0(std::get<0>(confs[i]) - rShift,DOWN);
-        }
-        VectorT tmpUP = M[UP]*gTmpUP;
-        VectorT tmpDOWN = M[DOWN]*gTmpDOWN;
-#ifdef WK_NAIVE_MEASUREMENT
-        for(auto t=0.0;t<config.beta;t+=config.beta/_CONFIG_maxTBins)
-        {
-            for(int k=0;k<n;k++)
-            {
-                const auto tau = std::get<0>(confs[k]);
-                itBins2(t,UP) += g0(t-tau, UP)*tmpUP(k);
-                itBins2(t,DOWN) += g0(t-tau, DOWN)*tmpDOWN(k);
-            }
-        }
-#else
-        for(int k=0;k<n;k++){		    // itBins(t)   = G0(t-t_k) * A_k
-            RealT tau = std::get<0>(confs[k]) - rShift;
-            const int sign2 = 2*(tau>0)-1;
-            itBins(static_cast<int>(_CONFIG_maxSBins * (tau + (tau<0)*config.beta) ), DOWN) += sign2*sign*tmpDOWN(k);
-            itBins(static_cast<int>(_CONFIG_maxSBins * (tau + (tau<0)*config.beta) ), UP) += sign2*sign*tmpUP(k);
-        }
-#endif
-        VLOG(3) << "leaving update";
     }
 
     MatrixT WeakCoupling::rebuildM(int spin)

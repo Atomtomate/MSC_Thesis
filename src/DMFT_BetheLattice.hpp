@@ -11,11 +11,11 @@ namespace DMFT
 {
 
     template<class ImpSolver>
-    class DMFT_BetheLattice
-    {
-        public:
-            DMFT_BetheLattice(const std::string& outDir, const Config& config, RealT mixing, ImpSolver &solver, GreensFct &G0, GreensFct &GImp, const RealT D):
-                config(config), mixing(mixing), iSolver(solver), g0(G0), g0Info("G0"), gImp(GImp), gImpInfo("GImp"),sImpGF(config.beta),sImpInfo("sImp"), ioh(outDir, config), D(D)
+        class DMFT_BetheLattice
+        {
+            public:
+                DMFT_BetheLattice(const std::string& outDir, const Config& config, RealT mixing, ImpSolver &solver, GreensFct &G0, GreensFct &GImp, const RealT D):
+                    config(config), mixing(mixing), iSolver(solver), g0(G0), g0Info("G0"), gImp(GImp), gImpInfo("GImp"),sImpGF(config.beta),sImpInfo("sImp"), ioh(outDir, config), D(D)
             {
                 std::string tmp("G0_Guess");
                 ioh.writeToFile(g0,tmp);
@@ -24,66 +24,78 @@ namespace DMFT
                 ioh.addGF(sImpGF,sImpInfo);
             };
 
-            void update(const unsigned int iterations, const unsigned long long updates)
-            {
-                for(unsigned int dmftIt = 1;config.isGenerator && dmftIt < iterations+1; dmftIt++)
-                {  
-                    if(config.world.rank() == 0) LOG(INFO) << "Computing new Weiss Green's function";
-                    //TODO: vectorize
-                    for(int n=0;n<_CONFIG_maxMatsFreq;n++){
-                        for(int s=0;s<_CONFIG_spins;s++){
-                            // set SC condition, enforcing Paramagnetic solution
-                            int sign = (2*(mFreq(n,config.beta)>0))-1;
-                            ComplexT tmp = ComplexT(config.mu,mFreq(n,config.beta)) - (D/2.0)*(D/2.0)*gImp.getByMFreq(n,s);
-                            g0.setByMFreq(n,s, 1.0/tmp );
+                void solve(const unsigned int iterations, const unsigned long long updates)
+                {
+                    if(config.isGenerator)
+                    {
+                        for(unsigned int dmftIt = 1;config.isGenerator && dmftIt < iterations+1; dmftIt++)
+                        {  
+                            if(config.local.rank() == 0) LOG(INFO) << "Computing new Weiss Green's function";
+                            //TODO: vectorize
+                            for(int n=0;n<_CONFIG_maxMatsFreq;n++){
+                                for(int s=0;s<_CONFIG_spins;s++){
+                                    // set SC condition, enforcing Paramagnetic solution
+                                    int sign = (2*(mFreq(n,config.beta)>0))-1;
+                                    ComplexT tmp = ComplexT(config.mu,mFreq(n,config.beta)) - (D/2.0)*(D/2.0)*gImp.getByMFreq(n,s);
+                                    g0.setByMFreq(n,s, 1.0/tmp );
+                                }
+                            }
+                            g0.transformMtoT();
+                            //TODO: this should be part of WeakCoupling
+                            g0.shift(config.U/2.0);
+                            g0.setParaMagnetic();
+                            if(dmftIt == 1)
+                            {
+                                ioh.setIteration(0);
+                                if(config.local.rank() == 0) ioh.writeToFile();
+                            }
+
+                            //only for WeakCoupling., this is now in update itself
+                            //g0.shift(config.U/2.0);
+
+                            MatG sImp = (g0.getMGF().cwiseInverse() - gImp.getMGF().cwiseInverse());
+                            sImpGF.setByMFreq(sImp);
+                            sImpGF.transformMtoT();
+                            //TODO this breaks for large N
+                            for(long unsigned int i=0; i <= 20; i++){
+                                iSolver.update(updates/20.0);
+                                if(config.local.rank() == 0)
+                                    LOG(INFO) << "MC Walker [" << config.local.rank() << "] at "<< " (" << (5*i) << "%) of iteration " << dmftIt << ". expansion order: " << iSolver.expansionOrder();
+                            }
+                            //g0.shift(config.U/2.0);
+
+                            //IOhelper::plot(g0, config.beta, "Weiss Function" + std::to_string(dmftIt));
+
+                            ioh.setIteration(dmftIt);
+                            if(config.local.rank() == 0)
+                            {
+                                LOG(INFO) << "finished sampling";
+                                LOG(INFO) << "measuring impurity Greens function";
+                                iSolver.computeImpGF();
+                                LOG(INFO) << "forcing paramagnetic solution";
+                                LOG(INFO) << "Writing results";
+                                ioh.writeToFile();
+                            }
+
                         }
                     }
-                    g0.transformMtoT();
-                    //TODO: this should be part of WeakCoupling
-                    g0.shift(config.U/2.0);
-                    g0.setParaMagnetic();
-                    if(dmftIt == 1)
+                    else
                     {
-                        ioh.setIteration(0);
-                        ioh.writeToFile();
+                        MCAccumulator<_CONFIG_maxSBins> mcAcc(g0,config);
+                        mcAcc.collect();
                     }
-
-                    //only for WeakCoupling., this is now in update itself
-                    //g0.shift(config.U/2.0);
-
-                    MatG sImp = (g0.getMGF().cwiseInverse() - gImp.getMGF().cwiseInverse());
-                    sImpGF.setByMFreq(sImp);
-                    sImpGF.transformMtoT();
-                    //TODO this breaks for large N
-                    for(long unsigned int i=0; i <= 20; i++){
-                        iSolver.update(updates/20.0);
-                        LOG(INFO) << "MC Walker [" << config.local.rank() << "] at "<< " (" << (5*i) << "%) of iteration " << dmftIt << ". expansion order: " << iSolver.expansionOrder();
-                    }
-                    //g0.shift(config.U/2.0);
-
-                    //IOhelper::plot(g0, config.beta, "Weiss Function" + std::to_string(dmftIt));
-
-                    LOG(INFO) << "finished sampling";
-                    LOG(INFO) << "measuring impurity Greens function";
-                    iSolver.computeImpGF();
-
-                    LOG(INFO) << "forcing paramagnetic solution";
-                    LOG(INFO) << "Writing results";
-                    ioh.setIteration(dmftIt);
-                    ioh.writeToFile();
 
                 }
-            }
 
 
-        private:
-            // general settings
-            const Config&	config;
-            IOhelper	    ioh;
+            private:
+                // general settings
+                const Config&	config;
+                IOhelper	    ioh;
 
-            // lattice specific
-            // TODO separate class
-            const RealT D;
+                // lattice specific
+                // TODO separate class
+                const RealT D;
 
 
 
@@ -97,6 +109,6 @@ namespace DMFT
                 GreensFct&	g0;
                 GreensFct&	gImp;
                 GreensFct  sImpGF;
-    };
+        };
 } // end namespace DMFT
 #endif
