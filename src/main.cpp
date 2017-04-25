@@ -17,9 +17,8 @@ int main(int argc,char **argv)
     boost::mpi::environment env(argc, argv);
     boost::mpi::communicator world;
     //TODO: for now only world.rank() == 0 collects data. change this after some testing: 2nd process for computation of weiss function?
-    bool isGenerator = (world.rank() > 0);
+    bool isGenerator = (world.size() > 1) ? (world.rank() > 0) : 1;
     boost::mpi::communicator local = world.split(isGenerator ? 0 : 1);
-
 
     double U = 2.5;
     double beta = 64.0;
@@ -39,11 +38,11 @@ int main(int argc,char **argv)
         //std::cin >> lattice;
         LOG(INFO) <<"Parameters: \n - beta:\t" <<  beta << "\n - U:\t" << U << "\n - mu:\t" << mu; 
     }
-    DMFT::Config config(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator);
+    //DMFT::Config config(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, );
 
     
     //DMFT::examples::_test_hysteresis();
-    DMFT::examples::_test_SOH(config,true,mixing);
+    DMFT::examples::_test_SOH(local, world, isGenerator);
 
     //Config conf(beta,mu,U,_CONFIG_maxMatsFreq);
     /*if (!sc)

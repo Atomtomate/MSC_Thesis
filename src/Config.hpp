@@ -40,17 +40,14 @@ namespace DMFT
 {
 
     // ========== global config parameters ==========
-    // TODO: get this from user, define static config to be passed around
     // TODO: consider adjustable maxMatsFreq
-    // TODO: export some of this for weakCoupling only
     static const	int _CONFIG_maxMatsFreq = 2048;//4096;		// frequencies go from maxMatsFreq/2 to maxMatsFreq/2 - 1
     static const    int _CONTIG_minMF    = -static_cast<int>(_CONFIG_maxMatsFreq/2.0);
     static const    int _CONFIG_maxTBins =	2048;//8192;//4096; 		// (default default 131072, 65536) powers of 2 make fft faster, both bins need to be equal for FFT
-    static const	int _CONFIG_maxSBins = 16384;			// TODO: dependent on tBins, this is acutalle sBinsSize/beta
-    // TODO: assert that spins are integeres starting with 0 (indexing!)
+    static const	int _CONFIG_maxSBins = 2*4096;//16384;
     static const    int _CONFIG_spins = 2;
     enum SPIN {DOWN = 0, UP = 1};
-    enum class MPI_MSG_TAGS: char {COMM_END = 0, DATA = 1, BROADCAST = 2};
+    enum class MPI_MSG_TAGS: char {SAMPLING_END = 0, DATA = 1, BROADCAST = 2, FINALIZE = 3};
 
     //#define DEBUG_MODE
 

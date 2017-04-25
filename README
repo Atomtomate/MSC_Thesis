@@ -3,17 +3,23 @@ compile with make debug | profile | release
 test_*.cpp files are ignored
 
 
-run with ./ImpSolv_TARGET
+run with mpirun -n N ./ImpSolv_TARGET
+
+output is stored in BetheLattice folder. run gnuplot plot.gp from this directory to generate output SVGs.
+
 flags:
-	--v=n: n=[1,..,9] enables verbose logging
+    --v=n: n=[1,..,9] enables verbose logging
 
-
+dependencies:
+    - boost (with mpi and filesystem)
+    - gsl
+    - trng4
+    - fftw3
+    - eigen3
 
 
 
 
 
 code remarks:
-
-- spins start with 0 TODO: use enums
 - all eigen storages are used with col major (inner loop ofer left index)

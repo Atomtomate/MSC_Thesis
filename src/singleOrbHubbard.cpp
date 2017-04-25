@@ -71,6 +71,9 @@ namespace DMFT
             //Config cU6(beta, 3.0, 6.0, _CONFIG_maxMatsFreq);
             Config confPT(beta, 1.2, 2.4, _CONFIG_maxMatsFreq, _CONFIG_maxTBins ,world,local,0);
             //Config cPT_U6(beta, 1.2, 2.4, _CONFIG_maxMatsFreq);
+            const int burnin = 100000;
+            const RealT zeroShift = 0.01;
+
             LOG(INFO) << "Using Bethe Lattice (guess and SC condition), computing Gimp for U = " << U << " at beta = 64";
             LOG(INFO) << "Using both converged solution to find solutions near phase transition (U = 2.4)";
             DMFT::GreensFct g0(beta);				// construct new Weiss green's function
@@ -88,17 +91,17 @@ namespace DMFT
             }
             g0.transformMtoT();
             LOG(INFO) << "initializing";
-            DMFT::WeakCoupling impSolver(g0, gImp, conf, 0.1, 100000);
+            DMFT::WeakCoupling impSolver(g0, gImp, conf, zeroShift, burnin);
             DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, conf, 0, impSolver, g0, gImp, D);
 
             LOG(INFO) << "solving";
-            dmftSolver.update(5*(static_cast<int>(U)+1),5000000);
+            dmftSolver.solve(5*(static_cast<int>(U)+1),5000000);
 
             LOG(INFO) << "Using converged solutions to obtain U=2.4 solution";
             DMFT::WeakCoupling impSolver_2(g0, gImp, confPT, 0.1, 100000);
             DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolverPT(descrPT, confPT, 0, impSolver_2, g0, gImp, D);
             LOG(INFO) << "solving, starting with converged solution";
-            dmftSolverPT.update(30,5000000);
+            dmftSolverPT.solve(30,1000000);
         }
 
         void _test_hysteresis(boost::mpi::communicator world, boost::mpi::communicator local)
@@ -116,8 +119,9 @@ namespace DMFT
         // _test_SOH -- non interacting lmit: U=0
         // _test_SOH -- U>0
 
-        int _test_SOH(DMFT::Config& config, bool use_bethe, double mixing){
+        int _test_PT(DMFT::Config& c, bool use_bethe, double mixing){
 
+            DMFT::Config config(64.0, 1.25, 2.5, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, c.local, c.world, c.isGenerator);
             if(config.world.rank() == 0){
                 LOG(INFO) << "Testing with Bethe lattice guess, sc energy density, U = " << config.U;
                 LOG(INFO) << "Setting D = 1, t = D/2.0, a = 1";
@@ -125,8 +129,10 @@ namespace DMFT
             const int D = 1.0;          // half bandwidth
             const RealT a	= 1.0;
             const RealT t	= D/2.0;
+            const int burnin = 50000;
+            const RealT zeroShift = 0.01;
 
-            std::string descr = "BetheLattice";
+            std::string descr = "BetheLatticePT";
 
             DMFT::GreensFct g0  (config.beta);							// construct new Weiss green's function
             DMFT::GreensFct gImp(config.beta);
@@ -162,12 +168,12 @@ namespace DMFT
               IOhelper::plot(gImp, config.beta, "gImp");
               */
 
-            if(config.world.rank() == 0) LOG(INFO) << "initializing";
-            DMFT::WeakCoupling impSolver(g0, gImp, config, 0.1, 0);
+            LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator ;
+            DMFT::WeakCoupling impSolver(g0, gImp, config, zeroShift, burnin);
             if(use_bethe)
             {
                 DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, config, mixing, impSolver, g0, gImp, D);
-                dmftSolver.solve(20,500000);
+                dmftSolver.solve(20,300000);
             }
             else
             {
@@ -181,5 +187,44 @@ namespace DMFT
             return 0;
         }
 
+        int _test_SOH(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator)
+        {
+            const int D = 1.0;          // half bandwidth
+            const RealT a	= 1.0;
+            const RealT t	= D/2.0;
+            const int burnin = 100000;
+            const RealT zeroShift = 0.01;
+
+            const RealT beta    = 10;
+
+
+            if(isGenerator)
+            {
+                for(int U_l : {1,2,3,4,5})
+                {
+                    std::string descr = "SBHubbardTest/U" + std::to_string(static_cast<int>(U_l));
+                    const RealT U       = U_l;
+                    const RealT mu      = U/2.0;
+                    DMFT::Config config(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator);
+                    DMFT::GreensFct g0  (config.beta);							// construct new Weiss green's function
+                    DMFT::GreensFct gImp(config.beta);
+                    DMFT::GreensFct gLoc(config.beta);
+                    setBetheSemiCirc(gImp, D, config);
+                    gImp.transformMtoT();
+                    setBetheSemiCirc(g0, D, config);
+                    g0.transformMtoT();
+
+                    LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator ;
+                    DMFT::WeakCoupling impSolver(g0, gImp, config, zeroShift, burnin);
+                    DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, config, 0.2, impSolver, g0, gImp, D);
+                    dmftSolver.solve(5,1000000);
+
+                    //(config.local.barrier)();                                           // wait to finish
+                }
+
+            }
+
+
+        }
     }	//end namespace examples
 }	//end namespace DMFT

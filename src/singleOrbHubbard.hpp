@@ -17,7 +17,8 @@ namespace DMFT{
 namespace examples{
 
 
-   int _test_SOH(DMFT::Config& config, bool use_bethe, double mxing);
+   int _test_PT(DMFT::Config& c, bool use_bethe, double mxing);
+   int _test_SOH(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator);
    void _run_hysteresis(double);
    void _test_hysteresis(void);
 

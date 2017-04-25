@@ -80,6 +80,9 @@ namespace DMFT
              *	@return	impurity GF
              */
             void computeImpGF(void);
+
+
+            void computeImpGF_OLD(void);
             /*! @return impurity Green's function. sample and call compute first!
             */
             inline GreensFct& getImpGF(void) {
@@ -180,6 +183,15 @@ namespace DMFT
 
             void updateContribution(int sign);
             void updateContribution_OLD(int sign);
+
+            /*! Call Weiss function G0(t1-t2, spin) - alpha(s_ext)_{t1-t2}
+             */
+            inline RealT g0Call(RealT t1, int spin, int s_ext, RealT t2)
+            {
+                const RealT t = t1-t2;
+                if(t != 0.0) return g0(t,spin);
+                return g0(0.0,spin) - (0.5 + (2*(s_ext==spin)-1)*zeroShift);
+            }
     };
 
 }

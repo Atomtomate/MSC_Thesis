@@ -26,9 +26,11 @@ namespace DMFT
 
                 void solve(const unsigned int iterations, const unsigned long long updates)
                 {
+
                     if(config.isGenerator)
                     {
-                        for(unsigned int dmftIt = 1;config.isGenerator && dmftIt < iterations+1; dmftIt++)
+                        //TODO: move IO from generator to accumulators
+                        for(unsigned int dmftIt = 1;dmftIt < iterations+1; dmftIt++)
                         {  
                             if(config.local.rank() == 0) LOG(INFO) << "Computing new Weiss Green's function";
                             //TODO: vectorize
@@ -47,7 +49,7 @@ namespace DMFT
                             if(dmftIt == 1)
                             {
                                 ioh.setIteration(0);
-                                if(config.local.rank() == 0) ioh.writeToFile();
+                                ioh.writeToFile();
                             }
 
                             //only for WeakCoupling., this is now in update itself
@@ -59,8 +61,7 @@ namespace DMFT
                             //TODO this breaks for large N
                             for(long unsigned int i=0; i <= 20; i++){
                                 iSolver.update(updates/20.0);
-                                if(config.local.rank() == 0)
-                                    LOG(INFO) << "MC Walker [" << config.local.rank() << "] at "<< " (" << (5*i) << "%) of iteration " << dmftIt << ". expansion order: " << iSolver.expansionOrder();
+                                LOG(INFO) << "MC Walker [" << config.world.rank() << "] at "<< " (" << (5*i) << "%) of iteration " << dmftIt << ". expansion order: " << iSolver.expansionOrder();
                             }
                             //g0.shift(config.U/2.0);
 
@@ -71,18 +72,26 @@ namespace DMFT
                             {
                                 LOG(INFO) << "finished sampling";
                                 LOG(INFO) << "measuring impurity Greens function";
-                                iSolver.computeImpGF();
+                            }
+                            iSolver.computeImpGF();
+                            if(config.local.rank() == 0)
+                            {
                                 LOG(INFO) << "forcing paramagnetic solution";
                                 LOG(INFO) << "Writing results";
-                                ioh.writeToFile();
                             }
+                            ioh.writeToFile();
 
                         }
+
+                        //config.world.send(0, static_cast<int>(MPI_MSG_TAGS::FINALIZE), 1 );
                     }
                     else
                     {
-                        MCAccumulator<_CONFIG_maxSBins> mcAcc(g0,config);
-                        mcAcc.collect();
+                        //MCAccumulator<_CONFIG_maxSBins> *mcAcc = new MCAccumulator<_CONFIG_maxSBins>(g0,config);
+                        //mcAcc->collect();
+                        //TODO: compute GImp
+                        //TODO: compute new g0
+                        //TODO: distribute g0 to generators
                     }
 
                 }

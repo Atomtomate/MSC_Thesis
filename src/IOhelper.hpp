@@ -1,8 +1,9 @@
 #ifndef IOHELPER_H_
 #define IOHELPER_H_
 
-#include "Config.hpp"
+
 #include "GreensFct.hpp"
+#include "Config.hpp"
 
 #include "gnuplot-iostream.h"
 
@@ -59,6 +60,7 @@ class IOhelper//: public mglDraw
                  *  @param  [in] gf     Green's function
                  */
                 static void plot(GreensFct& gf, RealT beta, std::string title);
+                static void plot(ImTG& gf, RealT beta, std::string title);
 
 		/*! Adds Green's function to pool
 		 *  @param  gf	constant pointer to Green''s function

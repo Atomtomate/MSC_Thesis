@@ -3,7 +3,7 @@
 //       Filename:  test_MPI.cpp
 //
 //    Description:  test cases for MPI communication of sample data. 
-//                  compile with mpic++ -std=c++14 test_MPI.cpp -lm -lboost_mpi -lboost_serialization.
+//                  compile+run with mpic++ -std=c++14 test_MPI.cpp -lm -lboost_mpi -lboost_serialization && mpirun -n 4 ./a.out
 //                  important :
 //                      - for loops with isend will override buffer
 //                      - remember to close receiver before opening new one

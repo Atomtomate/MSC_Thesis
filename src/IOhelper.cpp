@@ -3,6 +3,7 @@
 namespace DMFT
 {
     IOhelper::IOhelper(const std::string& _outDir, const Config& c): outDir(_outDir), c(c){
+        if(!c.isGenerator || !c.local.rank() == 0) return;
         try
         {
             if(!boost::filesystem::create_directory(outDir))
@@ -19,15 +20,18 @@ namespace DMFT
         }
         try
         {
-            boost::filesystem::path file = outDir;
-            file /= boost::filesystem::path(std::string("params.out"));
-            boost::filesystem::ofstream fs;
-            fs.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
-            fs.open (file);
-            fs << std::string("beta:\t") << c.beta << std::endl;
-            fs << std::string("U:   \t") << c.U << std::endl;
-            fs << std::string("mu:  \t") << c.mu << std::endl;
-            fs.close();
+            if(c.isGenerator && c.local.rank() == 0)
+            {
+                boost::filesystem::path file = outDir;
+                file /= boost::filesystem::path(std::string("params.out"));
+                boost::filesystem::ofstream fs;
+                fs.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
+                fs.open (file);
+                fs << std::string("beta:\t") << c.beta << std::endl;
+                fs << std::string("U:   \t") << c.U << std::endl;
+                fs << std::string("mu:  \t") << c.mu << std::endl;
+                fs.close();
+            }
         }
         catch (boost::filesystem::ofstream::failure e)
         {
@@ -37,12 +41,14 @@ namespace DMFT
 
     int IOhelper::writeToFile(void) const
     {
+        if(!c.isGenerator || c.local.rank() != 0) return 0;
         for(auto el: gfList) writeToFile(std::get<0>(el).get(), std::get<1>(el));
         return 0;
     }
 
     int IOhelper::writeToFile(unsigned index) const
     {
+        if(!c.isGenerator || c.local.rank() != 0) return 0;
         if(index >= gfList.size()) return 1;	// error, index out of range
         writeToFile(std::get<0>(gfList[index]), std::get<1>(gfList[index]));
         return 0;
@@ -50,6 +56,7 @@ namespace DMFT
 
     int IOhelper::writeToFile(GreensFct& gf, std::string & name) const
     {
+        if(!c.isGenerator || c.local.rank() != 0) return 0;
         LogInfos tmp(name);
         writeToFile(gf, tmp);
         return 0;
@@ -57,6 +64,7 @@ namespace DMFT
 
     void IOhelper::writeToFile(GreensFct& gf,const LogInfos& li) const
     {
+        if(!c.isGenerator || c.local.rank() != 0) return ;
         boost::filesystem::path file_mf = outDir;
         boost::filesystem::path file_it = outDir;
         boost::filesystem::path file_maxent = outDir;
@@ -109,6 +117,14 @@ namespace DMFT
         gp2 << "set output ' " << title << "_IT.png'\n";
         gp2 << "plot" << gp2.file1d( itgf_up) << "with points title ' " <<  title <<  " iTime GF, sigma down', "
             << gp2.file1d( itgf_down ) << "with points title ' " <<  title <<  " iTime GF. sigma up'" << std::endl;
+    }
+
+    void IOhelper::plot(ImTG& gf, RealT beta, std::string title)
+    {
+        GreensFct gfTmp(beta);
+        gfTmp.setByT(gf);
+        gfTmp.transformTtoM();
+        plot(gfTmp, beta, title);
     }
 
 }

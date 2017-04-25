@@ -77,7 +77,7 @@ namespace DMFT
          *  @param [in] val value of Green's function for \sigma at \tau
          */
         inline void setByT(const RealT t, const int spin, const RealT val){
-            const unsigned int i = tIndex(t);
+            const int i = tIndex(t);
             //if(t==1) g_it(0,spin) = val;	// NOTE: redudant since tIndex shifts up from 0, remove?
             g_it(i,spin) = val;
         }
@@ -99,11 +99,36 @@ namespace DMFT
          *
          *  @return G_sigma(  \f$ \tau \f$ )
          */
-        inline RealT operator() (const RealT t, int unsigned spin) const{
+        inline RealT operator() (const RealT t, const int spin) const{
+            //REMARK: this implies that G(0) == G(0^-) 
+            if(t == 0.0) return -1.0*g_it(g_it.rows()-1, spin);
             const int sgn = 2*(t>0)-1;
             //if(t<0){ t+=beta; return -1.0*g_it(tIndex(t), spin);}
             return sgn*g_it( tIndex( t + (t<0)*beta ), spin);
         }
+
+        /*! get imaginary time Green's function using inperpolation.
+         *
+         *  @param [in] t imaginary time \f$ \tau \f$
+         *  @param [in] spin \f$ \sigma \in N \f$
+         *  @param [in] order of polynomial interpolation. TODO: inmpl. order > 1
+         *
+         *  @return G_sigma(  \f$ \tau \f$ )
+         */
+        RealT getByT(const RealT t, int spin, const int order) const
+        {
+            const int sgn = 2*(t>0)-1;
+            const RealT tp = t + (t<0)*beta; 
+            const int index0 = tIndex( tp );
+            const RealT h = tp*static_cast<RealT>(MAX_T_BINS)/beta - index0;
+            const int index1 = index0 < (MAX_T_BINS-1) ? (index0+1) : 1;
+            const RealT val0 = sgn*g_it(index0, spin);
+            const RealT val1 = sgn*g_it(index1, spin);
+            //TODO: test!
+            const RealT res = val0 + h*(val1 - val0);
+            return res;
+        }
+
         template <class T> RealT operator()(T) = delete; // C++11
 
         /*! Return space separated string for the Matsubara Green's function.
@@ -193,26 +218,27 @@ namespace DMFT
             g_wn.leftCols(1) = g_wn.rightCols(1).eval();
             transformMtoT();
         }
+
         protected:
-        RealT beta;
-        //TODO ASSERT MATSFREQ == TBINS !!!!!
-        ImTG	g_it; // col major -> spin outer loop
-        MatG	g_wn; // col major -> spin outer loop
-        FFT 	fft;
-        //Config& conf;
+            RealT beta;
+            //TODO ASSERT MATSFREQ == TBINS !!!!!
+            ImTG	g_it; // col major -> spin outer loop
+            MatG	g_wn; // col major -> spin outer loop
+            FFT 	fft;
+            //Config& conf;
 
-        int mSet = 0;	// track whether matsuabra or iTime GF has been set
-        int tSet = 0;	// TODO implement
+            int mSet = 0;	// track whether matsuabra or iTime GF has been set
+            int tSet = 0;	// TODO implement
 
-        /*! computes index from imaginary time. G(0) => G(0^+), G(beta) => G(beta^-)
-         *  @param [in] t imaginary time \tau
-         *
-         *  @return index for lookup in g_it
-         */
-        inline int tIndex(const RealT t) const {
-            const int res = static_cast<int>(t*static_cast<RealT>(MAX_T_BINS)/beta);
-            return res+(res == 0);
-        }
+            /*! computes index from imaginary time. G(0) => G(0^+), G(beta) => G(beta^-)
+             *  @param [in] t imaginary time \tau
+             *
+             *  @return index for lookup in g_it
+             */
+            inline int tIndex(const RealT t) const {
+                const int res = static_cast<int>(t*static_cast<RealT>(MAX_T_BINS)/beta);
+                return res; // TODO: test for +(res == 0);
+            }
 
 
     };
