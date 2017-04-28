@@ -13,10 +13,13 @@ namespace DMFT
         }
         */
 
+    //TODO: use http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html
     void FFT::transformMtoT(const MatG &from, ImTG &to)
     {
         const RealT absErr = 0.01;
+        const int shift = static_cast<int>((_CONFIG_maxTBins - _CONFIG_maxMatsFreq)/2);
         for(int s=0;s<_CONFIG_spins;s++){
+            memset(fftw3_input, 0, _CONFIG_maxTBins*sizeof(fftw_complex));
             for(int n=0;n<_CONFIG_maxMatsFreq;n++){
                 const RealT wn_k = fft_wmin + n*fft_dw;
                 ComplexT input_tmp = std::exp( ComplexT(0.0,-fft_tmin * wn_k ))*( from(n,s) - 1.0/(ComplexT(0.0,mFreq(n,_beta))) )/_beta;
@@ -25,7 +28,7 @@ namespace DMFT
             }
             fftw_execute(planMtoT);
 
-            for(int n=0;n<_CONFIG_maxMatsFreq;n++){
+            for(int n=0;n<_CONFIG_maxTBins;n++){
                 const RealT tau_k = fft_dt*n;
                 ComplexT tmp = ComplexT(fftw3_output[n][0],fftw3_output[n][1]);
                 tmp = tmp*std::exp(ComplexT(0.0,-fft_wmin*tau_k));
@@ -42,6 +45,7 @@ namespace DMFT
     void FFT::transformTtoM(const ImTG& from, MatG& to)
     {
         for(int s=0;s<_CONFIG_spins;s++){
+            memset(fftw3_input, 0, _CONFIG_maxTBins*sizeof(fftw_complex));
             for(int n=0;n<_CONFIG_maxTBins;n++){
                 const RealT tau_k = fft_dt*n + fft_tmin;
                 ComplexT input_tmp = (std::exp( ComplexT(0.0,fft_wmin * tau_k))) * from(n,s);
@@ -63,6 +67,25 @@ namespace DMFT
 
     void FFT::transformMtoT_naive(const MatG &from, ImTG &to)
     {
+        for(int t=0;t<_CONFIG_maxTBins;t++)
+        {
+            RealT tau = t*_beta/_CONFIG_maxTBins;
+            for(int s=0;s<_CONFIG_spins;s++)
+            {
+                ComplexT sum = 0.0;
+                for(int n=0;n<_CONFIG_maxMatsFreq;n++){
+                    const ComplexT tmp(std::exp(ComplexT(0.0,-mFreq(n,_beta)*tau)));
+                    sum += tmp*(from(n,s) - 1.0/ComplexT(0.0,mFreq(n,_beta)));
+
+                }
+                to(t,s) = std::real(sum/_beta) - 0.5;
+            }
+        }
+    }
+
+    void FFT::transformTtoM_naive(const ImTG &from, MatG &to)
+    {
+        //TODO: implement
         for(int t=0;t<_CONFIG_maxTBins;t++)
         {
             RealT tau = t*_beta/_CONFIG_maxTBins;

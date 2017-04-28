@@ -72,7 +72,7 @@ namespace DMFT
             Config confPT(beta, 1.2, 2.4, _CONFIG_maxMatsFreq, _CONFIG_maxTBins ,world,local,0);
             //Config cPT_U6(beta, 1.2, 2.4, _CONFIG_maxMatsFreq);
             const int burnin = 100000;
-            const RealT zeroShift = 0.01;
+            const RealT zeroShift = 0.51;
 
             LOG(INFO) << "Using Bethe Lattice (guess and SC condition), computing Gimp for U = " << U << " at beta = 64";
             LOG(INFO) << "Using both converged solution to find solutions near phase transition (U = 2.4)";
@@ -119,71 +119,74 @@ namespace DMFT
         // _test_SOH -- non interacting lmit: U=0
         // _test_SOH -- U>0
 
-        int _test_PT(DMFT::Config& c, bool use_bethe, double mixing){
+        int _test_PT(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator, bool use_bethe, double mixing){
 
-            DMFT::Config config(64.0, 1.25, 2.5, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, c.local, c.world, c.isGenerator);
-            if(config.world.rank() == 0){
-                LOG(INFO) << "Testing with Bethe lattice guess, sc energy density, U = " << config.U;
-                LOG(INFO) << "Setting D = 1, t = D/2.0, a = 1";
-            }
-            const int D = 1.0;          // half bandwidth
-            const RealT a	= 1.0;
-            const RealT t	= D/2.0;
-            const int burnin = 50000;
-            const RealT zeroShift = 0.01;
-
-            std::string descr = "BetheLatticePT";
-
-            DMFT::GreensFct g0  (config.beta);							// construct new Weiss green's function
-            DMFT::GreensFct gImp(config.beta);
-            DMFT::GreensFct gLoc(config.beta);
-
-            if(config.world.rank() == 0){
-                LOG(INFO) << "computing analytical solution for G_wn for U=0";
-                //std::cout << "G0 guess: 0 for bethe, 1 for SC: ";
-                //std::cin >> guess;
-                ////if(!use_bethe){
-                //LOG(INFO) << "using simple cubic guess";
-                //setSCG0(g0,config);
-                //}else{
-                LOG(INFO) << "using bethe lattice guess";
-            }
-
-            setBetheSemiCirc(gImp, D, config);
-            gImp.transformMtoT();
-            //TODO: write hilbert transform function
-            setBetheSemiCirc(g0, D, config);
-            g0.transformMtoT();
-            //IOhelper::plot(g0, config.beta, "Weiss Function");
-
-            //}
-            //TODO: overload operators
-            /*for(int s=0;s<_CONFIG_spins;s++){
-              for(int n=0;n<_CONFIG_maxMatsFreq;n++){
-              ComplexT tmp = (1.0/( ComplexT(config.mu - config.U/2.0, mFreq(n,config.beta)) - (D/2.0)*(D/2.0)*g0.getByMFreq(n,s) ));
-              gImp.setByMFreq(n,s, tmp);
-              }
-              }
-              gImp.transformMtoT();
-              IOhelper::plot(gImp, config.beta, "gImp");
-              */
-
-            LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator ;
-            DMFT::WeakCoupling impSolver(g0, gImp, config, zeroShift, burnin);
-            if(use_bethe)
+            if(isGenerator)
             {
-                DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, config, mixing, impSolver, g0, gImp, D);
-                dmftSolver.solve(20,300000);
-            }
-            else
-            {
-                LOG(WARNING) << "simple cubic lattice DMFT currently disabled!";
-                //REMARK: paper for type deduction from constructor has been accepted for C++17
-                //DMFTSolver<WeakCoupling> dmftSolver(descr, config, mixing, impSolver, g0, gImp, gLoc);
-                //dmftSolver.update(30,1000000);
-            }
-            //Bethe solution: sImp = t_t1*t_t1*gImp.getByMFreq(n,s);
+                DMFT::Config config(64.0, 1.3, 2.6, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator);
+                if(config.world.rank() == 0){
+                    LOG(INFO) << "Testing with Bethe lattice guess, sc energy density, U = " << config.U;
+                    LOG(INFO) << "Setting D = 1, t = D/2.0, a = 1";
+                }
+                const int D = 1.0;          // half bandwidth
+                const RealT a	= 1.0;
+                const RealT t	= D/2.0;
+                const int burnin = 10000;
+                const RealT zeroShift = 0.51;
 
+                std::string descr = "BetheLatticePT";
+
+                DMFT::GreensFct g0  (config.beta);							// construct new Weiss green's function
+                DMFT::GreensFct gImp(config.beta);
+                DMFT::GreensFct gLoc(config.beta);
+
+                if(config.world.rank() == 0){
+                    LOG(INFO) << "computing analytical solution for G_wn for U=0";
+                    //std::cout << "G0 guess: 0 for bethe, 1 for SC: ";
+                    //std::cin >> guess;
+                    ////if(!use_bethe){
+                    //LOG(INFO) << "using simple cubic guess";
+                    //setSCG0(g0,config);
+                    //}else{
+                    LOG(INFO) << "using bethe lattice guess";
+                }
+
+                setBetheSemiCirc(gImp, D, config);
+                gImp.transformMtoT();
+                //TODO: write hilbert transform function
+                setBetheSemiCirc(g0, D, config);
+                g0.transformMtoT();
+                //IOhelper::plot(g0, config.beta, "Weiss Function");
+
+                //}
+                //TODO: overload operators
+                /*for(int s=0;s<_CONFIG_spins;s++){
+                  for(int n=0;n<_CONFIG_maxMatsFreq;n++){
+                  ComplexT tmp = (1.0/( ComplexT(config.mu - config.U/2.0, mFreq(n,config.beta)) - (D/2.0)*(D/2.0)*g0.getByMFreq(n,s) ));
+                  gImp.setByMFreq(n,s, tmp);
+                  }
+                  }
+                  gImp.transformMtoT();
+                  IOhelper::plot(gImp, config.beta, "gImp");
+                  */
+
+                LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator == " << config.isGenerator ;
+                DMFT::WeakCoupling impSolver(g0, gImp, config, zeroShift, burnin);
+                if(use_bethe)
+                {
+                    DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, config, mixing, impSolver, g0, gImp, D);
+                    dmftSolver.solve(30,100000);
+                }
+                else
+                {
+                    LOG(WARNING) << "simple cubic lattice DMFT currently disabled!";
+                    //REMARK: paper for type deduction from constructor has been accepted for C++17
+                    //DMFTSolver<WeakCoupling> dmftSolver(descr, config, mixing, impSolver, g0, gImp, gLoc);
+                    //dmftSolver.update(30,1000000);
+                }
+                //Bethe solution: sImp = t_t1*t_t1*gImp.getByMFreq(n,s);
+
+            }
             return 0;
         }
 
@@ -192,8 +195,8 @@ namespace DMFT
             const int D = 1.0;          // half bandwidth
             const RealT a	= 1.0;
             const RealT t	= D/2.0;
-            const int burnin = 100000;
-            const RealT zeroShift = 0.01;
+            const int burnin = 10000;
+            const RealT zeroShift = 0.51;
 
             const RealT beta    = 10;
 
@@ -216,8 +219,8 @@ namespace DMFT
 
                     LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator ;
                     DMFT::WeakCoupling impSolver(g0, gImp, config, zeroShift, burnin);
-                    DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, config, 0.2, impSolver, g0, gImp, D);
-                    dmftSolver.solve(5,1000000);
+                    DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, config, 0.0, impSolver, g0, gImp, D);
+                    dmftSolver.solve(5,100000);
 
                     //(config.local.barrier)();                                           // wait to finish
                 }

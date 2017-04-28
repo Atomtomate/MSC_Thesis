@@ -225,6 +225,8 @@ namespace DMFT
             ImTG	g_it; // col major -> spin outer loop
             MatG	g_wn; // col major -> spin outer loop
             FFT 	fft;
+            RealT       tailCoeffs[4];
+
             //Config& conf;
 
             int mSet = 0;	// track whether matsuabra or iTime GF has been set

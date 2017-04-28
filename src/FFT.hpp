@@ -18,8 +18,8 @@ namespace DMFT
         private:
             //TODO: check for _CONFIG_maxMatsFreq != _CONFIG_maxTBins
             RealT _beta;
-            fftw_complex fftw3_input[_CONFIG_maxMatsFreq];
-            fftw_complex fftw3_output[_CONFIG_maxMatsFreq];
+            fftw_complex fftw3_input[_CONFIG_maxTBins];
+            fftw_complex fftw3_output[_CONFIG_maxTBins];
 
 
             fftw_plan planMtoT;
@@ -32,8 +32,8 @@ namespace DMFT
         public:
             FFT(const RealT beta): _beta(beta)
             {
-                planMtoT = fftw_plan_dft_1d(_CONFIG_maxMatsFreq,fftw3_input,fftw3_output,FFTW_FORWARD,FFTW_ESTIMATE);
-                planTtoM = fftw_plan_dft_1d(_CONFIG_maxMatsFreq,fftw3_input,fftw3_output,FFTW_BACKWARD,FFTW_ESTIMATE);
+                planMtoT = fftw_plan_dft_1d(_CONFIG_maxTBins,fftw3_input,fftw3_output,FFTW_FORWARD,FFTW_ESTIMATE);
+                planTtoM = fftw_plan_dft_1d(_CONFIG_maxTBins,fftw3_input,fftw3_output,FFTW_BACKWARD,FFTW_ESTIMATE);
                 fft_wmin = mFreq(0,_beta);
                 fft_dt   = _beta/static_cast<RealT>(_CONFIG_maxTBins);      // for FFT matsFreq == TBins
                 fft_dw   = 2.0*boost::math::constants::pi<RealT>()/_beta;
@@ -55,6 +55,8 @@ namespace DMFT
             void transformMtoT(const MatG& from, ImTG& to);
 
             void transformMtoT_naive(const MatG& from, ImTG& to);
+            
+            void transformTtoM_naive(const ImTG &from, MatG &to);
 
             /*! performs a convolution of f and g using fft
              *  fp = FFT(f), gp = FFT(g) -> iFFT(fp * gp): the result is int f(t' - t) g(t) dt 

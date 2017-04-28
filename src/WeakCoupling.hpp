@@ -13,6 +13,8 @@
 #include <algorithm>
 
 #define MEASUREMENT_SHIFT 1
+#define MATSUBARA_MEASUREMENT 1
+
 namespace DMFT
 {
 
@@ -179,7 +181,7 @@ namespace DMFT
             int totalSign;
             int n; 					// expansion order (number of used rows/cols)
             const RealT zeroShift;				// auxiliary ising shift
-            ImTG	    itBins;
+            ImTG itBins;
 
             void updateContribution(int sign);
             void updateContribution_OLD(int sign);
