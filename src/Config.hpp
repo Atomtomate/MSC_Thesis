@@ -95,6 +95,9 @@ namespace DMFT
     inline RealT mFreq(const int freq,const RealT beta) {
         return (2.0*(freq-static_cast<int>(_CONFIG_maxMatsFreq/2.0))+1)*boost::math::constants::pi<RealT>()/beta;
     }
+    inline RealT mFreqSymm(const int freq,const RealT beta) {
+        return (2.0*freq+1)*boost::math::constants::pi<RealT>()/beta;
+    }
 
     inline long int arrIndex(const int i, const int spin) {return spin+i*_CONFIG_spins;}
 

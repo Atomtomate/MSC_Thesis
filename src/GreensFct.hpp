@@ -34,11 +34,11 @@ namespace DMFT
 
         const int MAX_T_BINS = _CONFIG_maxTBins;
         const int MAX_M_FREQ = _CONFIG_maxMatsFreq;
-        const int SPINS	= _CONFIG_spins;
+        const int SPINS	= 2;
 
         public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-        GreensFct(RealT beta): beta(beta), fft(beta), deltaIt(static_cast<RealT>(MAX_T_BINS)/beta)
+        GreensFct(RealT beta, const bool symmetric = true): beta(beta), fft(beta), deltaIt(static_cast<RealT>(MAX_T_BINS)/beta)
         {
             g_it = ImTG::Zero(MAX_T_BINS, SPINS);
             g_wn = MatG::Zero(MAX_M_FREQ, SPINS);
@@ -64,7 +64,10 @@ namespace DMFT
          *  @param [in] spin \f$ \sigma \in N \f$
          *  @param [in] val value of \f$ G_\sigma (\tau ) \f$
          */
-        inline void setByMFreq(const int n, const int spin, const ComplexT val)	{ g_wn(n,spin) = val; }
+        inline void setByMFreq(const int n, const int spin, const ComplexT val)
+        {
+                g_wn(n,spin) = val; 
+        }
 
         /*! Sets G(i \omega_n) = val
          *
@@ -91,7 +94,17 @@ namespace DMFT
          *
          *  @return
          */
-        inline ComplexT getByMFreq(const int n, const unsigned int spin) const		{ return g_wn(n,spin); }
+        inline ComplexT getByMFreq(const int n, const unsigned int spin) const {
+            if(symmetric)
+            {
+                if(n>0) return g_wn(n,spin);
+                else return -g_wn(-n,spin);
+            }
+            else
+            {
+                return g_wn(n,spin);
+            }
+        }
 
         /*! @brief	imaginary time Green's function \f$ G_\sigma(\tau) \f$
          *  		storage order is t first (inner loop over t)
@@ -213,19 +226,6 @@ namespace DMFT
         const MatG& getMGF() const { return g_wn; }
         const ImTG& getItGF() const { return g_it; }
 
-        const MatG getMGF(int size) const
-        {
-            MatG res(size,2);
-            for(int n = 0; n < size; n++)
-            {
-                if(n < MAX_M_FREQ)
-                {
-                    1 + 1;
-                }
-            }
-            return g_wn;
-        }
-
         // TODO: overload operators and use expression templates
 
 
@@ -251,6 +251,8 @@ namespace DMFT
 
         protected:
             RealT beta;
+            const bool symmetric;
+
             ImTG	g_it; // col major -> spin outer loop
             MatG	g_wn; // col major -> spin outer loop
             FFT 	fft;
