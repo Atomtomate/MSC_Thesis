@@ -25,6 +25,8 @@ namespace DMFT
      *  - alignment \f$ G_\downarrow (\tau_1, \tau_2, ...) , G_\uparrow (\tau_1, \tau_2, ...) \f$
      *
      *  TODO: finish implementation of GreensFct as expression template
+     *  TODO: use cubic spline interpolation for FFT - halfway done
+     *  TODO: high freq. expansion (can use cubic spline)
      *  TODO: remember to add site dependency for hubbard model
      */
     class GreensFct//: public VecExpression<GreensFct>
@@ -36,7 +38,7 @@ namespace DMFT
 
         public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-        GreensFct(RealT beta): beta(beta), fft(beta)
+        GreensFct(RealT beta): beta(beta), fft(beta), deltaIt(static_cast<RealT>(MAX_T_BINS)/beta)
         {
             g_it = ImTG::Zero(MAX_T_BINS, SPINS);
             g_wn = MatG::Zero(MAX_M_FREQ, SPINS);
@@ -49,7 +51,7 @@ namespace DMFT
         /*! Call this after setting \f$ G(\tau) \f$ 
          *  @return 1 if previously set, 0 otherwise
          */
-        int markTSet(void){return tSet++;}
+        int markTSet(void){ fitTail(); return tSet++;}
 
         /*! Call this after setting \f$ G(i \omega_n) \f$.
          *  @return returns 1 if previously set, 0 otherwise
@@ -81,7 +83,7 @@ namespace DMFT
             //if(t==1) g_it(0,spin) = val;	// NOTE: redudant since tIndex shifts up from 0, remove?
             g_it(i,spin) = val;
         }
-        void setByT(ImTG &g) {g_it = g; tSet = 1;}
+        void setByT(ImTG &g) {g_it = g; fitTail(); tSet = 1;}
 
         /*! get Matsubara Green's function \f$ G_\sigma(i \omega_n) \f$ by n.
          *  @param  n Matsubara frequency \f$ \omega_n \f$
@@ -145,6 +147,15 @@ namespace DMFT
                 res << std::setprecision(8) << mFreq(n, beta) << "\t" <<  g_wn(n,0).real() << "\t" \
                     << g_wn(n,0).imag() << "\t" << g_wn(n,1).real() << "\t" << g_wn(n,1).imag() << "\n" ;
             }
+            for(int n=MAX_M_FREQ; n < 5*MAX_M_FREQ; n++)
+            {
+                RealT mf = mFreq(n, beta);
+                ComplexT imf = ComplexT(0.0,mf);
+                ComplexT mExpUp = static_cast<RealT>(2*(n<0)-1)*(- 1.0/imf + expansionCoeffsUp[0]/(imf*imf) - expansionCoeffsUp[1]/(imf*imf*imf));
+                ComplexT mExpDown = static_cast<RealT>(2*(n<0)-1)*(- 1.0/imf + expansionCoeffsDown[0]/(imf*imf) - expansionCoeffsDown[1]/(imf*imf*imf));
+                res << std::setprecision(8) << mf << "\t" <<  mExpUp.real() << "\t" \
+                    << mExpUp.imag() << "\t" << mExpDown.real() << "\t" << mExpDown.imag() << "\n" ;
+            }
             return res.str();
         }
 
@@ -202,30 +213,52 @@ namespace DMFT
         const MatG& getMGF() const { return g_wn; }
         const ImTG& getItGF() const { return g_it; }
 
+        const MatG getMGF(int size) const
+        {
+            MatG res(size,2);
+            for(int n = 0; n < size; n++)
+            {
+                if(n < MAX_M_FREQ)
+                {
+                    1 + 1;
+                }
+            }
+            return g_wn;
+        }
+
         // TODO: overload operators and use expression templates
 
 
 
         void setParaMagnetic(void)
         {
-            /*LOG(DEBUG) << g_wn;
-              LOG(DEBUG) << "===";
-              LOG(DEBUG) << g_wn.leftCols(1);
-              LOG(DEBUG) << "===";
-              LOG(DEBUG) << g_wn.rightCols(1);
-              LOG(DEBUG) << "---";*/
             g_wn.rightCols(1) = 0.5*(g_wn.leftCols(1) + g_wn.rightCols(1)).eval();
             g_wn.leftCols(1) = g_wn.rightCols(1).eval();
             transformMtoT();
         }
 
+        void fitTail(void)
+        {
+            // https://arxiv.org/pdf/1507.01012.pdf
+            // > -(G(0)  + G(beta) )/w_n   => -1/w_n
+            // > 
+            // >  (-1)^n (G^(n)(0) + G^(n)(beta))/w_n^n => ...
+            expansionCoeffsUp[0] = (g_it(1,UP) - g_it(0,UP) + g_it(MAX_T_BINS-1,UP) - g_it(MAX_T_BINS-2,UP))/deltaIt;
+            expansionCoeffsUp[1] = (g_it(0,UP) - 2.0*g_it(1,UP) + 1*g_it(2,UP) + g_it(MAX_T_BINS-1,UP) - 2.0*g_it(MAX_T_BINS-2,UP) + g_it(MAX_T_BINS-3,UP))/(deltaIt*deltaIt);
+            expansionCoeffsDown[0] = (g_it(1,DOWN) - g_it(0,DOWN) + g_it(MAX_T_BINS-1,DOWN) - g_it(MAX_T_BINS-2,DOWN))/deltaIt;
+            expansionCoeffsDown[1] = (g_it(0,DOWN) - 2.0*g_it(1,DOWN) + 1*g_it(2,DOWN) + g_it(MAX_T_BINS-1,DOWN) - 2.0*g_it(MAX_T_BINS-2,DOWN) + g_it(MAX_T_BINS-3,DOWN))/(deltaIt*deltaIt);
+        }
+
         protected:
             RealT beta;
-            //TODO ASSERT MATSFREQ == TBINS !!!!!
             ImTG	g_it; // col major -> spin outer loop
             MatG	g_wn; // col major -> spin outer loop
             FFT 	fft;
             RealT       tailCoeffs[4];
+            RealT       deltaIt;
+
+            RealT expansionCoeffsUp[2];
+            RealT expansionCoeffsDown[2];
 
             //Config& conf;
 
@@ -238,7 +271,7 @@ namespace DMFT
              *  @return index for lookup in g_it
              */
             inline int tIndex(const RealT t) const {
-                const int res = static_cast<int>(t*static_cast<RealT>(MAX_T_BINS)/beta);
+                const int res = static_cast<int>(t*deltaIt);
                 return res; // TODO: test for +(res == 0);
             }
 
