@@ -27,6 +27,7 @@ namespace DMFT
      *  TODO: finish implementation of GreensFct as expression template
      *  TODO: use cubic spline interpolation for FFT - halfway done
      *  TODO: high freq. expansion (can use cubic spline)
+     *  TODO: convert symmetric to template paramter when C++17 becomes standard
      *  TODO: remember to add site dependency for hubbard model
      */
     class GreensFct//: public VecExpression<GreensFct>
@@ -35,13 +36,16 @@ namespace DMFT
         const int MAX_T_BINS = _CONFIG_maxTBins;
         const int MAX_M_FREQ = _CONFIG_maxMatsFreq;
         const int SPINS	= 2;
+        const int TAIL_ORDER = 4;
 
         public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-        GreensFct(RealT beta, const bool symmetric = true): beta(beta), fft(beta), deltaIt(static_cast<RealT>(MAX_T_BINS)/beta)
+        GreensFct(RealT beta, const bool symmetric = true, bool fitTail = true):\
+            symmetric(symmetric), beta(beta), fft(beta), deltaIt(static_cast<RealT>(MAX_T_BINS)/beta) 
         {
             g_it = ImTG::Zero(MAX_T_BINS, SPINS);
             g_wn = MatG::Zero(MAX_M_FREQ, SPINS);
+            expansionCoeffs.reserve(TAIL_ORDER);
         }
 
         GreensFct(GreensFct const&) = delete; // TODO: implement
@@ -66,7 +70,15 @@ namespace DMFT
          */
         inline void setByMFreq(const int n, const int spin, const ComplexT val)
         {
-                g_wn(n,spin) = val; 
+            if(symmetric)
+            {
+                if(n<0) g_wn(-n,spin) = -val;
+                else g_wn(n,spin) = val;
+            }
+            else
+            {
+                g_wn(n+g_wn.rows()/2,spin) = val;
+            }
         }
 
         /*! Sets G(i \omega_n) = val
@@ -97,12 +109,12 @@ namespace DMFT
         inline ComplexT getByMFreq(const int n, const unsigned int spin) const {
             if(symmetric)
             {
-                if(n>0) return g_wn(n,spin);
-                else return -g_wn(-n,spin);
+                if(n<0) return -g_wn(-n,spin);
+                else return g_wn(n,spin);
             }
             else
             {
-                return g_wn(n,spin);
+                return g_wn(n+g_wn.rows()/2,spin);
             }
         }
 
@@ -154,20 +166,31 @@ namespace DMFT
         std::string getMGFstring(void) const
         {
             std::stringstream res;
-            res << std::fixed << std::setw(8)<< "mFreq \tSpin0 Re\tSpin0 Im\tSpin1 Re\tSpin1 Im\n";
-            for(int n=0; n < MAX_M_FREQ; n++)
-            {
-                res << std::setprecision(8) << mFreq(n, beta) << "\t" <<  g_wn(n,0).real() << "\t" \
-                    << g_wn(n,0).imag() << "\t" << g_wn(n,1).real() << "\t" << g_wn(n,1).imag() << "\n" ;
-            }
-            for(int n=MAX_M_FREQ; n < 5*MAX_M_FREQ; n++)
+            res << std::fixed << std::setw(8)<< "\t mFreq \tSpin UP Re \t Spin UP Im \t Spin DOWN Re \t Spin DOWN Im \n";
+            for(int n=-MAX_M_FREQ; n < 0; n++)
             {
                 RealT mf = mFreq(n, beta);
                 ComplexT imf = ComplexT(0.0,mf);
-                ComplexT mExpUp = static_cast<RealT>(2*(n<0)-1)*(- 1.0/imf + expansionCoeffsUp[0]/(imf*imf) - expansionCoeffsUp[1]/(imf*imf*imf));
-                ComplexT mExpDown = static_cast<RealT>(2*(n<0)-1)*(- 1.0/imf + expansionCoeffsDown[0]/(imf*imf) - expansionCoeffsDown[1]/(imf*imf*imf));
-                res << std::setprecision(8) << mf << "\t" <<  mExpUp.real() << "\t" \
-                    << mExpUp.imag() << "\t" << mExpDown.real() << "\t" << mExpDown.imag() << "\n" ;
+                ComplexT mExp[2];
+                mExp[UP] = expansionCoeffs[0][UP]/imf - expansionCoeffs[1][UP]/(mf*mf) - expansionCoeffs[2][UP]/(imf*mf*mf) + expansionCoeffs[3][UP]/(mf*mf*mf*mf);
+                mExp[DOWN] = expansionCoeffs[0][DOWN]/imf - expansionCoeffs[1][DOWN]/(mf*mf) - expansionCoeffs[2][DOWN]/(imf*mf*mf) + expansionCoeffs[3][DOWN]/(mf*mf*mf*mf);
+                res << std::setprecision(6) << mf << "\t" <<  mExp[UP].real() << "\t" \
+                    << mExp[UP].imag() << "\t" << mExp[DOWN].real() << "\t" << mExp[DOWN].imag() << "\n" ;
+            }
+            for(int n=0; n < MAX_M_FREQ; n++)
+            {
+                res << std::setprecision(8) << mFreq(n, beta) << "\t" <<  g_wn(n,UP).real() << "\t" \
+                    << g_wn(n,UP).imag() << "\t" << g_wn(n,DOWN).real() << "\t" << g_wn(n,DOWN).imag() << "\n" ;
+            }
+            for(int n=MAX_M_FREQ; n < 2*MAX_M_FREQ; n++)
+            {
+                RealT mf = mFreq(n, beta);
+                ComplexT imf = ComplexT(0.0,mf);
+                ComplexT mExp[2];
+                mExp[UP] = expansionCoeffs[0][UP]/imf - expansionCoeffs[1][UP]/(mf*mf) - expansionCoeffs[2][UP]/(imf*mf*mf) + expansionCoeffs[3][UP]/(mf*mf*mf*mf);
+                mExp[DOWN] = expansionCoeffs[0][DOWN]/imf - expansionCoeffs[1][DOWN]/(mf*mf) - expansionCoeffs[2][DOWN]/(imf*mf*mf) + expansionCoeffs[3][DOWN]/(mf*mf*mf*mf);
+                res << std::setprecision(6) << mf << "\t" <<  mExp[UP].real() << "\t" \
+                    << mExp[UP].imag() << "\t" << mExp[DOWN].real() << "\t" << mExp[DOWN].imag() << "\n" ;
             }
             return res.str();
         }
@@ -202,21 +225,29 @@ namespace DMFT
 
         /*! Does a FFT from Matsubara to imaginary time Green's function and stores it in internal storage.
         */
-        inline void transformMtoT(void){ fft.transformMtoT_naive(g_wn, g_it); markTSet(); }
+        void transformMtoT(void)
+        {
+            fft.transformMtoT(g_wn, g_it, expansionCoeffs);
+            markTSet();
+        }
 
         /*! Does a FFT from Matsubara to imaginary time Green's function and stores it in target.
          *  @param	[out]	Eigen::ArrayXXd where imaginary time Green's function will be stored
          */
-        inline void transformMtoT(ImTG& target){ fft.transformMtoT_naive(g_wn, target); markTSet(); }
+        void transformMtoT(ImTG& target)
+        {
+            fft.transformMtoT(g_wn, target, expansionCoeffs);
+            markTSet();
+        }
 
         /*! Does a FFT from imaginary time to Matsubara Green's function and stores it.
         */
-        inline void transformTtoM(void){ fft.transformTtoM(g_it, g_wn); markMSet(); }   
+        void transformTtoM(void){ fft.transformTtoM(g_it, g_wn); markMSet(); }   
 
         /*! Does a FFT from imaginary time to Matsubara Green's function and stores it in target.
          *  @param	[out]	Eigen::ArrayXXcd where Matsubara Green's function will be stored
          */
-        inline void transformTtoM(MatG& target){ fft.transformTtoM(g_it, target); markMSet(); }
+        void transformTtoM(MatG& target){ fft.transformTtoM(g_it, target); markMSet(); }
 
         /*! Compute \f[ ()G(i \omega_n)^{-1} - s)^{-1}  \f] and also transform to \f[ G(\tau) \f].
          *  @param  [in]  s shift
@@ -237,16 +268,33 @@ namespace DMFT
             transformMtoT();
         }
 
+        /*! Fits the expansion coefficients for the matsubara Green's function.
+         *  This is used to interally improve accuracy.
+         *
+         *  @return void
+         */
         void fitTail(void)
         {
             // https://arxiv.org/pdf/1507.01012.pdf
             // > -(G(0)  + G(beta) )/w_n   => -1/w_n
             // > 
             // >  (-1)^n (G^(n)(0) + G^(n)(beta))/w_n^n => ...
-            expansionCoeffsUp[0] = (g_it(1,UP) - g_it(0,UP) + g_it(MAX_T_BINS-1,UP) - g_it(MAX_T_BINS-2,UP))/deltaIt;
-            expansionCoeffsUp[1] = (g_it(0,UP) - 2.0*g_it(1,UP) + 1*g_it(2,UP) + g_it(MAX_T_BINS-1,UP) - 2.0*g_it(MAX_T_BINS-2,UP) + g_it(MAX_T_BINS-3,UP))/(deltaIt*deltaIt);
-            expansionCoeffsDown[0] = (g_it(1,DOWN) - g_it(0,DOWN) + g_it(MAX_T_BINS-1,DOWN) - g_it(MAX_T_BINS-2,DOWN))/deltaIt;
-            expansionCoeffsDown[1] = (g_it(0,DOWN) - 2.0*g_it(1,DOWN) + 1*g_it(2,DOWN) + g_it(MAX_T_BINS-1,DOWN) - 2.0*g_it(MAX_T_BINS-2,DOWN) + g_it(MAX_T_BINS-3,DOWN))/(deltaIt*deltaIt);
+            
+            expansionCoeffs[0][UP] = 1; 
+            expansionCoeffs[0][DOWN] = 1; 
+
+            expansionCoeffs[1][UP] = (g_it(1,UP) - g_it(0,UP) + g_it(MAX_T_BINS-1,UP) - g_it(MAX_T_BINS-2,UP))/deltaIt;
+            expansionCoeffs[1][DOWN] = (g_it(1,DOWN) - g_it(0,DOWN) + g_it(MAX_T_BINS-1,DOWN) - g_it(MAX_T_BINS-2,DOWN))/deltaIt;
+
+            expansionCoeffs[2][UP] = (g_it(0,UP) - 2.0*g_it(1,UP) + g_it(2,UP) +\
+                    g_it(MAX_T_BINS-1,UP) - 2.0*g_it(MAX_T_BINS-2,UP) + g_it(MAX_T_BINS-3,UP))/(deltaIt*deltaIt);
+            expansionCoeffs[2][DOWN] = (g_it(0,DOWN) - 2.0*g_it(1,DOWN) + g_it(2,DOWN) +\
+                    g_it(MAX_T_BINS-1,DOWN) - 2.0*g_it(MAX_T_BINS-2,DOWN) + g_it(MAX_T_BINS-3,DOWN))/(deltaIt*deltaIt);
+
+            expansionCoeffs[3][UP] = (- g_it(0,UP) + 3.0*g_it(1,UP) - 3.0*g_it(2,UP) + g_it(3,UP) +\
+                    g_it(MAX_T_BINS-1,UP) - 3.0*g_it(MAX_T_BINS-2,UP) + 3.0*g_it(MAX_T_BINS-3,UP) - g_it(MAX_T_BINS-4,UP))/(deltaIt*deltaIt*deltaIt);
+            expansionCoeffs[3][DOWN] = (- g_it(0,DOWN) + 3.0*g_it(1,DOWN) - 3.0*g_it(2,DOWN) + g_it(3,DOWN) +\
+                    g_it(MAX_T_BINS-1,DOWN) - 3.0*g_it(MAX_T_BINS-2,DOWN) + 3.0*g_it(MAX_T_BINS-3,DOWN) - g_it(MAX_T_BINS-4,DOWN))/(deltaIt*deltaIt*deltaIt);
         }
 
         protected:
@@ -259,8 +307,7 @@ namespace DMFT
             RealT       tailCoeffs[4];
             RealT       deltaIt;
 
-            RealT expansionCoeffsUp[2];
-            RealT expansionCoeffsDown[2];
+            std::vector<std::array<RealT,2> > expansionCoeffs;
 
             //Config& conf;
 

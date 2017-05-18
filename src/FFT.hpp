@@ -29,16 +29,20 @@ namespace DMFT
             RealT fft_dt;
             RealT fft_wmin;
 
+            ComplexT tail(const RealT wn, const std::vector<std::array<RealT,2> >& tail, const int spin) const;
+
+            RealT ftTail(const RealT tau, const std::vector<std::array<RealT,2> >& tail, const int spin) const;
+
         public:
             FFT(const RealT beta): _beta(beta)
-            {
-                planMtoT = fftw_plan_dft_1d(_CONFIG_maxTBins,fftw3_input,fftw3_output,FFTW_FORWARD,FFTW_ESTIMATE);
-                planTtoM = fftw_plan_dft_1d(_CONFIG_maxTBins,fftw3_input,fftw3_output,FFTW_BACKWARD,FFTW_ESTIMATE);
-                fft_wmin = mFreq(0,_beta);
-                fft_dt   = _beta/static_cast<RealT>(_CONFIG_maxTBins);      // for FFT matsFreq == TBins
-                fft_dw   = 2.0*boost::math::constants::pi<RealT>()/_beta;
-                fft_tmin = fft_dt/2.0;
-            }
+        {
+            planMtoT = fftw_plan_dft_1d(_CONFIG_maxTBins,fftw3_input,fftw3_output,FFTW_FORWARD,FFTW_ESTIMATE);
+            planTtoM = fftw_plan_dft_1d(_CONFIG_maxTBins,fftw3_input,fftw3_output,FFTW_BACKWARD,FFTW_ESTIMATE);
+            fft_wmin = mFreq(0,_beta);
+            fft_dt   = _beta/static_cast<RealT>(_CONFIG_maxTBins);      // for FFT matsFreq == TBins
+            fft_dw   = 2.0*boost::math::constants::pi<RealT>()/_beta;
+            fft_tmin = fft_dt/2.0;
+        }
 
             virtual ~FFT()
             {
@@ -52,11 +56,11 @@ namespace DMFT
              *  @param [in] to      MatGF as Eigen::ArrayXXcd
              *  @param [out] from   ImTGF as Eigen::ArrayXXd
              */
-            void transformMtoT(const MatG& from, ImTG& to);
+            void transformMtoT(const MatG& from, ImTG& to, const std::vector<std::array<RealT,2> >& tail);
 
-            void transformMtoT_naive(const MatG& from, ImTG& to);
-            
-            void transformTtoM_naive(const ImTG &from, MatG &to);
+            void transformMtoT_naive(const MatG& from, ImTG& to) const;
+
+            void transformTtoM_naive(const ImTG &from, MatG &to) const;
 
             /*! performs a convolution of f and g using fft
              *  fp = FFT(f), gp = FFT(g) -> iFFT(fp * gp): the result is int f(t' - t) g(t) dt 

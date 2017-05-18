@@ -176,7 +176,7 @@ void WeakCoupling::update(const unsigned long iterations)
                 Sp[DOWN]  = g0(0.0,DOWN) - (0.5 + (2*(s_n==DOWN)-1)*zeroShift);
                 Sp[UP]    = g0(0.0,UP) - (0.5 + (2*(s_n==UP)-1)*zeroShift);
                 A = -Sp[DOWN]*Sp[UP]*config.beta*config.U;                                          // -b*U*detRatio/(n+1)
-                if(A<0) LOG(WARNING) << "Acceptane rate for insertion negative. n = 0, Sp[DOWN]: " << Sp[DOWN] << ", SP[UP]: " << Sp[UP];
+                if(A < 0 && A > -0.001) LOG(WARNING) << "Acceptane rate for insertion negative. n = 0, Sp[DOWN]: " << Sp[DOWN] << ", SP[UP]: " << Sp[UP];
                 VLOG(3) << "Acceptance rate: " << A;
                 if(zetap < A){			                		                // propose insertion
                     VLOG(3) << "accepted";
@@ -208,7 +208,7 @@ void WeakCoupling::update(const unsigned long iterations)
                     Sp[s]= 1.0/tmp;	                                	// (8.39) 
                     A *= tmp;
                 }
-                if(A<0) LOG(WARNING) << "Acceptane rate for insertion negative. n = " << n << ", A = " << A;
+                if(A<0 && A > -0.001) LOG(WARNING) << "Acceptane rate for insertion negative. n = " << n << ", A = " << A;
                 /*  if(A<0) LOG(WARNING) << "Acceptane rate for insertion negative. n = " << n << ", A = " << A << ", s_n: " << s_n
                     << "\n g0(0, DOWN): " << g0(0.0,DOWN) << " -> " << g0(0.0,DOWN) - (0.5 + (2*(s_n==DOWN)-1)*zeroShift) <<  ", tmp[down]: " << R[DOWN]*M[DOWN]*Q[DOWN]
                     << "\n  g0(0, UP): " << g0(0.0,UP)  << " -> " << g0(0.0,UP) - (0.5 + (2*(s_n==UP)-1)*zeroShift) << ", tmp[up]: " << R[UP]*M[UP]*Q[UP];
@@ -240,7 +240,7 @@ void WeakCoupling::update(const unsigned long iterations)
             Sp[DOWN] = M[DOWN](rndConfPos,rndConfPos);					// (8.37)
             Sp[UP] = M[UP](rndConfPos,rndConfPos);						// (8.37)
             A *= Sp[0]*Sp[1];
-            if(A<0) LOG(WARNING) << "Acceptane rate for insertion negative. n = " << n << ", A = " << A;
+            if(A<0 && A > -0.001) LOG(WARNING) << "Acceptane rate for insertion negative. n = " << n << ", A = " << A;
             if ( zetap < A){                    					//compute A(n-1 <- n) (8.37) (8.44) - WeakCoupling::acceptanceR
                 // TODO: loop over spins
                 VLOG(3) << "Accepted";
