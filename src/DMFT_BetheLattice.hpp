@@ -14,19 +14,20 @@ namespace DMFT
         class DMFT_BetheLattice
         {
             public:
-                DMFT_BetheLattice(const std::string& outDir, const Config& config, RealT mixing, ImpSolver &solver, GreensFct &G0, GreensFct &GImp, const RealT D):
-                    config(config), mixing(mixing), iSolver(solver), g0(G0), g0Info("G0"), gImp(GImp), gImpInfo("GImp"),sImpGF(config.beta),sImpInfo("sImp"), ioh(outDir, config), D(D)
-            {
-                std::string tmp("G0_Guess");
-                ioh.writeToFile(g0,tmp);
-                ioh.addGF(g0,   g0Info);
-                ioh.addGF(gImp, gImpInfo);
-                ioh.addGF(sImpGF,sImpInfo);
-            };
-
-                void solve(const unsigned int iterations, const unsigned long long updates)
+                DMFT_BetheLattice(std::string& outDir, const Config& config, RealT mixing, ImpSolver &solver, GreensFct &G0, GreensFct &GImp, const RealT D):
+                    config(config), mixing(mixing), iSolver(solver), \
+                    g0(G0), g0Info("G0"), gImp(GImp), gImpInfo("GImp"), selfE(config.beta, true, false), seLInfo("SelfE"),\
+                    ioh(outDir, config), D(D), fft(config.beta)
                 {
+                    std::string tmp("G0_Guess");
+                    ioh.writeToFile(g0,tmp);
+                    ioh.addGF(g0,   g0Info);
+                    ioh.addGF(gImp, gImpInfo);
+                    ioh.addGF(selfE, seLInfo);
+                }
 
+                void solve(const unsigned int iterations, const unsigned long long updates, bool symmetricG0 = false)
+                {
                     if(config.isGenerator)
                     {
                         //TODO: move IO from generator to accumulators
@@ -34,11 +35,13 @@ namespace DMFT
                         {  
                             if(config.local.rank() == 0) LOG(INFO) << "Computing new Weiss Green's function";
                             //TODO: vectorize
+                            MatG tmpG0(_CONFIG_maxTBins,2);
                             for(int n=0;n<_CONFIG_maxMatsFreq;n++){
                                 for(int s=0;s<_CONFIG_spins;s++){
                                     // set SC condition, enforcing Paramagnetic solution
-                                    int sign = (2*(mFreq(n,config.beta)>0))-1;
-                                    ComplexT tmp = ComplexT(config.mu,mFreq(n,config.beta)) - (D/2.0)*(D/2.0)*gImp.getByMFreq(n,s);
+                                    // use symmetry here
+                                    ComplexT tmp = ComplexT(config.mu, mFreqS(n,config.beta)) - (D/2.0)*(D/2.0)*gImp.getByMFreq(n,s);
+                                    VLOG(5) << n << ": " << ComplexT(config.mu, mFreqS(n,config.beta)) << " - " << (D/2.0)*(D/2.0)*gImp.getByMFreq(n,s) << " = " << tmp;
                                     g0.setByMFreq(n,s, 1.0/tmp );
                                 }
                             }
@@ -55,10 +58,15 @@ namespace DMFT
                             //only for WeakCoupling., this is now in update itself
                             //g0.shift(config.U/2.0);
 
+//TODO: use tail
                             MatG sImp = (g0.getMGF().cwiseInverse() - gImp.getMGF().cwiseInverse());
-                            sImpGF.setByMFreq(sImp);
-                            sImpGF.transformMtoT();
-                            //TODO this breaks for large N
+                            ImTG sImp_it(_CONFIG_maxTBins, 2);
+
+                            selfE.setByMFreq(sImp);
+                            selfE.setParaMagnetic();
+
+                            fft.transformMtoT(sImp,sImp_it,true); 
+                            //TODO improve this naive loop
                             for(long unsigned int i=0; i <= 20; i++){
                                 iSolver.update(updates/20.0);
                                 LOG(INFO) << "MC Walker [" << config.world.rank() << "] at "<< " (" << (5*i) << "%) of iteration " << dmftIt << ". expansion order: " << iSolver.expansionOrder();
@@ -70,7 +78,7 @@ namespace DMFT
                             ioh.setIteration(dmftIt);
                             if(config.local.rank() == 0)
                             {
-                                LOG(INFO) << "finished sampling";
+                                LOG(INFO) << "finished sampling. average expansion order: " << iSolver.avgN();
                                 LOG(INFO) << "measuring impurity Greens function";
                             }
                             iSolver.computeImpGF();
@@ -96,11 +104,14 @@ namespace DMFT
 
                 }
 
+                void setDir(std::string d) { ioh.initDir(d); }
 
             private:
                 // general settings
                 const Config&	config;
                 IOhelper	    ioh;
+
+                FFT fft;
 
                 // lattice specific
                 // TODO separate class
@@ -114,10 +125,10 @@ namespace DMFT
                 ImpSolver& iSolver;
                 LogInfos	g0Info;
                 LogInfos	gImpInfo;
-                LogInfos	sImpInfo;
+                LogInfos	seLInfo;
                 GreensFct&	g0;
                 GreensFct&	gImp;
-                GreensFct  sImpGF;
+                GreensFct       selfE;
         };
 } // end namespace DMFT
 #endif

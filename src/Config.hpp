@@ -41,10 +41,10 @@ namespace DMFT
 
     // ========== global config parameters ==========
     // TODO: consider adjustable maxMatsFreq
-    static const	int _CONFIG_maxMatsFreq = 128;//8192;//4096;//4096;		// frequencies go from maxMatsFreq/2 to maxMatsFreq/2 - 1
+    static const    int _CONFIG_maxMatsFreq = 128;//4096;//4096;		// frequencies go from maxMatsFreq/2 to maxMatsFreq/2 - 1
     static const    int _CONTIG_minMF    = -static_cast<int>(_CONFIG_maxMatsFreq/2.0);
-    static const    int _CONFIG_maxTBins =	8192;//4096;//8192; 		// (default default 131072, 65536) powers of 2 make fft faster, both bins need to be equal for FFT
-    static const	int _CONFIG_maxSBins = 4*4096;//16384;
+    static const    int _CONFIG_maxTBins =	4096;//8192;//1024; 		// (default default 131072, 65536) powers of 2 make fft faster, both bins need to be equal for FFT
+    static const    int _CONFIG_maxSBins = 4*8192;//16384;
     static const    int _CONFIG_spins = 2;
     enum SPIN {DOWN = 0, UP = 1};
     enum class MPI_MSG_TAGS: char {SAMPLING_END = 0, DATA = 1, BROADCAST = 2, FINALIZE = 3};
@@ -95,8 +95,8 @@ namespace DMFT
     inline RealT mFreq(const int freq,const RealT beta) {
         return (2.0*(freq-static_cast<int>(_CONFIG_maxMatsFreq/2.0))+1)*boost::math::constants::pi<RealT>()/beta;
     }
-    inline RealT mFreqSymm(const int freq,const RealT beta) {
-        return (2.0*freq+1)*boost::math::constants::pi<RealT>()/beta;
+    inline RealT mFreqS(const int freq,const RealT beta) {
+        return (2.0*freq+1.0)*boost::math::constants::pi<RealT>()/beta;
     }
 
     inline long int arrIndex(const int i, const int spin) {return spin+i*_CONFIG_spins;}
@@ -122,13 +122,13 @@ namespace DMFT
              */
             Config(const RealT beta, const RealT mu, const RealT U, const int mfCount, const int itCount, const boost::mpi::communicator local, const boost::mpi::communicator world,const bool isGen):
                 beta(beta), mu(mu), mfCount(mfCount), itCount(itCount), mfGrid(mfCount), U(U), local(local), world(world), isGenerator(isGen)
+        {
+            const int min = static_cast<int>(mfCount/2.0);
+            for(int n= -min; n<static_cast<int>((mfCount-1)/2.0);n+=1)
             {
-                const int min = static_cast<int>(mfCount/2.0);
-                for(int n= -static_cast<int>(mfCount/2.0); n<static_cast<int>((mfCount-1)/2.0);n+=1)
-                {
-                    mfGrid(n + min) = PI*(2.0*n+1)/beta;
-                }
+                mfGrid(n + min) = PI*(2.0*n+1)/beta;
             }
+        }
 
             //TODO: sparse mfGrid with interpolation
 
@@ -147,18 +147,18 @@ namespace DMFT
 }   //end namespace DMFT
 
 
-    // ========== BOOST Serialization for Eigen matrices ==========
+// ========== BOOST Serialization for Eigen matrices ==========
 /*namespace boost
-{
-    template<class Archive, typename _Scalar, int _Rows, int _Cols, int _Options, int _MaxRows, int _MaxCols>
-        inline void serialize(
-                Archive& ar,
-                Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>& t,
-                const unsigned int file_version
-                )
-        {
-            for(size_t i=0; i<t.size();i++)
-                ar& t.data()[i];
-        }
-}*/
+  {
+  template<class Archive, typename _Scalar, int _Rows, int _Cols, int _Options, int _MaxRows, int _MaxCols>
+  inline void serialize(
+  Archive& ar,
+  Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>& t,
+  const unsigned int file_version
+  )
+  {
+  for(size_t i=0; i<t.size();i++)
+  ar& t.data()[i];
+  }
+  }*/
 #endif

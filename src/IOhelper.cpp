@@ -2,7 +2,13 @@
 
 namespace DMFT
 {
-    IOhelper::IOhelper(const std::string& _outDir, const Config& c): outDir(_outDir), c(c){
+    IOhelper::IOhelper(const std::string& _outDir, const Config& c): c(c){
+        initDir(_outDir);
+    };
+
+    void IOhelper::initDir(std::string& _outDir)
+    {
+        outDir = _outDir;
         if(!c.isGenerator || !c.local.rank() == 0) return;
         try
         {
@@ -37,13 +43,13 @@ namespace DMFT
         {
             LOG(ERROR) << "Error while writing parameters to file: " << e.what();
         }
-    };
 
-    int IOhelper::writeToFile(void) const
-    {
-        if(!c.isGenerator || c.local.rank() != 0) return 0;
-        for(auto el: gfList) writeToFile(std::get<0>(el).get(), std::get<1>(el));
-        return 0;
+        int IOhelper::writeToFile(void) const
+        {
+            if(!c.isGenerator || c.local.rank() != 0) return 0;
+            for(auto el: gfList) writeToFile(std::get<0>(el).get(), std::get<1>(el));
+            return 0;
+        }
     }
 
     int IOhelper::writeToFile(unsigned index) const
@@ -94,6 +100,33 @@ namespace DMFT
         }
     }
 
+    void IOhelper::readFromFile(GreensFct& gf, const LogInfos& li) const
+    {
+        if(!c.isGenerator || c.local.rank() != 0) return ;
+        boost::filesystem::path file_mf = outDir;
+        boost::filesystem::path file_it = outDir;
+        file_mf	/= boost::filesystem::path(std::to_string(iteration) + std::string("_") + li.filename + std::string("_MF.out"));
+        file_it	/= boost::filesystem::path(std::to_string(iteration) + std::string("_") + li.filename + std::string("_IT.out"));
+        boost::filesystem::ofstream fm,ft;
+        fm.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
+        ft.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
+        try
+        {
+            fm.open (file_mf);
+            ft.open (file_it);
+            //TODO: get it oder find highest it
+            //TODO: read file into GF
+            //TODO: check consistency with fft
+            fm.close(); ft.close();
+        }
+        catch (boost::filesystem::ofstream::failure e)
+        {
+            LOG(ERROR) << "Error while writing Matsubara Green\'s function to file: " << e.what();
+            LOG(ERROR) << "Error while writing Green\'s function to file: " << e.what();
+        }
+    }
+
+
 
     void IOhelper::plot(GreensFct& gf, RealT beta, std::string title)
     {
@@ -111,6 +144,8 @@ namespace DMFT
             itgf_up.push_back( std::make_pair( i, gf(i,1) ) );
         }    
 
+        gp1 << "set terminal x11\n";
+        gp2 << "set terminal x11\n";
         gp1 << "set output ' " << title << "_MF.png'\n";
         gp1 << "plot" << gp1.file1d( mgf_down ) << "with points title ' " <<  title <<  " Matsubara GF, sigma down', "
             << gp1.file1d( mgf_up ) << "with points title ' " <<  title <<  " Matsubara GF, sigma up'" << std::endl;
@@ -124,6 +159,13 @@ namespace DMFT
         GreensFct gfTmp(beta);
         gfTmp.setByT(gf);
         gfTmp.transformTtoM();
+        plot(gfTmp, beta, title);
+    }
+    void IOhelper::plot(MatG& gf, RealT beta, std::string title)
+    {
+        GreensFct gfTmp(beta);
+        gfTmp.setByMFreq(gf);
+        gfTmp.transformMtoT();
         plot(gfTmp, beta, title);
     }
 

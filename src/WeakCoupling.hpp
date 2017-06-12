@@ -50,6 +50,9 @@ namespace DMFT
 
             inline int expansionOrder(void) {return n;}
 
+            inline RealT avgN(void) {return static_cast<RealT>(totN)/(steps-burninSteps);};
+
+
             /*!	@brief	Updates the time ordered spin configuration and the inverse
              *  		Weiss Greens function M by inserting or removing one configuration.
              *
@@ -180,6 +183,7 @@ namespace DMFT
             int lastSign;						// needed when proposal is rejected
             int totalSign;
             int n; 					// expansion order (number of used rows/cols)
+            long totN;
             const RealT zeroShift;				// auxiliary ising shift
             ImTG itBins;
 

@@ -5,6 +5,7 @@
 #include "DMFTSolver.hpp"
 #include "Config.hpp"
 #include "integrals.hpp"
+#include "FFT.hpp"
 
 #include "Faddeeva.hh"
 #include "gnuplot-iostream.h"

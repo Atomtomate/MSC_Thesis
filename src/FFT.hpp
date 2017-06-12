@@ -3,7 +3,6 @@
 
 #include "Config.hpp"
 
-
 #include "fftw3.h"
 #include <algorithm>
 
@@ -18,6 +17,7 @@ namespace DMFT
         private:
             //TODO: check for _CONFIG_maxMatsFreq != _CONFIG_maxTBins
             RealT _beta;
+            //TODO: use r2c and c2r
             fftw_complex fftw3_input[_CONFIG_maxTBins];
             fftw_complex fftw3_output[_CONFIG_maxTBins];
 
@@ -41,7 +41,7 @@ namespace DMFT
             fft_wmin = mFreq(0,_beta);
             fft_dt   = _beta/static_cast<RealT>(_CONFIG_maxTBins);      // for FFT matsFreq == TBins
             fft_dw   = 2.0*boost::math::constants::pi<RealT>()/_beta;
-            fft_tmin = fft_dt/2.0;
+            fft_tmin = 0.0;//fft_dt/2.0;
         }
 
             virtual ~FFT()
@@ -50,13 +50,22 @@ namespace DMFT
                 fftw_destroy_plan(planTtoM);
             }
 
-            /*! FFT from Matsubara space t>o imaginary time.
+            /*! FFT from Matsubara space t>0 imaginary time.
              *  TODO: TRIQS ref, detailed description
              *
              *  @param [in] to      MatGF as Eigen::ArrayXXcd
              *  @param [out] from   ImTGF as Eigen::ArrayXXd
              */
-            void transformMtoT(const MatG& from, ImTG& to, const std::vector<std::array<RealT,2> >& tail);
+            void transformMtoT(const MatG &from, ImTG &to, bool symmetric);
+
+            /*! FFT from Matsubara space t>0 imaginary time.
+             *  TODO: TRIQS ref, detailed description
+             *
+             *  @param [in] to      MatGF as Eigen::ArrayXXcd
+             *  @param [in] tail    std::vector<std::array<RealT,2> > with analytic GF tail coefficients
+             *  @param [out] from   ImTGF as Eigen::ArrayXXd
+             */
+            void transformMtoT(const MatG& from, ImTG& to, const std::vector<std::array<RealT,2> >& tail, bool symmetric);
 
             void transformMtoT_naive(const MatG& from, ImTG& to) const;
 

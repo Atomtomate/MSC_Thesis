@@ -38,7 +38,12 @@ class IOhelper//: public mglDraw
 {
     public:
         //TODO: thread safe console output
-		IOhelper(const std::string& _outDir, const Config& c);
+		IOhelper(std::string& _outDir, const Config& c);
+                
+                /*! initialize (new) output dir
+                 *  @param [in] _outDir directory path from current working dir
+                 */
+                void initDir(std::string& _outDir)
 
 		/*! Write all Green's functions to specified folder.
 		 *  note that GF must be queued for logging before calling this function.
@@ -56,11 +61,15 @@ class IOhelper//: public mglDraw
 		 */
                 int writeToFile(GreensFct& gf, std::string & name) const;
                 
+
+                void readFromFile(GreensFct& gf, const LogInfos& li) const;
+                
                 /*! Plot Green's function using GnuPlot
                  *  @param  [in] gf     Green's function
                  */
                 static void plot(GreensFct& gf, RealT beta, std::string title);
                 static void plot(ImTG& gf, RealT beta, std::string title);
+                static void plot(MatG& gf, RealT beta, std::string title);
 
 		/*! Adds Green's function to pool
 		 *  @param  gf	constant pointer to Green''s function
@@ -84,7 +93,7 @@ class IOhelper//: public mglDraw
 		//TODO: Typename should be some smart pointer (std::shared_ptr), but some performance tests need to be in place first
 		std::vector<GFListEl> gfList;
 		unsigned iteration;
-		const boost::filesystem::path outDir;
+		boost::filesystem::path outDir;
                 const Config& c;
 
 		void writeToFile(GreensFct& gf, const LogInfos& li) const;

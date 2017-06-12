@@ -40,12 +40,13 @@ namespace DMFT
 
         public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-        GreensFct(RealT beta, const bool symmetric = true, bool fitTail = true):\
-            symmetric(symmetric), beta(beta), fft(beta), deltaIt(static_cast<RealT>(MAX_T_BINS)/beta) 
+            GreensFct(RealT beta, const bool symmetric = false, bool fitTail = false):\
+                symmetric(symmetric), beta(beta), fft(beta), deltaIt(static_cast<RealT>(MAX_T_BINS)/beta), fit(fitTail), tailFitted(false) 
         {
             g_it = ImTG::Zero(MAX_T_BINS, SPINS);
             g_wn = MatG::Zero(MAX_M_FREQ, SPINS);
-            expansionCoeffs.reserve(TAIL_ORDER);
+            std::array<RealT,2> z = {.0, .0};
+            expansionCoeffs = {z, z, z, z};
         }
 
         GreensFct(GreensFct const&) = delete; // TODO: implement
@@ -60,7 +61,7 @@ namespace DMFT
         /*! Call this after setting \f$ G(i \omega_n) \f$.
          *  @return returns 1 if previously set, 0 otherwise
          */
-        int markMSet(void){return mSet++;}
+        int markMSet(void){ fitTail(); return mSet++;}
 
         /*! Sets G(i \omega_n) = val
          *
@@ -79,13 +80,14 @@ namespace DMFT
             {
                 g_wn(n+g_wn.rows()/2,spin) = val;
             }
+            tSet = 0;
         }
 
         /*! Sets G(i \omega_n) = val
          *
          *  @param [in] g Matsubara Green's function (as Eigen::ArrayXXd) 
          */
-        void setByMFreq(MatG &g)	{ g_wn = g; mSet = 1;}
+        void setByMFreq(MatG &g)	{ g_wn = g; mSet = 1; tSet = 0;}
 
         /*! Sets \f$ G(t) = val, G(0) = val \Rightarrow G(0^+) = val \f$
          *
@@ -97,8 +99,10 @@ namespace DMFT
             const int i = tIndex(t);
             //if(t==1) g_it(0,spin) = val;	// NOTE: redudant since tIndex shifts up from 0, remove?
             g_it(i,spin) = val;
+            tailFitted = false;
+            mSet = 0;
         }
-        void setByT(ImTG &g) {g_it = g; fitTail(); tSet = 1;}
+        void setByT(ImTG &g) {g_it = g; markTSet(); tSet = 1; mSet = 0;}
 
         /*! get Matsubara Green's function \f$ G_\sigma(i \omega_n) \f$ by n.
          *  @param  n Matsubara frequency \f$ \omega_n \f$
@@ -165,31 +169,31 @@ namespace DMFT
          */
         std::string getMGFstring(void) const
         {
+            //if(!mSet) return "";
             std::stringstream res;
             res << std::fixed << std::setw(8)<< "\t mFreq \tSpin UP Re \t Spin UP Im \t Spin DOWN Re \t Spin DOWN Im \n";
-            for(int n=-MAX_M_FREQ; n < 0; n++)
+            /*  for(int n=-fit*MAX_M_FREQ; n < 0; n++)
             {
-                RealT mf = mFreq(n, beta);
-                ComplexT imf = ComplexT(0.0,mf);
+                RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
                 ComplexT mExp[2];
-                mExp[UP] = expansionCoeffs[0][UP]/imf - expansionCoeffs[1][UP]/(mf*mf) - expansionCoeffs[2][UP]/(imf*mf*mf) + expansionCoeffs[3][UP]/(mf*mf*mf*mf);
-                mExp[DOWN] = expansionCoeffs[0][DOWN]/imf - expansionCoeffs[1][DOWN]/(mf*mf) - expansionCoeffs[2][DOWN]/(imf*mf*mf) + expansionCoeffs[3][DOWN]/(mf*mf*mf*mf);
-                res << std::setprecision(6) << mf << "\t" <<  mExp[UP].real() << "\t" \
+                mExp[UP] = getTail( wn, UP);
+                mExp[DOWN] = getTail( wn, DOWN);
+                res << std::setprecision(6) << wn << "\t" <<  mExp[UP].real() << "\t" \
                     << mExp[UP].imag() << "\t" << mExp[DOWN].real() << "\t" << mExp[DOWN].imag() << "\n" ;
-            }
+            }*/
             for(int n=0; n < MAX_M_FREQ; n++)
             {
-                res << std::setprecision(8) << mFreq(n, beta) << "\t" <<  g_wn(n,UP).real() << "\t" \
+                RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
+                res << std::setprecision(8) << wn << "\t" <<  g_wn(n,UP).real() << "\t" \
                     << g_wn(n,UP).imag() << "\t" << g_wn(n,DOWN).real() << "\t" << g_wn(n,DOWN).imag() << "\n" ;
             }
-            for(int n=MAX_M_FREQ; n < 2*MAX_M_FREQ; n++)
+            for(int n=MAX_M_FREQ; n < 2*MAX_M_FREQ*fit; n++)
             {
-                RealT mf = mFreq(n, beta);
-                ComplexT imf = ComplexT(0.0,mf);
+                RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
                 ComplexT mExp[2];
-                mExp[UP] = expansionCoeffs[0][UP]/imf - expansionCoeffs[1][UP]/(mf*mf) - expansionCoeffs[2][UP]/(imf*mf*mf) + expansionCoeffs[3][UP]/(mf*mf*mf*mf);
-                mExp[DOWN] = expansionCoeffs[0][DOWN]/imf - expansionCoeffs[1][DOWN]/(mf*mf) - expansionCoeffs[2][DOWN]/(imf*mf*mf) + expansionCoeffs[3][DOWN]/(mf*mf*mf*mf);
-                res << std::setprecision(6) << mf << "\t" <<  mExp[UP].real() << "\t" \
+                mExp[UP] = getTail( wn, UP);
+                mExp[DOWN] = getTail( wn, DOWN);
+                res << std::setprecision(6) << wn << "\t" <<  mExp[UP].real() << "\t" \
                     << mExp[UP].imag() << "\t" << mExp[DOWN].real() << "\t" << mExp[DOWN].imag() << "\n" ;
             }
             return res.str();
@@ -197,11 +201,20 @@ namespace DMFT
 
         std::string getMaxEntString(void) const
         {
+            //if(!mSet) return "";
             std::stringstream res;
             res << std::fixed << std::setw(8);
-            for(int n=static_cast<int>(MAX_M_FREQ/2 ); n < MAX_M_FREQ; n++)
+            for(int n=0; n < MAX_M_FREQ; n++)
             {
-                res << std::setprecision(8) << mFreq(n,beta) << " " << g_wn(n,0).imag() << 0.0001 << "\n" ;
+                RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
+                res << std::setprecision(8) << wn << "\t" << g_wn(n,UP).imag() << "\t"<<1.0/(10.0*(n+10.0)) <<"\n" ;
+            }
+            for(int n=MAX_M_FREQ; n < 5*MAX_M_FREQ*fit; n++)
+            {
+                RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
+                ComplexT mExp[2];
+                mExp[UP] = getTail( wn, UP);
+                res << std::setprecision(8) << wn << "\t" << mExp[UP].imag() << "\t"<<1.0/MAX_M_FREQ<< "\n" ;
             }
             return res.str();
         }
@@ -213,6 +226,7 @@ namespace DMFT
          */
         std::string getITGFstring(void) const
         {
+            //if(!tSet) return "";
             std::stringstream res;
             res << std::fixed << std::setw(8)<< "iTime \tSpin up \tSpin down\n";
             for(int i =0; i < MAX_T_BINS; i++)
@@ -227,8 +241,8 @@ namespace DMFT
         */
         void transformMtoT(void)
         {
-            fft.transformMtoT(g_wn, g_it, expansionCoeffs);
-            markTSet();
+            //if(symmetric) 
+            transformMtoT(g_it);
         }
 
         /*! Does a FFT from Matsubara to imaginary time Green's function and stores it in target.
@@ -236,7 +250,15 @@ namespace DMFT
          */
         void transformMtoT(ImTG& target)
         {
-            fft.transformMtoT(g_wn, target, expansionCoeffs);
+            if(fit)
+            {
+                fitTail();
+                fft.transformMtoT(g_wn, target, expansionCoeffs, symmetric);
+            }
+            else
+            {
+                fft.transformMtoT(g_wn, target, symmetric);
+            }
             markTSet();
         }
 
@@ -254,17 +276,67 @@ namespace DMFT
          */
         inline void shift(const RealT s) { g_wn = ((g_wn.cwiseInverse() - s).cwiseInverse()).eval() ; markMSet(); transformMtoT();}
 
+        inline bool isSymmetric(void) {return symmetric;}
+        inline bool hasTail(void) {return fit;}
+
+        /*! Compute this^-1 (i wn) - other^-1 (i wn), with tails if available.
+         *
+         *  @param [in] other MatG
+         */
+        MatG invAdd(GreensFct& other)
+        {
+            MatG res(1,1);
+            if(!tailFitted) fitTail();
+            if(!other.tailFitted) other.fitTail();
+            if(fit && other.hasTail())
+            {
+                MatG res(MAX_T_BINS,2); 
+                if(symmetric && other.isSymmetric())
+                {
+                    res.topRows(MAX_M_FREQ) = g_wn.cwiseInverse() - other.getMGF().cwiseInverse();
+                    for(int n=MAX_M_FREQ;n<MAX_T_BINS;n++)
+                    {
+                        const RealT wn = mFreq(n,beta);
+                        res(n,DOWN) = 1.0/getTail(wn, DOWN) - 1.0/other.getTail(wn, DOWN);
+                        res(n,UP) = 1.0/getTail(wn, UP) - 1.0/other.getTail(wn, UP);
+                    }
+                }
+                else
+                {
+                    int offset = static_cast<int>( (MAX_T_BINS - MAX_M_FREQ)/2.0 );
+                    for(int n=0;n<offset;n++)
+                    {
+                        const RealT wn = mFreq(n,beta);
+                        res(n,DOWN) = 1.0/getTail(wn, DOWN) - 1.0/other.getTail(wn, DOWN);
+                        res(n,UP) = 1.0/getTail(wn, UP) - 1.0/other.getTail(wn, UP);
+                    }
+                    res.block(offset,0,MAX_M_FREQ,2) = g_wn.cwiseInverse() - other.getMGF().cwiseInverse();
+                    for(int n=MAX_M_FREQ+offset;n<MAX_T_BINS;n++)
+                    {
+                        const RealT wn = mFreq(n,beta);
+                        res(n,DOWN) = 1.0/getTail(wn, DOWN) - 1.0/other.getTail(wn, DOWN);
+                        res(n,UP) = 1.0/getTail(wn, UP) - 1.0/other.getTail(wn, UP);
+                    }
+                }
+            }
+            else
+            {
+                MatG res = g_wn.cwiseInverse() - other.getMGF().cwiseInverse();
+            }
+            return res;
+        }
+
         const MatG& getMGF() const { return g_wn; }
         const ImTG& getItGF() const { return g_it; }
 
         // TODO: overload operators and use expression templates
 
 
-
         void setParaMagnetic(void)
         {
             g_wn.rightCols(1) = 0.5*(g_wn.leftCols(1) + g_wn.rightCols(1)).eval();
             g_wn.leftCols(1) = g_wn.rightCols(1).eval();
+            fitTail();
             transformMtoT();
         }
 
@@ -275,54 +347,83 @@ namespace DMFT
          */
         void fitTail(void)
         {
-            // https://arxiv.org/pdf/1507.01012.pdf
-            // > -(G(0)  + G(beta) )/w_n   => -1/w_n
-            // > 
-            // >  (-1)^n (G^(n)(0) + G^(n)(beta))/w_n^n => ...
-            
-            expansionCoeffs[0][UP] = 1; 
-            expansionCoeffs[0][DOWN] = 1; 
+            if(fit)
+            {
+                // https://arxiv.org/pdf/1507.01012.pdf
+                // > -(G(0)  + G(beta) )/w_n   => -1/w_n
+                // > 
+                // >  (-1)^n (G^(n)(0) + G^(n)(beta))/w_n^n => ...
 
-            expansionCoeffs[1][UP] = (g_it(1,UP) - g_it(0,UP) + g_it(MAX_T_BINS-1,UP) - g_it(MAX_T_BINS-2,UP))/deltaIt;
-            expansionCoeffs[1][DOWN] = (g_it(1,DOWN) - g_it(0,DOWN) + g_it(MAX_T_BINS-1,DOWN) - g_it(MAX_T_BINS-2,DOWN))/deltaIt;
+                expansionCoeffs[0][UP] = 1; 
+                expansionCoeffs[0][DOWN] = 1; 
 
-            expansionCoeffs[2][UP] = (g_it(0,UP) - 2.0*g_it(1,UP) + g_it(2,UP) +\
-                    g_it(MAX_T_BINS-1,UP) - 2.0*g_it(MAX_T_BINS-2,UP) + g_it(MAX_T_BINS-3,UP))/(deltaIt*deltaIt);
-            expansionCoeffs[2][DOWN] = (g_it(0,DOWN) - 2.0*g_it(1,DOWN) + g_it(2,DOWN) +\
-                    g_it(MAX_T_BINS-1,DOWN) - 2.0*g_it(MAX_T_BINS-2,DOWN) + g_it(MAX_T_BINS-3,DOWN))/(deltaIt*deltaIt);
+                if(tSet)
+                {
+                    expansionCoeffs[1][UP] = (g_it(1,UP) - g_it(0,UP) + g_it(MAX_T_BINS-1,UP) - g_it(MAX_T_BINS-2,UP))/deltaIt;
+                    expansionCoeffs[1][DOWN] = (g_it(1,DOWN) - g_it(0,DOWN) + g_it(MAX_T_BINS-1,DOWN) - g_it(MAX_T_BINS-2,DOWN))/deltaIt;
 
-            expansionCoeffs[3][UP] = (- g_it(0,UP) + 3.0*g_it(1,UP) - 3.0*g_it(2,UP) + g_it(3,UP) +\
-                    g_it(MAX_T_BINS-1,UP) - 3.0*g_it(MAX_T_BINS-2,UP) + 3.0*g_it(MAX_T_BINS-3,UP) - g_it(MAX_T_BINS-4,UP))/(deltaIt*deltaIt*deltaIt);
-            expansionCoeffs[3][DOWN] = (- g_it(0,DOWN) + 3.0*g_it(1,DOWN) - 3.0*g_it(2,DOWN) + g_it(3,DOWN) +\
-                    g_it(MAX_T_BINS-1,DOWN) - 3.0*g_it(MAX_T_BINS-2,DOWN) + 3.0*g_it(MAX_T_BINS-3,DOWN) - g_it(MAX_T_BINS-4,DOWN))/(deltaIt*deltaIt*deltaIt);
+                    expansionCoeffs[2][UP] = (g_it(0,UP) - 2.0*g_it(1,UP) + g_it(2,UP) +\
+                            g_it(MAX_T_BINS-1,UP) - 2.0*g_it(MAX_T_BINS-2,UP) + g_it(MAX_T_BINS-3,UP))/(deltaIt*deltaIt);
+                    expansionCoeffs[2][DOWN] = (g_it(0,DOWN) - 2.0*g_it(1,DOWN) + g_it(2,DOWN) +\
+                            g_it(MAX_T_BINS-1,DOWN) - 2.0*g_it(MAX_T_BINS-2,DOWN) + g_it(MAX_T_BINS-3,DOWN))/(deltaIt*deltaIt);
+
+                    expansionCoeffs[3][UP] = (- g_it(0,UP) + 3.0*g_it(1,UP) - 3.0*g_it(2,UP) + g_it(3,UP) +\
+                            g_it(MAX_T_BINS-1,UP) - 3.0*g_it(MAX_T_BINS-2,UP) + 3.0*g_it(MAX_T_BINS-3,UP) - g_it(MAX_T_BINS-4,UP))/(deltaIt*deltaIt*deltaIt);
+                    expansionCoeffs[3][DOWN] = (- g_it(0,DOWN) + 3.0*g_it(1,DOWN) - 3.0*g_it(2,DOWN) + g_it(3,DOWN) +\
+                            g_it(MAX_T_BINS-1,DOWN) - 3.0*g_it(MAX_T_BINS-2,DOWN) + 3.0*g_it(MAX_T_BINS-3,DOWN) - g_it(MAX_T_BINS-4,DOWN))/(deltaIt*deltaIt*deltaIt);
+                }
+            }
+            else
+            {
+                std::array<RealT,2> z = {.0, .0};
+                expansionCoeffs = {z, z, z, z};
+                //std::fill(expansionCoeffs.begin(), expansionCoeffs.end(), z);
+            }
+            tailFitted = true;
+        }
+
+        ComplexT getTail(const RealT wn, int spin) const
+        {
+            ComplexT iwn(0.0, wn);
+            ComplexT res = expansionCoeffs[0][spin]/iwn - expansionCoeffs[1][spin]/(wn*wn) - expansionCoeffs[2][spin]/(iwn*wn*wn) + expansionCoeffs[3][spin]/(wn*wn*wn*wn);
+            return res;
+        }
+
+        RealT getFtTail(const RealT tau, const int spin) const
+        {
+            return -expansionCoeffs[0][spin]/2.0 + expansionCoeffs[1][spin]*(2.0*tau - beta)/4.0 + expansionCoeffs[2][spin]*tau*(beta-tau)/4.0\
+                + expansionCoeffs[3][spin]*(2.0*tau - beta)*(2.0*tau*tau - 2.0*tau*beta - beta*beta)/48.0;
         }
 
         protected:
-            RealT beta;
-            const bool symmetric;
+        RealT beta;
+        const bool symmetric;
+        const bool fit;
 
-            ImTG	g_it; // col major -> spin outer loop
-            MatG	g_wn; // col major -> spin outer loop
-            FFT 	fft;
-            RealT       tailCoeffs[4];
-            RealT       deltaIt;
+        bool tailFitted;
 
-            std::vector<std::array<RealT,2> > expansionCoeffs;
+        ImTG	g_it; // col major -> spin outer loop
+        MatG	g_wn; // col major -> spin outer loop
+        FFT 	fft;
+        RealT       tailCoeffs[4];
+        RealT       deltaIt;
 
-            //Config& conf;
+        std::vector<std::array<RealT,2> > expansionCoeffs;
 
-            int mSet = 0;	// track whether matsuabra or iTime GF has been set
-            int tSet = 0;	// TODO implement
+        //Config& conf;
 
-            /*! computes index from imaginary time. G(0) => G(0^+), G(beta) => G(beta^-)
-             *  @param [in] t imaginary time \tau
-             *
-             *  @return index for lookup in g_it
-             */
-            inline int tIndex(const RealT t) const {
-                const int res = static_cast<int>(t*deltaIt);
-                return res; // TODO: test for +(res == 0);
-            }
+        int mSet = 0;	// track whether matsuabra or iTime GF has been set
+        int tSet = 0;	// TODO implement
+
+        /*! computes index from imaginary time. G(0) => G(0^+), G(beta) => G(beta^-)
+         *  @param [in] t imaginary time \tau
+         *
+         *  @return index for lookup in g_it
+         */
+        inline int tIndex(const RealT t) const {
+            const int res = static_cast<int>(t*deltaIt);
+            return res; // TODO: test for +(res == 0);
+        }
 
 
     };

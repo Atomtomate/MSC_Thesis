@@ -11,6 +11,10 @@ set output 'G0_Guess.svg'
 set title 'G_{0,up}({/Symbol t})'
 plot '0_G0_Guess_IT.out' using 1:3 ps 0.5  title 'Weiss function initial guess'
 
+set output 'G0_Guess_mf.svg'
+set title 'G_{0,up}(i {/Symbol w})'
+plot '0_G0_Guess_MF.out' using 1:3 ps 0.5  title 'Weiss function initial guess'
+
 set output 'GImp.svg'
 set title 'G_{Imp,up}(i {/Symbol w}_n)'
 filename(n) = sprintf("%d_GImp_MF.out", n)

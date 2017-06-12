@@ -10,6 +10,7 @@ namespace DMFT
         config(config), g0(g0), gImp(gImp), zeroShift(zeroShift), burninSteps(burninSteps) 
     {
         n 		= 0;
+        totN 		= 0;
         steps 		= 0;
         totalSign	= 0;
         lastSign	= 1;
@@ -52,22 +53,6 @@ namespace DMFT
 #endif
     }
 
-    void WeakCoupling::computeMatGreensFct(void)
-    {
-        //TODO: flag for meassurement of mats G
-        for(unsigned int n=0;n<_CONFIG_maxMatsFreq; n++){
-            ComplexT sumWn = 0.0;
-            RealT mfreq = mFreq(n,config.beta);
-            for(int s=0;s<2;s++){
-                for(int j=0;j<_CONFIG_maxSBins*config.beta;j++){
-                    if(itBins(j,s) == 0.0) continue;
-                    const RealT tp = static_cast<RealT>(j)/_CONFIG_maxSBins;
-                    sumWn += std::exp(ComplexT(0.0, mfreq*tp))*itBins(j,s);
-                }
-                gImp.setByMFreq(n,s, g0.getByMFreq(n,s) - g0.getByMFreq(n,s)*sumWn/static_cast<RealT>(totalSign));
-            }
-        }
-    }
 
     void WeakCoupling::computeImpGF(void)
     {
@@ -99,14 +84,14 @@ namespace DMFT
             for(int k = 0; k < _CONFIG_maxMatsFreq; k++)
             {
                 ComplexT sumWn(0.0,0.0);
-                RealT mfreq		= mFreq(k,config.beta);
+                RealT mfreq		= gImp.isSymmetric() ? mFreqS(k,config.beta) : mFreq(k, config.beta);
                 for(int j=0;j<itBins.rows();j++){
                     const RealT bVal = itBins(j,s);
                     //if(bVal == 0.0) continue;
                     const RealT tp = config.beta*j/static_cast<RealT>(itBins.rows());
                     sumWn += std::exp(ComplexT(0.0,mfreq*config.beta*j/static_cast<RealT>(itBins.rows())))*(itBins(j,s)/static_cast<RealT>(totalSign));
                 }
-                gImp.setByMFreq(k,s,g0.getByMFreq(k,s) - g0.getByMFreq(k,s)*(sumWn));
+                gImp.setByMFreq(k,s,g0.getByMFreq(k,s)*(1.0-(sumWn)));
             }
         }
 #else
@@ -165,7 +150,7 @@ void WeakCoupling::update(const unsigned long iterations)
         std::array<RealT,2> Sp;
         RealT A	= 0.0;
 
-        if((s_n != 0) and (s_n != 1)) LOG(WARNING) << "wrong aux spin value!";
+//if((s_n != 0) and (s_n != 1)) LOG(WARNING) << "wrong aux spin value!";
         VLOG(2) << "Updating Configuration, current size: " << n << ", zetap: " << zetap;
         if (zeta < 0.5) {						    	                        // try to insert spin
             t_n *= config.beta;
@@ -176,7 +161,7 @@ void WeakCoupling::update(const unsigned long iterations)
                 Sp[DOWN]  = g0(0.0,DOWN) - (0.5 + (2*(s_n==DOWN)-1)*zeroShift);
                 Sp[UP]    = g0(0.0,UP) - (0.5 + (2*(s_n==UP)-1)*zeroShift);
                 A = -Sp[DOWN]*Sp[UP]*config.beta*config.U;                                          // -b*U*detRatio/(n+1)
-                if(A < 0 && A > -0.001) LOG(WARNING) << "Acceptane rate for insertion negative. n = 0, Sp[DOWN]: " << Sp[DOWN] << ", SP[UP]: " << Sp[UP];
+//if(A < 0 && A > -0.001) LOG(WARNING) << "Acceptane rate for insertion negative. n = 0, Sp[DOWN]: " << Sp[DOWN] << ", SP[UP]: " << Sp[UP];
                 VLOG(3) << "Acceptance rate: " << A;
                 if(zetap < A){			                		                // propose insertion
                     VLOG(3) << "accepted";
@@ -198,7 +183,7 @@ void WeakCoupling::update(const unsigned long iterations)
                     RealT q_data[n];
                     for(int i=0; i<n;i++ ){
                         const RealT tau = t_n - std::get<0>(confs[i]);
-                        if(tau == 0.0) LOG(WARNING) << "off-diagonal G(0)!";
+//if(tau == 0.0) LOG(WARNING) << "off-diagonal G(0) sampled!";
                         r_data[i] = g0Call(t_n, s, s_n, std::get<0>(confs[i]));		        // (8.34) Generate new elements for M from Weiss Greens fct
                         q_data[i] = g0Call(std::get<0>(confs[i]), s, std::get<1>(confs[i]), t_n);
                     }
@@ -208,7 +193,7 @@ void WeakCoupling::update(const unsigned long iterations)
                     Sp[s]= 1.0/tmp;	                                	// (8.39) 
                     A *= tmp;
                 }
-                if(A<0 && A > -0.001) LOG(WARNING) << "Acceptane rate for insertion negative. n = " << n << ", A = " << A;
+//if(A<0 && A > -0.001) LOG(WARNING) << "Acceptane rate for insertion negative. n = " << n << ", A = " << A;
                 /*  if(A<0) LOG(WARNING) << "Acceptane rate for insertion negative. n = " << n << ", A = " << A << ", s_n: " << s_n
                     << "\n g0(0, DOWN): " << g0(0.0,DOWN) << " -> " << g0(0.0,DOWN) - (0.5 + (2*(s_n==DOWN)-1)*zeroShift) <<  ", tmp[down]: " << R[DOWN]*M[DOWN]*Q[DOWN]
                     << "\n  g0(0, UP): " << g0(0.0,UP)  << " -> " << g0(0.0,UP) - (0.5 + (2*(s_n==UP)-1)*zeroShift) << ", tmp[up]: " << R[UP]*M[UP]*Q[UP];
@@ -240,7 +225,7 @@ void WeakCoupling::update(const unsigned long iterations)
             Sp[DOWN] = M[DOWN](rndConfPos,rndConfPos);					// (8.37)
             Sp[UP] = M[UP](rndConfPos,rndConfPos);						// (8.37)
             A *= Sp[0]*Sp[1];
-            if(A<0 && A > -0.001) LOG(WARNING) << "Acceptane rate for insertion negative. n = " << n << ", A = " << A;
+//if(A<0 && A > -0.001) LOG(WARNING) << "Acceptane rate for insertion negative. n = " << n << ", A = " << A;
             if ( zetap < A){                    					//compute A(n-1 <- n) (8.37) (8.44) - WeakCoupling::acceptanceR
                 // TODO: loop over spins
                 VLOG(3) << "Accepted";
@@ -315,7 +300,7 @@ void WeakCoupling::updateContribution_OLD(int sign)
     Eigen::VectorXd::Map(&out[n], n) = (M[DOWN]*out_d).eval();
     Eigen::VectorXd::Map(&out[2*n], n) = (M[UP]*out_u).eval();
     out[3*n] = sign;
-    //TODO: overload boost serialize to directly send eigen arrays
+    //TODO: do local accumulator, later send sums over
     config.world.send(0, static_cast<int>(MPI_MSG_TAGS::DATA), out );
     return;
 }
@@ -328,6 +313,8 @@ void WeakCoupling::updateContribution(int sign)
     //if(!sign) sign = lastSign;		    // update got rejected, use last sign
     //lastSign = sign;			    // remember last sign
     totalSign += 1;//sign;
+    //TODO: boost avg+var
+    totN += n;
 
 
     if(!n) return;
