@@ -32,6 +32,11 @@ namespace DMFT
                 bool dataReady;
                 FFT fft;
 
+                // used for full statistics. stores all configurations with times
+                std::vector<VectorT> MklGl;
+                std::vector<VectorT> tau_k;        
+                std::vector<RealT> signs;        
+
                 std::vector<AccT> binsUp;
                 std::vector<AccT> binsDown;
 
@@ -47,6 +52,12 @@ namespace DMFT
                     int index = static_cast<int>(BinSize * (tau + (tau<0)*config.beta)/config.beta );
                     binsDown[index](sign2*sign*valDown);
                     binsUp[index](sign2*sign*valUp);
+                }
+
+                RealT mean(void)
+                {
+                    RealT mean = 0;
+
                 }
 
                 // list of accumulators, one for ech registered process
@@ -65,7 +76,7 @@ namespace DMFT
                  *  The first n/3 elements are imaginary time points,  after that n/3 values for spin DOWN, then spin UP.
                  *  The last element is the sign (+1, -1, 0 to use last sign (sample rejected))
                  */
-                void collect(void)
+                void MPIcollect(void)
                 {
                     while(!config.isGenerator)
                     {
@@ -79,19 +90,6 @@ namespace DMFT
                             totalSign += sign;
                             for(int i = 0; i < dataLength; i++)
                                 push(data[i],data[dataLength+i],data[2*dataLength+i], sign);
-                            /*std::vector<RealT> outVdown(BinSize,0);
-                            std::vector<RealT> outVup(BinSize,0);
-                            for(int i = 0; i < BinSize; i++)
-                            {
-                                outVdown[i] = boost::accumulators::sum(binsDown[i]);
-                                outVup[i] = boost::accumulators::sum(binsUp[i]);
-                                //g0_tmp(i,DOWN) = g0.getByT(t, DOWN);
-                                //g0_tmp(i,UP) = g0.getByT(t, UP);
-                            }
-                            //LOG(INFO) << "-----------------mcacc--------------------: " << totalSign  << "\n"
-                            //    << outVdown << "\n" << outVup << "\n"
-                            //    << "----------------->mcacc<--------------------";
-                            */
                         }
                         else if (msg.tag() == static_cast<int>(MPI_MSG_TAGS::SAMPLING_END))
                         {
@@ -132,6 +130,32 @@ namespace DMFT
                             LOG(ERROR) << "unrecognized message tag: " << msg.tag();
                         }
                     }
+                }
+                
+                
+                void insert(RealT sign, VectorT MG_, VectorT tk)
+                {
+                    signs.push_back(sign);
+                    MklGl.push_back(MG_);
+                    tau_k.push_back(tk);
+                }
+
+                
+                void reserve(long size){ MklGl.reserve(size); tau_k.reserve(size); }    
+
+                /*! Computes statistics (mean, variance, autocorrelation time) on the accumulated data.
+                 *
+                 */
+                void computeImpGF_fullStatistics(void)
+                {
+                    int N = tau_k.size();
+                    int bins = N/50;
+                    if(MklGl.empty())
+                    {
+                        LOG(WARNING) << "Requesting full statistics without data";
+                        return;
+                    }
+                    RealT mean = 0, var = 0, R = 0, corrT = 0;
                 }
 
 

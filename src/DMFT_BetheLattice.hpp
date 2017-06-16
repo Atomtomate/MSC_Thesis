@@ -87,6 +87,9 @@ namespace DMFT
                                 LOG(INFO) << "forcing paramagnetic solution";
                                 LOG(INFO) << "Writing results";
                             }
+                            gImp.setParaMagnetic();
+                            g0.setParaMagnetic();
+
                             ioh.writeToFile();
 
                         }

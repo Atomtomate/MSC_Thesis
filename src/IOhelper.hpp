@@ -43,12 +43,12 @@ class IOhelper//: public mglDraw
                 /*! initialize (new) output dir
                  *  @param [in] _outDir directory path from current working dir
                  */
-                void initDir(std::string& _outDir)
+                void initDir(std::string& _outDir);
 
 		/*! Write all Green's functions to specified folder.
 		 *  note that GF must be queued for logging before calling this function.
 		 */
-		int writeToFile() const;
+		int writeToFile(void) const;
 
 		/*! Write specific Green's function to file.
 		 *  @param  [in]  handle obtained through addGF(const GreensFct* gf, LogInfos l); 
@@ -62,7 +62,7 @@ class IOhelper//: public mglDraw
                 int writeToFile(GreensFct& gf, std::string & name) const;
                 
 
-                void readFromFile(GreensFct& gf, const LogInfos& li) const;
+                void readFromFile(GreensFct& gf, const std::string files_it, const std::string files_mf) const;
                 
                 /*! Plot Green's function using GnuPlot
                  *  @param  [in] gf     Green's function

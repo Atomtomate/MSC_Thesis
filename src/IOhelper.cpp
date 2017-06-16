@@ -2,7 +2,8 @@
 
 namespace DMFT
 {
-    IOhelper::IOhelper(const std::string& _outDir, const Config& c): c(c){
+    IOhelper::IOhelper(std::string& _outDir, const Config& c): c(c)
+    {
         initDir(_outDir);
     };
 
@@ -44,12 +45,13 @@ namespace DMFT
             LOG(ERROR) << "Error while writing parameters to file: " << e.what();
         }
 
-        int IOhelper::writeToFile(void) const
-        {
-            if(!c.isGenerator || c.local.rank() != 0) return 0;
-            for(auto el: gfList) writeToFile(std::get<0>(el).get(), std::get<1>(el));
-            return 0;
-        }
+    }
+
+    int IOhelper::writeToFile(void) const
+    {
+        if(!c.isGenerator || c.local.rank() != 0) return 0;
+        for(auto el: gfList) writeToFile(std::get<0>(el).get(), std::get<1>(el));
+        return 0;
     }
 
     int IOhelper::writeToFile(unsigned index) const
@@ -100,29 +102,43 @@ namespace DMFT
         }
     }
 
-    void IOhelper::readFromFile(GreensFct& gf, const LogInfos& li) const
+    void IOhelper::readFromFile(GreensFct& gf, const std::string files_it, const std::string files_mf) const
     {
+        boost::filesystem::path file_mf;
+        boost::filesystem::path file_it;
+        boost::filesystem::ifstream fs;
+        fs.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
         if(!c.isGenerator || c.local.rank() != 0) return ;
-        boost::filesystem::path file_mf = outDir;
-        boost::filesystem::path file_it = outDir;
-        file_mf	/= boost::filesystem::path(std::to_string(iteration) + std::string("_") + li.filename + std::string("_MF.out"));
-        file_it	/= boost::filesystem::path(std::to_string(iteration) + std::string("_") + li.filename + std::string("_IT.out"));
-        boost::filesystem::ofstream fm,ft;
-        fm.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
-        ft.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
-        try
+        if(!files_mf.empty())
         {
-            fm.open (file_mf);
-            ft.open (file_it);
-            //TODO: get it oder find highest it
-            //TODO: read file into GF
-            //TODO: check consistency with fft
-            fm.close(); ft.close();
+            file_mf = boost::filesystem::path(files_mf);
+            try
+            {
+                fs.open(file_mf);
+                int n = 0;
+                ComplexT up,down;
+                fs.close();
+            }
+            catch (boost::filesystem::ofstream::failure e)
+            {
+                LOG(ERROR) << "Error while reading Matsubara Green\'s function from file: " << e.what();
+            }
         }
-        catch (boost::filesystem::ofstream::failure e)
+        if(!files_it.empty())
         {
-            LOG(ERROR) << "Error while writing Matsubara Green\'s function to file: " << e.what();
-            LOG(ERROR) << "Error while writing Green\'s function to file: " << e.what();
+            file_it = boost::filesystem::path(files_it);
+            try
+            {
+                fs.open(file_it);
+                //TODO: get it oder find highest it
+                //TODO: read file into GF
+                //TODO: check consistency with fft
+                fs.close();
+            }
+            catch (boost::filesystem::ofstream::failure e)
+            {
+                LOG(ERROR) << "Error while reading Green\'s function from file: " << e.what();
+            }
         }
     }
 

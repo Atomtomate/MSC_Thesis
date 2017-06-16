@@ -42,8 +42,8 @@ int main(int argc,char **argv)
 
     
     //DMFT::examples::_test_SOH(local, world, isGenerator);
-    DMFT::examples::_test_PT(local, world, isGenerator, true, 0.0);
-    //DMFT::examples::_test_hysteresis(local, world, isGenerator, true, 0.0);
+    //DMFT::examples::_test_PT(local, world, isGenerator, true, 0.0);
+    DMFT::examples::_test_hysteresis(local, world, isGenerator);
 
     //Config conf(beta,mu,U,_CONFIG_maxMatsFreq);
     /*if (!sc)

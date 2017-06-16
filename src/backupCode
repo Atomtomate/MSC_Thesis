@@ -11,3 +11,58 @@
                         std::cout << "\n +++++M: \n" << M << "\n +++++ \n" << std::endl;
                         n += 1;
 
+    void WeakCoupling::computeImpGF(void)
+    {
+        //TODO: use convolution instead
+        long binCount = itBinsUP.size();
+        for(int i=0;i<g0.getItGF().rows();i++)
+        {
+            RealT t 		= config.beta*static_cast<RealT>(i)/g0.getItGF().rows();
+            RealT sumIt		= 0.0;
+            for(int j=0;j<binCount ;j++)
+            {
+                const RealT bValUP = boost::accumulators::sum(itBinsUP(j));
+                const RealT bValDOWN = boost::accumulators::sum(itBinsDOWN(j));
+                if(bValUP)
+                {
+                    RealT mfreq	= gImp.isSymmetric() ? mFreqS(k,config.beta) : mFreq(k, config.beta);
+                    const RealT tp = config.beta*static_cast<RealT>(j)/binCount;
+                    sumIt += g0(t-tp,UP)*bValUP;
+                    ComplexT sumWn(0.0,0.0);
+                    for(int k = 0; k < _CONFIG_maxMatsFreq; k++)
+                    {
+                        sumWn += std::exp(ComplexT(0.0,mfreq*tp))*bValUP;
+                    }
+                }
+                if(bValDOWN)
+                {
+                    RealT mfreq	= gImp.isSymmetric() ? mFreqS(k,config.beta) : mFreq(k, config.beta);
+                    const RealT tp = config.beta*static_cast<RealT>(j)/binCount;
+                    sumIt += g0(t-tp,DOWN)*bValDOWN;
+                    ComplexT sumWn(0.0,0.0);
+                    for(int k = 0; k < _CONFIG_maxMatsFreq; k++)
+                    {
+                        sumWn += std::exp(ComplexT(0.0,mfreq*tp))*bValDOWN;
+                    }
+
+                }
+            }
+            gImp.setByT(t,s, g0(t,s) - sumIt/static_cast<RealT>(totalSign));
+        }
+
+ifdef MATSUBARA_MEASUREMENT
+
+        //TODO: absorb in i loop?
+        for(int j=0;j<itBins.rows();j++){
+            const RealT bVal = itBins(j,s);
+            //if(bVal == 0.0) continue;
+            const RealT tp = config.beta*j/static_cast<RealT>(itBins.rows());
+        }
+        gImp.setByMFreq(k,s,g0.getByMFreq(k,s)*(1.0-(sumWn)));
+    }
+}
+else
+}
+gImp.transformTtoM();
+endif
+

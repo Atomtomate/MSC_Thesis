@@ -7,14 +7,10 @@ set samples 110
 
 
 
-set output 'G0_Guess.svg'
-set title 'G_{0,up}({/Symbol t})'
-plot '0_G0_Guess_IT.out' using 1:3 ps 0.5  title 'Weiss function initial guess'
-
 set output 'GImp.svg'
 set title 'G_{Imp,up}(i {/Symbol w}_n)'
 filename(n) = sprintf("%d_GImp_MF.out", n)
-plot for [i=0:30] filename(i) using 1:3 ps 0.5  title sprintf("Iteration %d",i)
+plot for [i=0:30] filename(i) using 1:3 every 1::::50 ps 0.9  title sprintf("Iteration %d",i)
 
 set output 'GImp_IT.svg'
 set title 'G_{Imp,up}(i {/Symbol t}_n)'
@@ -44,8 +40,12 @@ plot for [i=0:20] filename(i) using 1:5 ps 0.5 title sprintf("Iteration %d",i)
 
 set output 'SImp.svg'
 set title 'Sigma_{Imp,up}(i {/Symbol w}_n)'
-filename(n) = sprintf("%d_sImp_MF.out", n)
+filename(n) = sprintf("%d_SelfE_MF.out", n)
 plot for [i=0:20] filename(i) using 1:3 ps 0.5  title sprintf("Iteration %d",i)
+
+set output 'G0_Guess.svg'
+set title 'G_{0,up}({/Symbol t})'
+plot '0_G0_Guess_IT.out' using 1:3 every 1::::50 ps 0.9  title 'Weiss function initial guess'
 
 set output 'GLoc_Re.svg'
 set title 'Re[G_{loc,up}(i {/Symbol w}_n)]'

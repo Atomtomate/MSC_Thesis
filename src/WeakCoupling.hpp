@@ -4,9 +4,12 @@
 #include "Config.hpp"
 #include "GreensFct.hpp"
 #include "ImpSolver.hpp"
-#include "MCAccumulator.hpp"
 
 #include <boost/serialization/vector.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/moment.hpp>
 
 #include <iostream>
 #include <tuple>
@@ -14,6 +17,7 @@
 
 #define MEASUREMENT_SHIFT 1
 #define MATSUBARA_MEASUREMENT 1
+#define FULL_STATISTICS 1
 
 namespace DMFT
 {
@@ -33,19 +37,20 @@ namespace DMFT
     class WeakCoupling: public ImpSolver<WeakCoupling>
     {
         public:
-            EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-                // ========== Definitions ==========
-                /*! Constructor for the WeakCoupling solver
-                 *  @param [in]  g0				Weiss Green's function
-                 *  @param [out] gImp			sampled impurity Green's function
-                 *  @param [in]	 U				Interaction strength
-                 *  @param [in]  zeroShift		U-zeroShift avoids some of the sign problem complications
-                 *  @param [in]  mu				chemical potential
-                 *  @param [in]  beta			temperature
-                 *  @param [in]  burningSteps	disregard first values during simulation until reasonable stable state is achieved TODO: auto gen
-                 */
-                WeakCoupling(GreensFct &g0, GreensFct &gImp, const Config& config, const RealT zeroShift, const unsigned int burninSteps);
+            using AccT = boost::accumulators::accumulator_set<RealT, boost::accumulators::features<boost::accumulators::tag::sum, boost::accumulators::tag::moment<2> > >;
+            // ========== Definitions ==========
+            /*! Constructor for the WeakCoupling solver
+             *  @param [in]  g0				Weiss Green's function
+             *  @param [out] gImp			sampled impurity Green's function
+             *  @param [in]	 U				Interaction strength
+             *  @param [in]  zeroShift		U-zeroShift avoids some of the sign problem complications
+             *  @param [in]  mu				chemical potential
+             *  @param [in]  beta			temperature
+             *  @param [in]  burningSteps	disregard first values during simulation until reasonable stable state is achieved TODO: auto gen
+             */
+            WeakCoupling(GreensFct &g0, GreensFct &gImp, const Config& config, const RealT zeroShift, const unsigned int burninSteps);
+
             virtual ~WeakCoupling();
 
             inline int expansionOrder(void) {return n;}
@@ -85,7 +90,6 @@ namespace DMFT
              *	@return	impurity GF
              */
             void computeImpGF(void);
-
 
             void computeImpGF_OLD(void);
             /*! @return impurity Green's function. sample and call compute first!
@@ -172,20 +176,22 @@ namespace DMFT
             //REMARK: there should probably be some check of ownership, smart pointer could be used but are slow
             GreensFct   &g0;			// reference to Weiss GF
             GreensFct   &gImp;			// sampled impurity GF
+            //MCAccumulator acc;
 
             const Config& config;
             std::array<MatrixT,2> M;
             std::array<VectorT,2> gfCache;	                // cached access to Weiss GF at current vertex points
             SConfigL confs;
 
-            unsigned int steps;					// number of updates
+            unsigned long steps;					// number of updates
             const unsigned int burninSteps;		// throw away some steps at the start
             int lastSign;						// needed when proposal is rejected
-            int totalSign;
+            long totalSign;
             int n; 					// expansion order (number of used rows/cols)
             long totN;
             const RealT zeroShift;				// auxiliary ising shift
-            ImTG itBins;
+            std::array< AccT, _CONFIG_maxSBins> itBinsUP;
+            std::array< AccT, _CONFIG_maxSBins> itBinsDOWN;
 
             void updateContribution(int sign);
             void updateContribution_OLD(int sign);

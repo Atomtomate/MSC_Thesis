@@ -20,8 +20,8 @@ namespace examples{
 
    int _test_PT(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator, bool use_bethe, double mxing);
    int _test_SOH(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator);
-   void _run_hysteresis(double);
-   void _test_hysteresis(void);
+   void _run_hysteresis(RealT beta, boost::mpi::communicator world, boost::mpi::communicator local, const bool isGenerator);
+   void _test_hysteresis(boost::mpi::communicator world, boost::mpi::communicator local, const bool isGenerator);
 
 
 }	//end namespace examples
