@@ -2,7 +2,7 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 from distr import *
-
+from matplotlib2tikz import save as tikz_save
 
 class Sampler (object):
     def sample(self, N = 1):
@@ -28,7 +28,7 @@ class Sampler (object):
         self.expected_value()
         self.variance()
 
-    def show_results(self, true_distr = None, true_mean = None, true_variance = None, true_weight = None, title = ""):
+    def show_results(self, true_distr = None, true_mean = None, true_variance = None, true_weight = None, title = "", save_tikz = False):
         fig, ax = plt.subplots()
         if true_distr is not None:
             x = np.linspace(np.min(self.f_sample*self.weights), np.max(self.f_sample*self.weights), len(self.f_sample)*10)
@@ -59,8 +59,11 @@ class Sampler (object):
             wsl = ax_arr[2].plot(np.arange(1,len(self.weights)+1), np.cumsum(self.weights, dtype=float)/np.arange(1,len(self.weights)+1,dtype=float))
             wtl = ax_arr[2].axhline(true_weight, color = 'r', ls = 'dotted')
             ax_arr[2].legend(['weight_sampled', 'weight_true'])
-            
-        plt.show()
+          
+        if save_tikz:
+              tikz_save(title.replace(" ", "") + ".tex")
+        else:  
+            plt.show()
 
         
 class InversionSampler (Sampler):
@@ -144,7 +147,7 @@ class MetropolisHastingsSampler (Sampler):
 def example_invSampl_normal_distribution():
     inv_sample_normal = InversionSampler(Phi_inv)
     inv_sample_normal.run_sampler(1000)
-    inv_sample_normal.show_results(true_distr = phi, true_mean = 0.0, true_variance = 1.0)
+    inv_sample_normal.show_results(true_distr = phi, true_mean = 0.0, true_variance = 1.0, title = "Inversion Sampling" , save_tikz = True)
     
 def example_rejSampl_normal_distribution():
     q = norm(loc = 1.2, scale = 2)
@@ -154,14 +157,14 @@ def example_rejSampl_normal_distribution():
     plt.legend(['Density p(x)', 'Envelope c*q(x)']);
     rej_sample_normal = RejectionSampler(phi_test, q, scale = scale)
     rej_sample_normal.run_sampler(6000)
-    rej_sample_normal.show_results(true_distr = phi_test_true, true_mean = 1.2, true_variance = 1.3*1.3)
+    rej_sample_normal.show_results(true_distr = phi_test_true, true_mean = 1.2, true_variance = 1.3*1.3, title = "Rejection Sampling", save_tikz = True)
     print("tries: " + str(rej_sample_normal.tries) + ", samples: " + str(rej_sample_normal.samples) )
     
 def example_impSampl_normal_distribution():
     q = norm(loc = 1.2, scale = 1.5)
     imp_sample_normal = ImportanceSampler(phi_test, q)
     imp_sample_normal.run_sampler(3000)
-    imp_sample_normal.show_results(true_distr = phi_test_true, true_mean = 1.2, true_variance = 1.3*1.3, true_weight = phi_test_norm())
+    imp_sample_normal.show_results(true_distr = phi_test_true, true_mean = 1.2, true_variance = 1.3*1.3, true_weight = phi_test_norm(), title = "Importance Sampling", save_tikz = True)
     
 def gaussian_propose(x):
     return norm(loc=x, scale=1.8).rvs()
@@ -171,7 +174,7 @@ def gaussian_step(x, xp):
 def example_MHSample_normal_distribution():
     MH_sample_normal = MetropolisHastingsSampler(phi_test, gaussian_propose, gaussian_step, 3.0, burnin = 1000)
     MH_sample_normal.run_sampler(8000)
-    MH_sample_normal.show_results(true_distr = phi_test_true, true_mean = 1.2, true_variance = 1.3*1.3)
+    MH_sample_normal.show_results(true_distr = phi_test_true, true_mean = 1.2, true_variance = 1.3*1.3, title = "Metropolis Sampling", save_tikz = True)
     print("accepted samples: " + str(MH_sample_normal.accepted) + ", samples: " + str(MH_sample_normal.samples) + ", acceptance rate: " + str(MH_sample_normal.accepted/MH_sample_normal.samples))
     
 example_invSampl_normal_distribution()
