@@ -22,9 +22,9 @@ def plot_norm():
     plt.figure()
     plt.plot(u, Phi_inv(u), 'b-')
  
-mean = 1.2   
+mean = 1.2
 std = 1.3
-def phi_test(x):
+def phi_test(x, mean = 1.2, std = 1.3 ):
     return np.exp((-(x-mean)**2.0)/(2.0*std*std) )
     
 def phi_test_norm():
