@@ -8,20 +8,22 @@
 namespace DMFT
 {
 
+        //TODO: this can all be obtained from GrennFct object directly
         ComplexT FFT::tail(const RealT wn, const std::vector<std::array<RealT,2> >& tail, const int spin) const
         {
             ComplexT iwn(0.0, wn);
-            ComplexT res = tail[0][spin]/iwn - tail[1][spin]/(wn*wn) - tail[2][spin]/(iwn*wn*wn) + tail[3][spin]/(wn*wn*wn*wn);
+            ComplexT res = tail[0][spin] + tail[1][spin]/iwn - tail[2][spin]/(wn*wn) - tail[3][spin]/(iwn*wn*wn) + tail[4][spin]/(wn*wn*wn*wn);
             VLOG(8) << "Tail: " << tail[0][spin] << ", " << tail[1][spin] << ", " << tail[3][spin] << " => " << res;
             return res;
         }
 
+        //TODO: this can all be obtained from GrennFct object directly
         RealT FFT::ftTail(const RealT tau, const std::vector<std::array<RealT,2> >& tail, const int spin) const
         {
-            VLOG(8) << "ft Tail correction: " <<-tail[0][spin]/2.0 + tail[1][spin]*(2.0*tau - _beta)/4.0 + tail[2][spin]*tau*(_beta-tau)/4.0\
-                + tail[3][spin]*(2.0*tau - _beta)*(2.0*tau*tau - 2.0*tau*_beta - _beta*_beta)/48.0;
-            return -tail[0][spin]/2.0 + tail[1][spin]*(2.0*tau - _beta)/4.0 + tail[2][spin]*tau*(_beta-tau)/4.0\
-                + tail[3][spin]*(2.0*tau - _beta)*(2.0*tau*tau - 2.0*tau*_beta - _beta*_beta)/48.0;
+            VLOG(8) << "ft Tail correction: " <<-tail[1][spin]/2.0 + tail[2][spin]*(2.0*tau - _beta)/4.0 + tail[3][spin]*tau*(_beta-tau)/4.0\
+                + tail[4][spin]*(2.0*tau - _beta)*(2.0*tau*tau - 2.0*tau*_beta - _beta*_beta)/48.0;
+            return tail[0][spin] - tail[1][spin]/2.0 + tail[2][spin]*(2.0*tau - _beta)/4.0 + tail[3][spin]*tau*(_beta-tau)/4.0\
+                + tail[4][spin]*(2.0*tau - _beta)*(2.0*tau*tau - 2.0*tau*_beta - _beta*_beta)/48.0;
         }
 
 
@@ -38,6 +40,7 @@ namespace DMFT
         {
             const RealT absErr = 0.01;
             const int nMF = from.rows();
+            VLOG(5) << "transforming M to T, coeffs: " << tail_coeff[0][0] << ", " << tail_coeff[1][0] << ", " << tail_coeff[2][0] << ", " << tail_coeff[3][0] << ", " << tail_coeff[4][0] << ", " << tail_coeff[5][0];
             const int shift = static_cast<int>((_CONFIG_maxTBins - nMF)/2);
             for(int s=0;s<2;s++){
                 fft_wmin = symmetric ? mFreqS( - nMF, _beta) : mFreq(0, _beta);
@@ -97,6 +100,7 @@ namespace DMFT
 
         void FFT::transformMtoT_naive(const MatG &from, ImTG &to) const
         {
+            LOG(WARNING) << "this transofrmation method has not been updated for symmetric storage!"; 
             for(int t=0;t<_CONFIG_maxTBins;t++)
             {
                 RealT tau = t*_beta/_CONFIG_maxTBins;
@@ -105,7 +109,7 @@ namespace DMFT
                     ComplexT sum = 0.0;
                     for(int n=0;n<_CONFIG_maxMatsFreq;n++){
                         const ComplexT tmp(std::exp(ComplexT(0.0,-mFreq(n,_beta)*tau)));
-                        sum += tmp*(from(n,s) - 1.0/ComplexT(0.0,mFreq(n,_beta)));
+                        sum += tmp*(from(n,s) - 1.0);
 
                     }
                     to(t,s) = std::real(sum/_beta) - 0.5;
@@ -116,6 +120,7 @@ namespace DMFT
         void FFT::transformTtoM_naive(const ImTG &from, MatG &to) const
         {
             //TODO: implement
+            LOG(WARNING) << "this transofrmation method has not been updated for symmetric storage!"; 
             for(int t=0;t<_CONFIG_maxTBins;t++)
             {
                 RealT tau = t*_beta/_CONFIG_maxTBins;
@@ -123,11 +128,32 @@ namespace DMFT
                 {
                     ComplexT sum = 0.0;
                     for(int n=0;n<_CONFIG_maxMatsFreq;n++){
-                        const ComplexT tmp(std::exp(ComplexT(0.0,-mFreq(n,_beta)*tau)));
-                        sum += tmp*(from(n,s) - 1.0/ComplexT(0.0,mFreq(n,_beta)));
+                        const RealT mf = mFreqS(n, _beta);
+                        const ComplexT tmp(std::exp(ComplexT(0.0,-mf*tau)));
+                        sum += tmp*(from(n,s));
 
                     }
-                    to(t,s) = std::real(sum/_beta) - 0.5;
+                    to(t,s) = std::real(sum/_beta);
+                }
+            }
+        }
+        
+        void FFT::transformMtoT_naive(GreensFct* gf) const
+        { 
+            for(int s=0;s<_CONFIG_spins;s++)
+            {
+                for(int t=0;t<_CONFIG_maxTBins;t++)
+                {
+                    RealT tau = t*_beta/_CONFIG_maxTBins;
+                    ComplexT sum(0., 0.);
+                    for(int n=-_CONFIG_maxMatsFreq/2;n<_CONFIG_maxMatsFreq/2;n++)
+                    {
+                        const RealT mf = gf->getMFreq(n);
+                        const ComplexT c= std::exp(ComplexT(0.0, -mf*tau) );
+                        sum += (c - gf->getTail(mf, s))*gf->getByMFreq(n, s);
+                    }
+                    sum = (sum - gf->getFtTail(tau, s))/_beta;
+                    gf->setByT(tau, s, std::real(sum));
                 }
             }
         }

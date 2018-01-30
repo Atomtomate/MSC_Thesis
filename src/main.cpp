@@ -4,6 +4,7 @@ INITIALIZE_EASYLOGGINGPP
 void dataGenerationComm(boost::mpi::communicator local, boost::mpi::communicator world);
 void dataCollectionComm(boost::mpi::communicator local, boost::mpi::communicator world);
 
+
 //TODO: generate random number stream in collector processes?
 //static const char* help = "Placeholder help string, TODO: set help string\n";
 int main(int argc,char **argv)
@@ -21,7 +22,7 @@ int main(int argc,char **argv)
     boost::mpi::communicator local = world.split(isGenerator ? 0 : 1);
 
     double U = 2.5;
-    double beta = 64.0;
+    double beta = 20.0;
     double mixing = 0;
     double mu = U/2.0;
     // ========== configure logging		============
@@ -43,7 +44,8 @@ int main(int argc,char **argv)
     
     //DMFT::examples::_test_SOH(local, world, isGenerator);
     //DMFT::examples::_test_PT(local, world, isGenerator, true, 0.0);
-    DMFT::examples::_test_hysteresis(local, world, isGenerator);
+    //DMFT::examples::_test_hysteresis(local, world, isGenerator);
+    DMFT::examples::_test_hyb(local, world, isGenerator);
 
     //Config conf(beta,mu,U,_CONFIG_maxMatsFreq);
     /*if (!sc)

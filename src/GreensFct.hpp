@@ -4,6 +4,7 @@
 #include "Config.hpp"
 #include "Constants.h"
 #include "FFT.hpp"
+#include "GFTail.hpp"
 
 #include <vector>
 #include <complex>
@@ -13,8 +14,15 @@
 
 namespace DMFT
 {
+//DMFT::ComplexT c_fit_fct(int n, int i)
+//{
+//    return std::pow(1./DMFT::ComplexT(0., DMFT::mFreqS(n, 10.)),i);
+//}
 
-
+    /*ComplexT defaultTail(int n, int i)
+    {
+        return std::pow(1.0/ComplexT(0.,mFreqS(n, 10.)),i);
+    }*/
     /*! Implementation for functionality of the Green's funtion  
      *  
      *  \f[ \Delta(\sigma,w_n,\epsilon_k,V(k,\sigma )) = \sum_k \|V(k,\sigma )\|^2 /(i*\omega_n - \epsilon_k) \f]	(8.14)
@@ -33,22 +41,23 @@ namespace DMFT
     class GreensFct//: public VecExpression<GreensFct>
     {
 
-        const int MAX_T_BINS = _CONFIG_maxTBins;
-        const int MAX_M_FREQ = _CONFIG_maxMatsFreq;
-        const int SPINS	= 2;
-        const int TAIL_ORDER = 4;
+        //ComplexT (*tailFunc)(int, int);
+        static constexpr int MAX_T_BINS = _CONFIG_maxTBins;
+        static constexpr int MAX_M_FREQ = _CONFIG_maxMatsFreq;
+        static constexpr int SPINS	= 2;
+        static constexpr int TAIL_ORDER = 7;
 
         public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-            GreensFct(RealT beta, const bool symmetric = false, bool fitTail = false):\
-                symmetric(symmetric), beta(beta), fft(beta), deltaIt(static_cast<RealT>(MAX_T_BINS)/beta), fit(fitTail), tailFitted(false) 
+            GreensFct(RealT beta, const bool symmetric = false, bool fitTail = false, GFTail gft = GFTail()):
+                symmetric(symmetric), beta(beta), fft(beta), deltaIt(static_cast<RealT>(MAX_T_BINS)/beta), fit(fitTail), tailFitted(false), gft(gft)
         {
+            //tailFunc = defaultTail;//[](int n, int i) { return std::pow(1.0/ComplexT(0.,mFreqS(n, 10.)),i); 
             g_it = ImTG::Zero(MAX_T_BINS, SPINS);
             g_wn = MatG::Zero(MAX_M_FREQ, SPINS);
             g_it_std = ImTG::Zero(MAX_T_BINS, SPINS);
             g_wn_std = MatG::Zero(MAX_M_FREQ, SPINS);
-            std::array<RealT,2> z = {.0, .0};
-            expansionCoeffs = {z, z, z, z};
+            expansionCoeffs = {};
         }
 
         GreensFct(GreensFct const&) = delete; // TODO: implement
@@ -73,6 +82,11 @@ namespace DMFT
          */
         inline void setByMFreq(const int n, const int spin, const ComplexT val)
         {
+            if(std::abs(n) >= g_wn.rows())
+            {
+                LOG(WARNING) << "out of bound for internal storage of Matsubara GF. Use tail instead!";
+                return;
+            }
             if(symmetric)
             {
                 if(n<0) g_wn(-n,spin) = -val;
@@ -83,6 +97,7 @@ namespace DMFT
                 g_wn(n+g_wn.rows()/2,spin) = val;
             }
             tSet = 0;
+            tailFitted = false;
         }
 
 
@@ -112,20 +127,21 @@ namespace DMFT
                 g_wn_std(n+g_wn.rows()/2,spin) = std;
             }
             tSet = 0;
+            tailFitted = false;
         }
 
         /*! Sets G(i \omega_n) = val
          *
          *  @param [in] g Matsubara Green's function (as MatG) 
          */
-        void setByMFreq(const MatG &g)	{ g_wn = g; mSet = 1; tSet = 0;}
+        void setByMFreq(const MatG &g)	{ g_wn = g; mSet = 1; tSet = 0; tailFitted = false;}
 
         /*! Sets G(i \omega_n) = val
          *
          *  @param [in] g Matsubara Green's function (as Eigen::ArrayXXd) 
          *  @param [in] std standard deviation of data 
          */
-        void setByMFreq(const MatG &g, MatG &std)	{ g_wn = g; g_wn_std = std; mSet = 1; tSet = 0;}
+        void setByMFreq(const MatG &g, MatG &std)	{ g_wn = g; g_wn_std = std; mSet = 1; tSet = 0; tailFitted = false;}
 
         /*! Sets \f$ G(t) = val, G(0) = val \Rightarrow G(0^+) = val \f$
          *
@@ -134,12 +150,12 @@ namespace DMFT
          *  @param [in] val value of Green's function for \sigma at \tau
          *  @param [in] std standard deviation of data
          */
-        inline void setByT(const RealT t, const int spin, const RealT val, const RealT std = 0.0){
+        inline void setByT(const RealT t, const int spin, const RealT val, const RealT std = 0.0)
+        {
             const int i = tIndex(t);
             //if(t==1) g_it(0,spin) = val;	// NOTE: redudant since tIndex shifts up from 0, remove?
             g_it(i,spin) = val;
             g_it_std(i,spin) = std;
-            tailFitted = false;
             mSet = 0;
         }
 
@@ -162,7 +178,14 @@ namespace DMFT
          *
          *  @return
          */
-        inline ComplexT getByMFreq(const int n, const unsigned int spin) const {
+        inline ComplexT getByMFreq(const int n, const unsigned int spin) const
+        {
+            if(std::abs(n) >= g_wn.rows())
+            {
+                VLOG(5) << "using tail data instead of measured data, for wn: " << getMFreq(n) << " = " <<  getTail(getMFreq(n), spin);
+                if(!tailFitted) LOG(WARNING) << "requesting tail without having called fit";
+                return getTail(getMFreq(n), spin);
+            }
             if(symmetric)
             {
                 if(n<0) return -g_wn(-n,spin);
@@ -173,6 +196,14 @@ namespace DMFT
                 return g_wn(n+g_wn.rows()/2,spin);
             }
         }
+        
+
+        /*! Returns Matsubara frequency as function of the index n.
+         */
+        inline RealT getMFreq(const int n) const
+        {
+            return mFreqS(n, beta);
+        }
 
         /*! @brief	imaginary time Green's function \f$ G_\sigma(\tau) \f$
          *  		storage order is t first (inner loop over t)
@@ -182,7 +213,8 @@ namespace DMFT
          *
          *  @return G_sigma(  \f$ \tau \f$ )
          */
-        inline RealT operator() (const RealT t, const int spin) const{
+        inline RealT operator() (const RealT t, const int spin) const
+        {
             //REMARK: this implies that G(0) == G(0^-) 
             if(t == 0.0) return -1.0*g_it(g_it.rows()-1, spin);
             const int sgn = 2*(t>0)-1;
@@ -296,6 +328,9 @@ namespace DMFT
         {
             //if(symmetric) 
             transformMtoT(g_it);
+            //if(fit)
+            //   fitTail(); 
+            //fft.transformMtoT_naive(this);
         }
 
         /*! Does a FFT from Matsubara to imaginary time Green's function and stores it in target.
@@ -305,8 +340,13 @@ namespace DMFT
         {
             if(fit)
             {
+                std::vector<std::array<RealT,2> > expC;
                 fitTail();
-                fft.transformMtoT(g_wn, target, expansionCoeffs, symmetric);
+                for(int i = 0; i < expansionCoeffs[0].size(); i++)
+                {
+                    expC.push_back({expansionCoeffs[0][i], expansionCoeffs[1][i]});
+                }
+                fft.transformMtoT(g_wn, target, expC, symmetric);
             }
             else
             {
@@ -329,7 +369,7 @@ namespace DMFT
          */
         inline void shift(const RealT s) { g_wn = ((g_wn.cwiseInverse() - s).cwiseInverse()).eval() ; markMSet(); transformMtoT();}
 
-        inline bool isSymmetric(void) {return symmetric;}
+        inline bool isSymmetric(void) const {return symmetric;}
         inline bool hasTail(void) {return fit;}
 
         /*! Compute this^-1 (i wn) - other^-1 (i wn), with tails if available.
@@ -339,8 +379,8 @@ namespace DMFT
         MatG invAdd(GreensFct& other)
         {
             MatG res(1,1);
-            if(!tailFitted) fitTail();
-            if(!other.tailFitted) other.fitTail();
+            fitTail();
+            other.fitTail();
             if(fit && other.hasTail())
             {
                 MatG res(MAX_T_BINS,2); 
@@ -382,9 +422,6 @@ namespace DMFT
         const MatG& getMGF() const { return g_wn; }
         const ImTG& getItGF() const { return g_it; }
 
-        // TODO: overload operators and use expression templates
-
-
         void setParaMagnetic(void)
         {
             g_wn.rightCols(1) = 0.5*(g_wn.leftCols(1) + g_wn.rightCols(1)).eval();
@@ -400,37 +437,36 @@ namespace DMFT
          */
         void fitTail(void)
         {
-            if(fit)
+            expansionCoeffs = {};
+            //TODO: tailFitted flag not working correctly
+            if(!fit) return;
+            int nSamples = gft.last-gft.first + 1;
+            Eigen::Matrix<ComplexT, Eigen::Dynamic, Eigen::Dynamic> A;
+            Eigen::Matrix<ComplexT, Eigen::Dynamic, 1> rhs;
+            Eigen::Matrix<RealT, 1, Eigen::Dynamic> fittedC;
+            A.resize(nSamples, gft.nC);
+            rhs.resize(nSamples);
+            fittedC.resize(gft.nC);
+            for(int f = 0; f < _CONFIG_spins; f++)
             {
-                // https://arxiv.org/pdf/1507.01012.pdf
-                // > -(G(0)  + G(beta) )/w_n   => -1/w_n
-                // > 
-                // >  (-1)^n (G^(n)(0) + G^(n)(beta))/w_n^n => ...
-
-                expansionCoeffs[0][UP] = 1; 
-                expansionCoeffs[0][DOWN] = 1; 
-
-                if(tSet)
+                for(int i = 0; i < nSamples && (i + gft.first < _CONFIG_maxMatsFreq); i++)
                 {
-                    expansionCoeffs[1][UP] = (g_it(1,UP) - g_it(0,UP) + g_it(MAX_T_BINS-1,UP) - g_it(MAX_T_BINS-2,UP))/deltaIt;
-                    expansionCoeffs[1][DOWN] = (g_it(1,DOWN) - g_it(0,DOWN) + g_it(MAX_T_BINS-1,DOWN) - g_it(MAX_T_BINS-2,DOWN))/deltaIt;
-
-                    expansionCoeffs[2][UP] = (g_it(0,UP) - 2.0*g_it(1,UP) + g_it(2,UP) +\
-                            g_it(MAX_T_BINS-1,UP) - 2.0*g_it(MAX_T_BINS-2,UP) + g_it(MAX_T_BINS-3,UP))/(deltaIt*deltaIt);
-                    expansionCoeffs[2][DOWN] = (g_it(0,DOWN) - 2.0*g_it(1,DOWN) + g_it(2,DOWN) +\
-                            g_it(MAX_T_BINS-1,DOWN) - 2.0*g_it(MAX_T_BINS-2,DOWN) + g_it(MAX_T_BINS-3,DOWN))/(deltaIt*deltaIt);
-
-                    expansionCoeffs[3][UP] = (- g_it(0,UP) + 3.0*g_it(1,UP) - 3.0*g_it(2,UP) + g_it(3,UP) +\
-                            g_it(MAX_T_BINS-1,UP) - 3.0*g_it(MAX_T_BINS-2,UP) + 3.0*g_it(MAX_T_BINS-3,UP) - g_it(MAX_T_BINS-4,UP))/(deltaIt*deltaIt*deltaIt);
-                    expansionCoeffs[3][DOWN] = (- g_it(0,DOWN) + 3.0*g_it(1,DOWN) - 3.0*g_it(2,DOWN) + g_it(3,DOWN) +\
-                            g_it(MAX_T_BINS-1,DOWN) - 3.0*g_it(MAX_T_BINS-2,DOWN) + 3.0*g_it(MAX_T_BINS-3,DOWN) - g_it(MAX_T_BINS-4,DOWN))/(deltaIt*deltaIt*deltaIt);
+                    if(i + gft.first > _CONFIG_maxMatsFreq) LOG(ERROR) << "too many values for tail fit requested";
+                    for(int j = 0; j < gft.nC; j++)
+                    {
+                        A(i,j) = gft.fitFct( gft.first + i , j, beta);
+                        rhs(i) = getByMFreq( gft.first + i, f);
+                    }
                 }
-            }
-            else
-            {
-                std::array<RealT,2> z = {.0, .0};
-                expansionCoeffs = {z, z, z, z};
-                //std::fill(expansionCoeffs.begin(), expansionCoeffs.end(), z);
+                fittedC = A.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(rhs).real().transpose();
+                for(int j = 0; j < gft.nC; j++)
+                {
+                    if(!(isSymmetric() && j%2 == 0))
+                        expansionCoeffs[f][j]  = fittedC(j);
+                    else
+                        expansionCoeffs[f][j]  = 0.;
+                }
+                VLOG(4) << "Tail coef f = " << f << ": " << expansionCoeffs[f][0] << ", " << expansionCoeffs[f][1] << ", " << expansionCoeffs[f][2] << ", " << expansionCoeffs[f][3] << ", " << expansionCoeffs[f][4];
             }
             tailFitted = true;
         }
@@ -438,14 +474,29 @@ namespace DMFT
         ComplexT getTail(const RealT wn, int spin) const
         {
             ComplexT iwn(0.0, wn);
-            ComplexT res = expansionCoeffs[0][spin]/iwn - expansionCoeffs[1][spin]/(wn*wn) - expansionCoeffs[2][spin]/(iwn*wn*wn) + expansionCoeffs[3][spin]/(wn*wn*wn*wn);
+            ComplexT res(0.,0.);
+            for(int i = 0; i < expansionCoeffs[spin].size(); i++)
+                res += expansionCoeffs[spin][i]/std::pow(iwn,i);
             return res;
+        }
+
+        RealT getTailCoef(const unsigned int i, int spin)
+        {
+            return expansionCoeffs[spin][i];
         }
 
         RealT getFtTail(const RealT tau, const int spin) const
         {
-            return -expansionCoeffs[0][spin]/2.0 + expansionCoeffs[1][spin]*(2.0*tau - beta)/4.0 + expansionCoeffs[2][spin]*tau*(beta-tau)/4.0\
-                + expansionCoeffs[3][spin]*(2.0*tau - beta)*(2.0*tau*tau - 2.0*tau*beta - beta*beta)/48.0;
+            RealT res = expansionCoeffs[spin][0];
+            if(TAIL_ORDER > 1)
+                res += -expansionCoeffs[spin][1]/2.0;
+            if(TAIL_ORDER > 2)
+                res +=  expansionCoeffs[spin][2]*(2.0*tau - beta)/4.0;
+            if(TAIL_ORDER > 3)
+                res += expansionCoeffs[spin][3]*tau*(beta-tau)/4.0;
+            if(TAIL_ORDER > 4)
+                res += expansionCoeffs[spin][4]*(2.0*tau - beta)*(2.0*tau*tau - 2.0*tau*beta - beta*beta)/48.0;
+            return res;
         }
 
         protected:
@@ -460,10 +511,10 @@ namespace DMFT
         ImTG	g_it_std; // col major -> spin outer loop
         MatG	g_wn_std; // col major -> spin outer loop
         FFT 	fft;
-        RealT       tailCoeffs[4];
-        RealT       deltaIt;
+        RealT   deltaIt;
+        GFTail  gft;
 
-        std::vector<std::array<RealT,2> > expansionCoeffs;
+        std::array<std::array<RealT,TAIL_ORDER>, _CONFIG_spins> expansionCoeffs;
 
         //Config& conf;
 
@@ -482,6 +533,7 @@ namespace DMFT
 
 
     };
+
 
     //using GreensFct = GreensFct;	// useless for now, may be useful for later changes to GreensFct
     //using GreensFct = GreensFct<_CONFIG_maxTBins, _CONFIG_maxMatsFreq, _CONFIG_spins>;

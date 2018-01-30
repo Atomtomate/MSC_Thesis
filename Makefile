@@ -34,8 +34,8 @@ CXXFLAGS.PARALLEL := -O2 -Wall -fno-alias -parallel
 CXXFLAGS.FAST     := -O3 -parallel -g -xHost -ansi-alias -ipo -prof-use -D EIGEN_NO_DEBUG
 #-mtune=native -xhost -Wall
 CXXFLAGS.FP       := -fimf-precision=3 -fp-model=precise -fp-model source -prec-div -prec-sqrt
-CXXFLAGS          := -Wno-deprecated -std=c++14 -D DEBUG_MODE -DMKL_ILP64
-CLANGFLAGS        := -O2 -std=c++14 -ferror-limit=0 -L/usr/lib64 -lstdc++ -v
+CXXFLAGS          := -Wno-deprecated -std=c++17 -D DEBUG_MODE -DMKL_ILP64
+CLANGFLAGS        := -O2 -std=c++17 -ferror-limit=0 -L/usr/lib64 -lstdc++ -v
 
 #  libraries
 # mathgl2 and mathgl-qt needed

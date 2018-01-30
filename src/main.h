@@ -6,6 +6,9 @@
 
 #include "Config.hpp"
 #include "singleOrbHubbard.hpp"
+#include "Segments.hpp"
+#include "GreensFct.hpp"
+#include "GFTail.hpp"
 
 #include <iostream>
 #include <fstream>

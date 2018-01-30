@@ -8,9 +8,9 @@
 
 //TODO: use fftw3-mpi and/or GPU fft
 //#include "gnuplot-iostream.h"
-
 namespace DMFT
 {
+    class GreensFct;
     class FFT
     {
 
@@ -29,8 +29,10 @@ namespace DMFT
             RealT fft_dt;
             RealT fft_wmin;
 
+        //TODO: this can all be obtained from GrennFct object directly
             ComplexT tail(const RealT wn, const std::vector<std::array<RealT,2> >& tail, const int spin) const;
 
+        //TODO: this can all be obtained from GrennFct object directly
             RealT ftTail(const RealT tau, const std::vector<std::array<RealT,2> >& tail, const int spin) const;
 
         public:
@@ -70,6 +72,7 @@ namespace DMFT
             void transformMtoT_naive(const MatG& from, ImTG& to) const;
 
             void transformTtoM_naive(const ImTG &from, MatG &to) const;
+            void transformMtoT_naive(GreensFct* gf) const;
 
             /*! performs a convolution of f and g using fft
              *  fp = FFT(f), gp = FFT(g) -> iFFT(fp * gp): the result is int f(t' - t) g(t) dt 

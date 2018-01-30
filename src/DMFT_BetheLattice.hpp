@@ -2,6 +2,7 @@
 #define DMFT_BETHE_HPP_
 #include "GreensFct.hpp"
 #include "WeakCoupling.hpp"
+#include "StrongCoupling.hpp"
 #include "KInt.hpp"
 #include "IOhelper.hpp"
 #include "ImpSolver.hpp"
@@ -14,12 +15,12 @@ namespace DMFT
         class DMFT_BetheLattice
         {
             public:
-                DMFT_BetheLattice(std::string& outDir, const Config& config, RealT mixing, ImpSolver &solver, GreensFct &G0, GreensFct &GImp, const RealT D):
-                    config(config), mixing(mixing), iSolver(solver), \
-                    g0(G0), g0Info("G0"), gImp(GImp), gImpInfo("GImp"), selfE(config.beta, true, false), seLInfo("SelfE"),\
+                DMFT_BetheLattice(std::string& outDir, const Config& config, RealT mixing, ImpSolver &solver, GreensFct &G0, GreensFct &GImp, const RealT D, bool useHyb = false):
+                    config(config), mixing(mixing), iSolver(solver), useHyb(useHyb), \
+                    g0(G0), g0Info( useHyb ? "Hyb" : "G0" ), gImp(GImp), gImpInfo("GImp"), selfE(config.beta, true, false), seLInfo("SelfE"),\
                     ioh(outDir, config), D(D), fft(config.beta)
                 {
-                    std::string tmp("G0_Guess");
+                    std::string tmp( useHyb ? "Hyb_Guess" : "G0_Guess");
                     ioh.writeToFile(g0,tmp);
                     ioh.addGF(g0,   g0Info);
                     ioh.addGF(gImp, gImpInfo);
@@ -45,10 +46,16 @@ namespace DMFT
                                     g0.setByMFreq(n,s, 1.0/tmp );
                                 }
                             }
-                            g0.transformMtoT();
-                            //TODO: this should be part of WeakCoupling
-                            g0.shift(config.U/2.0);
-                            g0.setParaMagnetic();
+                            if(useHyb)
+                            {
+                                g0.transformMtoT();
+                                g0.shift(config.U/2.0);
+                                g0.setParaMagnetic();
+                            }
+                            else
+                            {
+
+                            }
                             if(dmftIt == 1)
                             {
                                 ioh.setIteration(0);
@@ -57,7 +64,6 @@ namespace DMFT
 
                             //only for WeakCoupling., this is now in update itself
                             //g0.shift(config.U/2.0);
-
 //TODO: use tail
                             MatG sImp = (g0.getMGF().cwiseInverse() - gImp.getMGF().cwiseInverse());
                             ImTG sImp_it(_CONFIG_maxTBins, 2);
@@ -88,7 +94,14 @@ namespace DMFT
                                 LOG(INFO) << "Writing results";
                             }
                             gImp.setParaMagnetic();
-                            g0.setParaMagnetic();
+                            if(useHyb)
+                            {
+
+                            }
+                            else
+                            {
+                                g0.setParaMagnetic();
+                            }
 
                             ioh.writeToFile();
 
@@ -119,10 +132,7 @@ namespace DMFT
                 // lattice specific
                 // TODO separate class
                 const RealT D;
-
-
-
-
+                const bool useHyb;
                 RealT mixing;
 
                 ImpSolver& iSolver;
