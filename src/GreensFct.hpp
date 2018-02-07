@@ -6,6 +6,8 @@
 #include "FFT.hpp"
 #include "GFTail.hpp"
 
+#include <boost/math/special_functions/legendre.hpp>
+
 #include <vector>
 #include <complex>
 #include <iostream>
@@ -45,14 +47,13 @@ namespace DMFT
         static constexpr int MAX_T_BINS = _CONFIG_maxTBins;
         static constexpr int MAX_M_FREQ = _CONFIG_maxMatsFreq;
         static constexpr int SPINS	= 2;
-        static constexpr int TAIL_ORDER = 7;
+        static constexpr int TAIL_ORDER = 6;
 
         public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-            GreensFct(RealT beta, const bool symmetric = false, bool fitTail = false, GFTail gft = GFTail()):
+            GreensFct(const RealT beta, const bool symmetric = false, bool fitTail = false, GFTail gft = GFTail()):
                 symmetric(symmetric), beta(beta), fft(beta), deltaIt(static_cast<RealT>(MAX_T_BINS)/beta), fit(fitTail), tailFitted(false), gft(gft)
         {
-            //tailFunc = defaultTail;//[](int n, int i) { return std::pow(1.0/ComplexT(0.,mFreqS(n, 10.)),i); 
             g_it = ImTG::Zero(MAX_T_BINS, SPINS);
             g_wn = MatG::Zero(MAX_M_FREQ, SPINS);
             g_it_std = ImTG::Zero(MAX_T_BINS, SPINS);
@@ -82,7 +83,7 @@ namespace DMFT
          */
         inline void setByMFreq(const int n, const int spin, const ComplexT val)
         {
-            if(std::abs(n) >= g_wn.rows())
+            if(std::abs(n) >= ((1. + isSymmetric())*g_wn.rows()/2.))
             {
                 LOG(WARNING) << "out of bound for internal storage of Matsubara GF. Use tail instead!";
                 return;
@@ -110,6 +111,11 @@ namespace DMFT
          */
         inline void setByMFreq(const int n, const int spin, const ComplexT val, const ComplexT std)
         {
+            if(std::abs(n) >= ((1. + isSymmetric())*g_wn.rows()/2.))
+            {
+                LOG(WARNING) << "out of bound for internal storage of Matsubara GF. Use tail instead!";
+                return;
+            }
             if(symmetric)
             {
                 if(n<0){
@@ -216,7 +222,7 @@ namespace DMFT
         inline RealT operator() (const RealT t, const int spin) const
         {
             //REMARK: this implies that G(0) == G(0^-) 
-            if(t == 0.0) return -1.0*g_it(g_it.rows()-1, spin);
+            if(t == 0.0) return g_it(1, spin);
             const int sgn = 2*(t>0)-1;
             //if(t<0){ t+=beta; return -1.0*g_it(tIndex(t), spin);}
             return sgn*g_it( tIndex( t + (t<0)*beta ), spin);
@@ -228,7 +234,7 @@ namespace DMFT
             for(int i =0; i < t.size(); i++)
             {
                 const int sgn = 2*(t[i]>0)-1;
-                if(t[i] == 0.0) res(i) = -1.0*g_it(g_it.rows()-1, spin);
+                if(t[i] == 0.0) res(i) = g_it(1, spin);
                 else res[i] = sgn*g_it( tIndex( t[i] + (t[i]<0)*beta ), spin);
             }
             return res;
@@ -266,11 +272,11 @@ namespace DMFT
         std::string getMGFstring(void) const
         {
             std::stringstream res;
-            res << std::fixed << std::setw(8)<< "\t mFreq \tSpin UP Re \t Spin UP Im \t Spin DOWN Re \t Spin DOWN Im \tSpin UP Re Err \t Spin UP Im Err \t Spin DOWN Re Err \t Spin DOWN Im Err \n";
+            res << std::fixed << std::setw(10)<< "\t mFreq \tSpin UP Re \t Spin UP Im \t Spin DOWN Re \t Spin DOWN Im \tSpin UP Re Err \t Spin UP Im Err \t Spin DOWN Re Err \t Spin DOWN Im Err \n";
             for(int n=0; n < MAX_M_FREQ; n++)
             {
                 RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
-                res << std::setprecision(8) << wn << "\t" <<  g_wn(n,UP).real() << "\t" << g_wn(n,UP).imag() << "\t" << g_wn(n,DOWN).real() << "\t" << g_wn(n,DOWN).imag() << "\t" <<  g_wn_std(n,UP).real() << "\t" << g_wn_std(n,UP).imag() << "\t" << g_wn_std(n,DOWN).real() << "\t" << g_wn_std(n,DOWN).imag() << "\n" ;
+                res << std::setprecision(10) << wn << "\t" <<  g_wn(n,UP).real() << "\t" << g_wn(n,UP).imag() << "\t" << g_wn(n,DOWN).real() << "\t" << g_wn(n,DOWN).imag() << "\t" <<  g_wn_std(n,UP).real() << "\t" << g_wn_std(n,UP).imag() << "\t" << g_wn_std(n,DOWN).real() << "\t" << g_wn_std(n,DOWN).imag() << "\n" ;
             }
             for(int n=MAX_M_FREQ; n < 2*MAX_M_FREQ*fit; n++)
             {
@@ -278,7 +284,7 @@ namespace DMFT
                 ComplexT mExp[2];
                 mExp[UP] = getTail( wn, UP);
                 mExp[DOWN] = getTail( wn, DOWN);
-                res << std::setprecision(6) << wn << "\t" <<  mExp[UP].real() << "\t" << mExp[UP].imag() << "\t" << mExp[DOWN].real() << "\t" << mExp[DOWN].imag() << "\n" ;
+                res << std::setprecision(10) << wn << "\t" <<  mExp[UP].real() << "\t" << mExp[UP].imag() << "\t" << mExp[DOWN].real() << "\t" << mExp[DOWN].imag() << "\n" ;
             }
             return res.str();
         }
@@ -287,19 +293,19 @@ namespace DMFT
         {
             //if(!mSet) return "";
             std::stringstream res;
-            res << std::fixed << std::setw(8);
+            res << std::fixed << std::setw(10);
             for(int n=0; n < MAX_M_FREQ; n++)
             {
                 ComplexT err = (g_wn_std(n,spin) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,spin);
                 RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
-                res << std::setprecision(8) << wn << "\t" << g_wn(n,spin).imag() << "\t" << err.imag() << "\n";
+                res << std::setprecision(10) << wn << "\t" << g_wn(n,spin).imag() << "\t" << err.imag() << "\n";
             }
             for(int n=MAX_M_FREQ; n < 5*MAX_M_FREQ*fit; n++)
             {
                 RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
                 ComplexT mExp[2];
                 mExp[UP] = getTail( wn, spin);
-                res << std::setprecision(8) << wn << "\t" << mExp[UP].imag() << "\t"<< 1.0/(MAX_M_FREQ*MAX_M_FREQ)<< "\n" ;
+                res << std::setprecision(10) << wn << "\t" << mExp[UP].imag() << "\t"<< 1.0/(MAX_M_FREQ*MAX_M_FREQ)<< "\n" ;
             }
             return res.str();
         }
@@ -313,10 +319,10 @@ namespace DMFT
         {
             //if(!tSet) return "";
             std::stringstream res;
-            res << std::fixed << std::setw(8)<< "iTime \tSpin up \tSpin down \tSpin up Err\tSpin down Err\n";
+            res << std::fixed << std::setw(10)<< "iTime \tSpin up \tSpin down \tSpin up Err\tSpin down Err\n";
             for(int i =0; i < MAX_T_BINS; i++)
             {
-                res << std::setprecision(8) << std::setw(8) << (beta*i)/MAX_T_BINS << "\t"\
+                res << std::setprecision(10) << std::setw(10) << (beta*i)/MAX_T_BINS << "\t"\
                     << g_it(i,UP)<< "\t" << g_it(i,DOWN) << "\t" << g_it_std(i,UP) << "\t" << g_it_std(i,DOWN) <<"\n";
             }
             return res.str();
@@ -426,8 +432,10 @@ namespace DMFT
         {
             g_wn.rightCols(1) = 0.5*(g_wn.leftCols(1) + g_wn.rightCols(1)).eval();
             g_wn.leftCols(1) = g_wn.rightCols(1).eval();
+            g_it.rightCols(1) = 0.5*(g_it.leftCols(1) + g_it.rightCols(1)).eval();
+            g_it.leftCols(1) = g_it.rightCols(1).eval();
             fitTail();
-            transformMtoT();
+            //transformMtoT();
         }
 
         /*! Fits the expansion coefficients for the matsubara Green's function.

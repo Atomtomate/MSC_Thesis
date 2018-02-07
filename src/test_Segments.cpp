@@ -55,6 +55,35 @@ bool test_all()
         LOG(INFO) << s.print_segments();
         LOG(INFO) << "delete AS: 3: " << s.deleteAntiSegment(3,0);
         LOG(INFO) << s.print_segments();
+                    DMFT::Segments<2> s2(config);
+                    s2.insertSegment(1.5,2,0);
+                    s2.insertSegment(3,5,0);
+                    s2.insertSegment(13,51,0);
+                    s2.insertSegment(8,10,1);
+                    s2.insertSegment(13,41,1);
+                    LOG(INFO) << s2.print_segments();
+                    LOG(DEBUG) << "0.0: " << s2.dist_to_next_end(0, 0);
+                    LOG(DEBUG) << "0.5: " << s2.dist_to_next_end(0.5, 0);
+                    LOG(DEBUG) << "1.0: " << s2.dist_to_next_end(1, 0);
+                    LOG(DEBUG) << "1.5: " << s2.dist_to_next_end(1.5, 0);
+                    LOG(DEBUG) << "12: " << s2.dist_to_next_end(12, 0);
+                    LOG(DEBUG) << "13: " << s2.dist_to_next_end(13, 0);
+                    LOG(DEBUG) << "15: " << s2.dist_to_next_end(15, 0);
+                    LOG(DEBUG) << "1: " << s2.dist_to_next_end(1, 1);
+                    LOG(DEBUG) << "45: " << s2.dist_to_next_end(45, 1);
+                    LOG(DEBUG) << "55: " << s2.dist_to_next_end(55, 1);
+
+
+
+                    DMFT::Segments<2> s3(config);
+                    s3.insertSegment(1.0,2,0);
+                    LOG(INFO) << s.print_segments();
+                    LOG(DEBUG) << "0.0: " << s3.dist_to_next_end(0, 0);
+                    LOG(DEBUG) << "1.5: " << s3.dist_to_next_end(1.5, 0);
+                    s.deleteSegment(0,0);
+                    LOG(DEBUG) << "1.5: " << s3.dist_to_next_end(1.5, 0);
+                    s.insertFullLine(0);
+                    LOG(DEBUG) << "1.5: " << s3.dist_to_next_end(1.5, 0);
         printf("done \n");
         return true;
 }

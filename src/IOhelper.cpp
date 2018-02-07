@@ -143,16 +143,15 @@ namespace DMFT
     }
 
 
-
     void IOhelper::plot(GreensFct& gf, RealT beta, std::string title)
     {
         Gnuplot gp1("gnuplot -persist");
         Gnuplot gp2("gnuplot -persist");
         std::vector<std::pair<RealT,RealT>> mgf_up, mgf_down, itgf_up, itgf_down;
-        for(int n=0;n<_CONFIG_maxMatsFreq;n++)
+        for(int n=-_CONFIG_maxMatsFreq/2;n<_CONFIG_maxMatsFreq/2;n++)
         {
-            mgf_down.push_back( std::make_pair( mFreq(n, beta), gf.getByMFreq(n,0).imag() ) );
-            mgf_up.push_back( std::make_pair( mFreq(n, beta), gf.getByMFreq(n,1).imag() ) );
+            mgf_down.push_back( std::make_pair( mFreqS(n, beta), gf.getByMFreq(n,0).imag() ) );
+            mgf_up.push_back( std::make_pair( mFreqS(n, beta), gf.getByMFreq(n,1).imag() ) );
         }
         for(RealT i=0;i<beta;i+=beta/_CONFIG_maxTBins)
         {

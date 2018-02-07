@@ -6,12 +6,19 @@
 #include "GreensFct.hpp"
 #include "ImpSolver.hpp"
 #include "Segments.hpp"
+#include "IOhelper.hpp"
+#include "GFLPoly.hpp"
 
 #include <boost/serialization/vector.hpp>
+#include <boost/accumulators/numeric/functional.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/moment.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/statistics/skewness.hpp>
+#include <boost/accumulators/statistics/kurtosis.hpp>
+#include <boost/math/special_functions/legendre.hpp>
 
 #include <iostream>
 #include <tuple>
@@ -19,7 +26,7 @@
 #include <limits>
 //#include <petscsys.h>                         // random numbers
 
-
+#define _CT_HYB_USE_L_BASIS 0
 namespace DMFT
 {
 /** Impurity Sovler using the CT-HYB algorithm.
@@ -34,12 +41,20 @@ namespace DMFT
 
 
 
-
+class StrongCoupling;
+typedef void (StrongCoupling::*MC_Move)(void);
+struct handler_pair
+{
+    int code;
+    MC_Move fn;
+};
 
 class StrongCoupling
 {
     public:
-        using AccT = boost::accumulators::accumulator_set<RealT, boost::accumulators::features<boost::accumulators::tag::sum, boost::accumulators::tag::moment<2> > >;
+        using AccT = boost::accumulators::accumulator_set<RealT, boost::accumulators::features<boost::accumulators::tag::sum, boost::accumulators::tag::variance > >;
+        using AccMT = boost::accumulators::accumulator_set<RealT, boost::accumulators::stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance, boost::accumulators::tag::skewness, boost::accumulators::tag::kurtosis > >;
+        using AccCT = boost::accumulators::accumulator_set<ComplexT, boost::accumulators::features<boost::accumulators::tag::sum, boost::accumulators::tag::moment<2> > >;
         StrongCoupling(GreensFct &hybr, GreensFct &gImp, const Config& config, const unsigned int burninSteps);
         virtual ~StrongCoupling();
 
@@ -53,10 +68,26 @@ class StrongCoupling
          *  @param beta Inverse temperature
          */
         int update(const unsigned long int iterations = 1l);
-        RealT avgN(void) {return -1;}
-        int expansionOrder(void) {return -1;}
-        void computeImpGF(void) {};
-        void doMeasurement(void);
+        RealT avgN(void)
+        {
+            RealT res = 0;
+            for(int f =0; f < _CONFIG_spins; f++)
+            {
+                res += boost::accumulators::mean(expOrd[f]);
+            }
+            return res/_CONFIG_spins;
+        }
+        int expansionOrder(void)
+        {
+            if(steps>burninSteps)
+                return boost::accumulators::mean(expOrd[0]);
+            return 0;
+        }
+
+        inline GreensFct& getImpGF(void) {
+            return gImp;
+        }
+        void computeImpGF(void);
 
 
         /** computes the acceptance rate by evaluation of the determinant
@@ -66,10 +97,12 @@ class StrongCoupling
         RealT acceptanceR(const RealT U, const RealT beta) const;
 
     private:
+        using ProposalRes = std::pair<RealT, bool>;
         trng::yarn2 r_time, r_timep, r_spin, r_insert, r_accept, r_shift;   // random number engines
         trng::uniform01_dist<> u;                                           // random number distribution
         GreensFct &hyb;
         GreensFct &gImp;
+        GFLPoly gImpLPoly;
         const Config &conf;
         std::array<MatrixT,_CONFIG_spins> M;
         Segments<_CONFIG_spins> segments;
@@ -80,23 +113,35 @@ class StrongCoupling
         const unsigned int burninSteps;
 
         int lastSign;						                            // needed when proposal is rejected
-        long totalSign;
-        long totN;
-        std::array< AccT, _CONFIG_maxSBins> itBinsUP;
-        std::array< AccT, _CONFIG_maxSBins> itBinsDOWN;
+        long int totalSign;
+        std::array<AccMT, _CONFIG_spins> expOrd;
+        std::array<std::array< AccT, _CONFIG_maxTBins>, _CONFIG_spins> itBins;
+        std::array<std::array<ComplexT, _CONFIG_maxMatsFreq>, _CONFIG_spins> mfBins;
+        std::array<std::array<RealT,_CONFIG_maxLPoly>,_CONFIG_spins> gl_c;
 
-        RealT tryInc(const RealT t, const RealT tp, const unsigned char f, const RealT fac, const RealT zetap = -1.);
-        RealT tryDec(const unsigned int row, const unsigned char f, const RealT fac, const RealT zetap = -1.);
-        RealT MInc(MatrixT *A, const RowVectorT &R, const VectorT &Q, const RealT Sp, const int index);
+        decltype(auto) tryInc(const RealT t, const RealT tp, const unsigned int f, const RealT fac, const RealT zetap = -1.);
+        decltype(auto) tryDec(const unsigned int row, const unsigned int f, const RealT fac, const RealT zetap = -1.);
+        decltype(auto) tryInsAntiSeg(const RealT t_n, const RealT tp_n, const unsigned int f_n, const RealT fac, const RealT zetap = -1.);
+        decltype(auto) tryRemAntiSeg(int index, const unsigned int f_n, const RealT fac, const RealT zetap = -1.);
+
+        void updateContribution(void);
+        void updateLPoly(void);
+
+        /*! Positions row and col at index from at index to
+         *  @param [out] A Matrix to be transformed
+         *  @param [in] from row/col index
+         *  @param [in] to   target row/col index
+         */
+        void swapRows(MatrixT *A, const int from, const int to);
+        void MInc(MatrixT *A, const RowVectorT &R, const VectorT &Q, const RealT Sp, const int index);
         void MDec(MatrixT* A, const unsigned int row);
-        bool tryInsAntiSeg(const RealT t_n, const RealT tp_n, const int f_n, const RealT fac, const RealT zetap = -1.);
-        bool tryRemAntiSeg(int index, const int f_n, const RealT fac, const RealT zetap = -1.);
+        void rebuildM(const bool timeOrdered = false);
 
         inline RealT hybCall(RealT ts, RealT tf, const unsigned char flavor)
         {
-            if(tf > conf.beta) tf -= conf.beta;
-            const RealT t = tf - ts;
-            return hyb(t,flavor);
+            RealT t = std::fmod(tf,conf.beta) - std::fmod(ts,conf.beta);
+            // return -hyb.getByT(t, flavor, 1);
+            return -hyb(t,flavor);
         }
 };
 

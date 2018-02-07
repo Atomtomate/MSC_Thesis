@@ -1,0 +1,577 @@
+[INFO ] 21:37:57:37s: Setting hybridization function from Weiss function guess.
+[INFO ] 21:37:57:37s: initializing rank 0. isGenerator ==1
+[INFO ] 21:37:57:37s: Computing new Weiss Green's function
+[INFO ] 21:37:57:37s: MC Walker [0] at  (5%) of iteration 1. expansion order: 0
+[INFO ] 21:37:57:37s: MC Walker [0] at  (10%) of iteration 1. expansion order: 0
+[INFO ] 21:37:57:37s: MC Walker [0] at  (15%) of iteration 1. expansion order: 0
+[INFO ] 21:37:58:37s: MC Walker [0] at  (20%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:37:59:37s: MC Walker [0] at  (25%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:00:38s: MC Walker [0] at  (30%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:01:38s: MC Walker [0] at  (35%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:02:38s: MC Walker [0] at  (40%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:04:38s: MC Walker [0] at  (45%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:05:38s: MC Walker [0] at  (50%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:06:38s: MC Walker [0] at  (55%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:07:38s: MC Walker [0] at  (60%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:09:38s: MC Walker [0] at  (65%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:10:38s: MC Walker [0] at  (70%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:11:38s: MC Walker [0] at  (75%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:12:38s: MC Walker [0] at  (80%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:13:38s: MC Walker [0] at  (85%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:14:38s: MC Walker [0] at  (90%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:16:38s: MC Walker [0] at  (95%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:17:38s: MC Walker [0] at  (100%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:38:17:38s: finished sampling. average expansion order: -nan
+[INFO ] 21:38:17:38s: measuring impurity Greens function
+[ERROR] 21:38:17:38s: tail computation not yet implemented
+[ERROR] 21:38:17:38s: 0.00709828, -0.090221, 0.00917097
+[DEBUG] 21:38:17:38s@void DMFT::StrongCoupling::computeImpGF(): -nan +- 0, -nan, -nan
+
+[DEBUG] 21:38:17:38s@void DMFT::StrongCoupling::computeImpGF(): -nan +- 0, -nan, -nan
+
+[INFO ] 21:38:17:38s: forcing paramagnetic solution
+[INFO ] 21:38:17:38s: Writing results
+[INFO ] 21:39:40:39s: Setting hybridization function from Weiss function guess.
+[INFO ] 21:39:40:39s: initializing rank 0. isGenerator ==1
+[INFO ] 21:39:40:39s: Computing new Weiss Green's function
+[INFO ] 21:39:40:39s: MC Walker [0] at  (5%) of iteration 1. expansion order: 0
+[INFO ] 21:39:40:39s: MC Walker [0] at  (10%) of iteration 1. expansion order: 0
+[INFO ] 21:39:40:39s: MC Walker [0] at  (15%) of iteration 1. expansion order: 0
+[INFO ] 21:39:40:39s: MC Walker [0] at  (20%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:42:39s: MC Walker [0] at  (25%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:43:39s: MC Walker [0] at  (30%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:44:39s: MC Walker [0] at  (35%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:45:39s: MC Walker [0] at  (40%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:46:39s: MC Walker [0] at  (45%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:48:39s: MC Walker [0] at  (50%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:49:39s: MC Walker [0] at  (55%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:50:39s: MC Walker [0] at  (60%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:52:39s: MC Walker [0] at  (65%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:53:39s: MC Walker [0] at  (70%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:54:39s: MC Walker [0] at  (75%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:55:39s: MC Walker [0] at  (80%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:56:39s: MC Walker [0] at  (85%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:57:39s: MC Walker [0] at  (90%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:39:59:39s: MC Walker [0] at  (95%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:40:00:40s: MC Walker [0] at  (100%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:40:00:40s: finished sampling. average expansion order: -nan
+[INFO ] 21:40:00:40s: measuring impurity Greens function
+[ERROR] 21:40:00:40s: tail computation not yet implemented
+[ERROR] 21:40:00:40s: 0.00709828, -0.090221, 0.00917097
+[DEBUG] 21:40:00:40s@void DMFT::StrongCoupling::computeImpGF(): -nan +- 0, -nan, -nan
+
+[DEBUG] 21:40:00:40s@void DMFT::StrongCoupling::computeImpGF(): -nan +- 0, -nan, -nan
+
+[INFO ] 21:40:00:40s: forcing paramagnetic solution
+[INFO ] 21:40:00:40s: Writing results
+[INFO ] 21:43:32:43s: Setting hybridization function from Weiss function guess.
+[INFO ] 21:43:32:43s: initializing rank 0. isGenerator ==1
+[INFO ] 21:43:32:43s: Computing new Weiss Green's function
+[INFO ] 21:43:32:43s: MC Walker [0] at  (5%) of iteration 1. expansion order: 0
+[INFO ] 21:43:32:43s: MC Walker [0] at  (10%) of iteration 1. expansion order: 0
+[INFO ] 21:43:32:43s: MC Walker [0] at  (15%) of iteration 1. expansion order: 0
+[INFO ] 21:43:33:43s: MC Walker [0] at  (20%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:34:43s: MC Walker [0] at  (25%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:35:43s: MC Walker [0] at  (30%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:36:43s: MC Walker [0] at  (35%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:37:43s: MC Walker [0] at  (40%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:39:43s: MC Walker [0] at  (45%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:40:43s: MC Walker [0] at  (50%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:41:43s: MC Walker [0] at  (55%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:42:43s: MC Walker [0] at  (60%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:44:43s: MC Walker [0] at  (65%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:45:43s: MC Walker [0] at  (70%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:46:43s: MC Walker [0] at  (75%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:47:43s: MC Walker [0] at  (80%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:48:43s: MC Walker [0] at  (85%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:50:43s: MC Walker [0] at  (90%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:51:43s: MC Walker [0] at  (95%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:52:43s: MC Walker [0] at  (100%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:43:52:43s: finished sampling. average expansion order: -nan
+[INFO ] 21:43:52:43s: measuring impurity Greens function
+[ERROR] 21:43:52:43s: tail computation not yet implemented
+[ERROR] 21:43:52:43s: -0.00352074, 0.00629301, -0.0045488
+[DEBUG] 21:43:52:43s@void DMFT::StrongCoupling::computeImpGF(): -nan +- 0, -nan, -nan
+
+[DEBUG] 21:43:52:43s@void DMFT::StrongCoupling::computeImpGF(): -nan +- 0, -nan, -nan
+
+[INFO ] 21:43:52:43s: forcing paramagnetic solution
+[INFO ] 21:43:52:43s: Writing results
+[INFO ] 21:45:57:45s: Setting hybridization function from Weiss function guess.
+[INFO ] 21:45:57:45s: initializing rank 0. isGenerator ==1
+[INFO ] 21:45:57:45s: Computing new Weiss Green's function
+[INFO ] 21:45:57:45s: MC Walker [0] at  (5%) of iteration 1. expansion order: 0
+[INFO ] 21:45:57:45s: MC Walker [0] at  (10%) of iteration 1. expansion order: 0
+[INFO ] 21:45:57:45s: MC Walker [0] at  (15%) of iteration 1. expansion order: 0
+[INFO ] 21:45:57:45s: MC Walker [0] at  (20%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:45:59:45s: MC Walker [0] at  (25%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:00:46s: MC Walker [0] at  (30%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:01:46s: MC Walker [0] at  (35%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:02:46s: MC Walker [0] at  (40%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:03:46s: MC Walker [0] at  (45%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:05:46s: MC Walker [0] at  (50%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:06:46s: MC Walker [0] at  (55%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:07:46s: MC Walker [0] at  (60%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:09:46s: MC Walker [0] at  (65%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:10:46s: MC Walker [0] at  (70%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:11:46s: MC Walker [0] at  (75%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:12:46s: MC Walker [0] at  (80%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:13:46s: MC Walker [0] at  (85%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:14:46s: MC Walker [0] at  (90%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:16:46s: MC Walker [0] at  (95%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:17:46s: MC Walker [0] at  (100%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:46:17:46s: finished sampling. average expansion order: -nan
+[INFO ] 21:46:17:46s: measuring impurity Greens function
+[ERROR] 21:46:17:46s: tail computation not yet implemented
+[ERROR] 21:46:17:46s: -0.00352074, 0.00629301, -0.0045488
+[DEBUG] 21:46:17:46s@void DMFT::StrongCoupling::computeImpGF(): -nan +- 0, -nan, -nan
+
+[DEBUG] 21:46:17:46s@void DMFT::StrongCoupling::computeImpGF(): -nan +- 0, -nan, -nan
+
+[INFO ] 21:46:17:46s: forcing paramagnetic solution
+[INFO ] 21:46:17:46s: Writing results
+[INFO ] 21:47:13:47s: Setting hybridization function from Weiss function guess.
+[INFO ] 21:47:13:47s: initializing rank 0. isGenerator ==1
+[INFO ] 21:47:13:47s: Computing new Weiss Green's function
+[INFO ] 21:47:21:47s: MC Walker [0] at  (5%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:47:33:47s: MC Walker [0] at  (10%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:47:46:47s: MC Walker [0] at  (15%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:47:58:47s: MC Walker [0] at  (20%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:48:10:48s: MC Walker [0] at  (25%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:48:21:48s: MC Walker [0] at  (30%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:48:33:48s: MC Walker [0] at  (35%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:48:45:48s: MC Walker [0] at  (40%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:48:57:48s: MC Walker [0] at  (45%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:49:09:49s: MC Walker [0] at  (50%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:49:21:49s: MC Walker [0] at  (55%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:49:33:49s: MC Walker [0] at  (60%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:49:46:49s: MC Walker [0] at  (65%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:49:58:49s: MC Walker [0] at  (70%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:50:10:50s: MC Walker [0] at  (75%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:50:22:50s: MC Walker [0] at  (80%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:50:33:50s: MC Walker [0] at  (85%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:50:46:50s: MC Walker [0] at  (90%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:50:58:50s: MC Walker [0] at  (95%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:51:10:51s: MC Walker [0] at  (100%) of iteration 1. expansion order: -2147483648
+[INFO ] 21:51:10:51s: finished sampling. average expansion order: -nan
+[INFO ] 21:51:10:51s: measuring impurity Greens function
+[ERROR] 21:51:10:51s: tail computation not yet implemented
+[ERROR] 21:51:10:51s: 4.82749e-06, 0.0132313, 6.23711e-06
+[DEBUG] 21:51:10:51s@void DMFT::StrongCoupling::computeImpGF(): -nan +- 0, -nan, -nan
+
+[DEBUG] 21:51:10:51s@void DMFT::StrongCoupling::computeImpGF(): -nan +- 0, -nan, -nan
+
+[INFO ] 21:51:10:51s: forcing paramagnetic solution
+[INFO ] 21:51:10:51s: Writing results
+[INFO ] 14:11:46:11s: Setting hybridization function from Weiss function guess.
+[INFO ] 14:11:46:11s:  0:  -- 1.000000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[DEBUG] 14:11:46:11s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 2
+[DEBUG] 14:11:46:11s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5
+[DEBUG] 14:11:46:11s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 4
+[DEBUG] 14:11:46:11s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 3.5
+[DEBUG] 14:11:46:11s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[DEBUG] 14:11:46:11s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[DEBUG] 14:11:46:11s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 37
+[DEBUG] 14:11:46:11s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[ERROR] 14:11:46:11s: Could not compute next index!
+[DEBUG] 14:11:46:11s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15
+[ERROR] 14:11:46:11s: Could not compute next index!
+[DEBUG] 14:11:46:11s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 5
+[INFO ] 14:13:59:13s: Setting hybridization function from Weiss function guess.
+[INFO ] 14:13:59:13s:  0:  -- 1.000000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[DEBUG] 14:13:59:13s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 0.0: 2
+[DEBUG] 14:13:59:13s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 0.5: 1.5
+[DEBUG] 14:13:59:13s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.0: 4
+[DEBUG] 14:13:59:13s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5: 3.5
+[DEBUG] 14:13:59:13s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 12: 40
+[DEBUG] 14:13:59:13s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 13: 39
+[DEBUG] 14:13:59:13s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15: 37
+[DEBUG] 14:13:59:13s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1: 40
+[ERROR] 14:13:59:13s: 45: Could not compute next index!
+[DEBUG] 14:13:59:13s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15
+[ERROR] 14:13:59:13s: 55: Could not compute next index!
+[DEBUG] 14:13:59:13s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 5
+[INFO ] 14:16:24:16s: Setting hybridization function from Weiss function guess.
+[INFO ] 14:16:24:16s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[DEBUG] 14:16:24:16s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 0.0: 2
+[DEBUG] 14:16:24:16s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 0.5: 1.5
+[DEBUG] 14:16:24:16s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.0: 4
+[DEBUG] 14:16:24:16s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5: 3.5
+[DEBUG] 14:16:24:16s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 12: 40
+[DEBUG] 14:16:24:16s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 13: 39
+[DEBUG] 14:16:24:16s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15: 37
+[DEBUG] 14:16:24:16s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1: 40
+[ERROR] 14:16:24:16s: 45: Could not compute next index!
+[DEBUG] 14:16:24:16s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15
+[ERROR] 14:16:24:16s: 55: Could not compute next index!
+[DEBUG] 14:16:24:16s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 5
+[INFO ] 14:23:48:23s: Setting hybridization function from Weiss function guess.
+[INFO ] 14:23:48:23s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[DEBUG] 14:23:48:23s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 0.0: ts: 0, ml: -1
+[DEBUG] 14:23:48:23s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 2
+[DEBUG] 14:23:48:23s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 0.5: ts: 0.5, ml: -0.5
+[DEBUG] 14:23:48:23s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5
+[DEBUG] 14:23:48:23s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 1.0: ts: 1, ml: 0.5
+[DEBUG] 14:23:48:23s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 4
+[DEBUG] 14:23:48:23s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 1.5: ts: 1.5, ml: -0.5
+[DEBUG] 14:23:48:23s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 3.5
+[DEBUG] 14:23:48:23s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 12: ts: 12, ml: 1
+[DEBUG] 14:23:48:23s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[DEBUG] 14:23:48:23s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 13: ts: 13, ml: -38
+[DEBUG] 14:23:48:23s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[DEBUG] 14:23:48:23s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 15: ts: 15, ml: -36
+[DEBUG] 14:23:48:23s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 37
+[DEBUG] 14:23:48:23s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 1: ts: 1, ml: 7
+[DEBUG] 14:23:48:23s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[DEBUG] 14:23:48:23s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 45: ts: 45, ml: 13
+[ERROR] 14:23:48:23s: Could not compute next index!
+[DEBUG] 14:23:48:23s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15
+[DEBUG] 14:23:48:23s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 55: ts: 55, ml: 3
+[ERROR] 14:23:48:23s: Could not compute next index!
+[DEBUG] 14:23:48:23s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 5
+[INFO ] 14:25:49:25s: Setting hybridization function from Weiss function guess.
+[INFO ] 14:25:49:25s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[DEBUG] 14:25:49:25s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 0.0: ts: 0, ml: -1
+[DEBUG] 14:25:49:25s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 2
+[DEBUG] 14:25:49:25s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 0.5: ts: 0.5, ml: -0.5
+[DEBUG] 14:25:49:25s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5
+[DEBUG] 14:25:49:25s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 1.0: ts: 1, ml: 0.5
+[DEBUG] 14:25:49:25s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1
+[DEBUG] 14:25:49:25s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 1.5: ts: 1.5, ml: -0.5
+[DEBUG] 14:25:49:25s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 3.5
+[DEBUG] 14:25:49:25s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 12: ts: 12, ml: 1
+[ERROR] 14:25:49:25s: Could not compute next index!
+[DEBUG] 14:25:49:25s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[DEBUG] 14:25:49:25s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 13: ts: 13, ml: -38
+[DEBUG] 14:25:49:25s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[DEBUG] 14:25:49:25s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 15: ts: 15, ml: -36
+[DEBUG] 14:25:49:25s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 37
+[DEBUG] 14:25:49:25s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 1: ts: 1, ml: 7
+[ERROR] 14:25:49:25s: Could not compute next index!
+[DEBUG] 14:25:49:25s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 9
+[DEBUG] 14:25:49:25s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 45: ts: 45, ml: 13
+[DEBUG] 14:25:49:25s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15
+[DEBUG] 14:25:49:25s@DMFT::RealT DMFT::Segments<NFLAVORS>::dist_to_next_end(DMFT::RealT, unsigned int) [with unsigned char NFLAVORS = 2; DMFT::RealT = double]: 55: ts: 55, ml: 3
+[ERROR] 14:25:49:25s: Could not compute next index!
+[DEBUG] 14:25:49:25s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 5
+[INFO ] 14:27:52:27s: Setting hybridization function from Weiss function guess.
+[INFO ] 14:27:52:27s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[INFO ] 14:27:52:27s: 0.0: ts: 0, ml: -1
+[DEBUG] 14:27:52:27s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 2
+[INFO ] 14:27:52:27s: 0.5: ts: 0.5, ml: -0.5
+[DEBUG] 14:27:52:27s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5
+[INFO ] 14:27:52:27s: 1.0: ts: 1, ml: 0.5
+[DEBUG] 14:27:52:27s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1
+[INFO ] 14:27:52:27s: 1.5: ts: 1.5, ml: -0.5
+[DEBUG] 14:27:52:27s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 3.5
+[INFO ] 14:27:52:27s: 12: ts: 12, ml: 1
+[ERROR] 14:27:52:27s: Could not compute next index!
+[DEBUG] 14:27:52:27s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[INFO ] 14:27:52:27s: 13: ts: 13, ml: -38
+[DEBUG] 14:27:52:27s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[INFO ] 14:27:52:27s: 15: ts: 15, ml: -36
+[DEBUG] 14:27:52:27s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 37
+[INFO ] 14:27:52:27s: 1: ts: 1, ml: 7
+[ERROR] 14:27:52:27s: Could not compute next index!
+[DEBUG] 14:27:52:27s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 9
+[INFO ] 14:27:52:27s: 45: ts: 45, ml: 13
+[DEBUG] 14:27:52:27s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15
+[INFO ] 14:27:52:27s: 55: ts: 55, ml: 3
+[ERROR] 14:27:52:27s: Could not compute next index!
+[DEBUG] 14:27:52:27s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 5
+[INFO ] 14:33:21:33s: Setting hybridization function from Weiss function guess.
+[INFO ] 14:33:21:33s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[INFO ] 14:33:21:33s: 0.0: ts: 0, ml: -1
+[DEBUG] 14:33:21:33s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 2
+[INFO ] 14:33:21:33s: 0.5: ts: 0.5, ml: -0.5
+[DEBUG] 14:33:21:33s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5
+[INFO ] 14:33:21:33s: 1.0: ts: 1, ml: 0.5
+[DEBUG] 14:33:21:33s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1
+[INFO ] 14:33:21:33s: 1.5: ts: 1.5, ml: -0.5
+[DEBUG] 14:33:21:33s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 3.5
+[INFO ] 14:33:21:33s: 12: ts: 12, ml: 1
+[ERROR] 14:33:21:33s: Could not compute next index 11 returned -1
+[DEBUG] 14:33:21:33s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[INFO ] 14:33:21:33s: 13: ts: 13, ml: -38
+[DEBUG] 14:33:21:33s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[INFO ] 14:33:21:33s: 15: ts: 15, ml: -36
+[DEBUG] 14:33:21:33s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 37
+[INFO ] 14:33:21:33s: 1: ts: 1, ml: 7
+[ERROR] 14:33:21:33s: Could not compute next index -6 returned -1
+[DEBUG] 14:33:21:33s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 9
+[INFO ] 14:33:21:33s: 45: ts: 45, ml: 13
+[DEBUG] 14:33:21:33s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15
+[INFO ] 14:33:21:33s: 55: ts: 55, ml: 3
+[ERROR] 14:33:21:33s: Could not compute next index 52 returned -1
+[DEBUG] 14:33:21:33s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 5
+[INFO ] 14:36:05:36s: Setting hybridization function from Weiss function guess.
+[INFO ] 14:36:05:36s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[INFO ] 14:36:05:36s: 0.0: ts: 0, ml: -1
+[DEBUG] 14:36:05:36s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 2
+[INFO ] 14:36:05:36s: 0.5: ts: 0.5, ml: -0.5
+[DEBUG] 14:36:05:36s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5
+[INFO ] 14:36:05:36s: 1.0: ts: 1, ml: 0.5
+[DEBUG] 14:36:05:36s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 4
+[INFO ] 14:36:05:36s: 1.5: ts: 1.5, ml: -0.5
+[DEBUG] 14:36:05:36s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 3.5
+[INFO ] 14:36:05:36s: 12: ts: 12, ml: 1
+[DEBUG] 14:36:05:36s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[INFO ] 14:36:05:36s: 13: ts: 13, ml: -38
+[DEBUG] 14:36:05:36s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[INFO ] 14:36:05:36s: 15: ts: 15, ml: -36
+[DEBUG] 14:36:05:36s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 37
+[INFO ] 14:36:05:36s: 1: ts: 1, ml: 7
+[DEBUG] 14:36:05:36s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[INFO ] 14:36:05:36s: 45: ts: 45, ml: 13
+[ERROR] 14:36:05:36s: Could not compute next index 58 returned 1
+[DEBUG] 14:36:05:36s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15
+[INFO ] 14:36:05:36s: 55: ts: 55, ml: 3
+[ERROR] 14:36:05:36s: Could not compute next index 58 returned -1
+[DEBUG] 14:36:05:36s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 5
+[INFO ] 14:38:23:38s: Setting hybridization function from Weiss function guess.
+[INFO ] 14:38:23:38s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[INFO ] 14:38:23:38s: 0.0: ts: 0, ml: -1
+[ERROR] 14:38:23:38s: Could not compute next index 1 returned 2
+[DEBUG] 14:38:23:38s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 2
+[INFO ] 14:38:23:38s: 0.5: ts: 0.5, ml: -0.5
+[ERROR] 14:38:23:38s: Could not compute next index 1 returned 2
+[DEBUG] 14:38:23:38s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5
+[INFO ] 14:38:23:38s: 1.0: ts: 1, ml: 0.5
+[DEBUG] 14:38:23:38s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 4
+[INFO ] 14:38:23:38s: 1.5: ts: 1.5, ml: -0.5
+[ERROR] 14:38:23:38s: Could not compute next index 2 returned 0
+[DEBUG] 14:38:23:38s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 0.5
+[INFO ] 14:38:23:38s: 12: ts: 12, ml: 1
+[DEBUG] 14:38:23:38s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[INFO ] 14:38:23:38s: 13: ts: 13, ml: -38
+[ERROR] 14:38:23:38s: Could not compute next index 51 returned 2
+[DEBUG] 14:38:23:38s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[INFO ] 14:38:23:38s: 15: ts: 15, ml: -36
+[ERROR] 14:38:23:38s: Could not compute next index 51 returned 2
+[DEBUG] 14:38:23:38s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 37
+[INFO ] 14:38:23:38s: 1: ts: 1, ml: 7
+[DEBUG] 14:38:23:38s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[INFO ] 14:38:23:38s: 45: ts: 45, ml: 13
+[ERROR] 14:38:23:38s: Could not compute next index 58 returned 1
+[DEBUG] 14:38:23:38s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15
+[INFO ] 14:38:23:38s: 55: ts: 55, ml: 3
+[ERROR] 14:38:23:38s: Could not compute next index 58 returned -1
+[DEBUG] 14:38:23:38s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 5
+[INFO ] 14:40:16:40s: Setting hybridization function from Weiss function guess.
+[INFO ] 14:40:16:40s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[INFO ] 14:40:16:40s: 0.0: ts: 0, ml: -1 getIndex: 2
+[DEBUG] 14:40:16:40s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 2
+[INFO ] 14:40:16:40s: 0.5: ts: 0.5, ml: -0.5 getIndex: 2
+[DEBUG] 14:40:16:40s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5
+[INFO ] 14:40:16:40s: 1.0: ts: 1, ml: 0.5 getIndex: 0
+[DEBUG] 14:40:16:40s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 4
+[INFO ] 14:40:16:40s: 1.5: ts: 1.5, ml: -0.5 getIndex: 0
+[DEBUG] 14:40:16:40s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 3.5
+[INFO ] 14:40:16:40s: 12: ts: 12, ml: 1 getIndex: 2
+[DEBUG] 14:40:16:40s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[INFO ] 14:40:16:40s: 13: ts: 13, ml: -38 getIndex: 2
+[DEBUG] 14:40:16:40s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[INFO ] 14:40:16:40s: 15: ts: 15, ml: -36 getIndex: 2
+[DEBUG] 14:40:16:40s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 37
+[INFO ] 14:40:16:40s: 1: ts: 1, ml: 7 getIndex: 0
+[DEBUG] 14:40:16:40s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[INFO ] 14:40:16:40s: 45: ts: 45, ml: 13 getIndex: -1
+[ERROR] 14:40:16:40s: Could not compute next index 58 returned 1
+[DEBUG] 14:40:16:40s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15
+[INFO ] 14:40:16:40s: 55: ts: 55, ml: 3 getIndex: -1
+[ERROR] 14:40:16:40s: Could not compute next index 58 returned -1
+[DEBUG] 14:40:16:40s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 5
+[INFO ] 14:48:12:48s: Setting hybridization function from Weiss function guess.
+[INFO ] 14:48:12:48s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[INFO ] 14:48:12:48s: 0.0: ts: 0, ml: -1, index: 4.94066e-324 getIndex: 2
+[DEBUG] 14:48:12:48s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 2
+[INFO ] 14:48:12:48s: 0.5: ts: 0.5, ml: -0.5, index: 0.5 getIndex: 2
+[DEBUG] 14:48:12:48s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5
+[INFO ] 14:48:12:48s: 1.0: ts: 1, ml: 0.5, index: 1.5 getIndex: 0
+[DEBUG] 14:48:12:48s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 4
+[INFO ] 14:48:12:48s: 1.5: ts: 1.5, ml: -0.5, index: 1.5 getIndex: 0
+[DEBUG] 14:48:12:48s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 3.5
+[INFO ] 14:48:12:48s: 12: ts: 12, ml: 1, index: 13 getIndex: 2
+[DEBUG] 14:48:12:48s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[INFO ] 14:48:12:48s: 13: ts: 13, ml: -38, index: 13 getIndex: 2
+[DEBUG] 14:48:12:48s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[INFO ] 14:48:12:48s: 15: ts: 15, ml: -36, index: 15 getIndex: 2
+[DEBUG] 14:48:12:48s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 37
+[INFO ] 14:48:12:48s: 1: ts: 1, ml: 7, index: 8 getIndex: 0
+[DEBUG] 14:48:12:48s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[INFO ] 14:48:12:48s: 45: ts: 45, ml: 13, index: 58 getIndex: -1
+[ERROR] 14:48:12:48s: Could not compute next index 58 returned 1
+[DEBUG] 14:48:12:48s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15
+[INFO ] 14:48:12:48s: 55: ts: 55, ml: 3, index: 58 getIndex: -1
+[ERROR] 14:48:12:48s: Could not compute next index 58 returned -1
+[DEBUG] 14:48:12:48s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 5
+[INFO ] 14:51:07:51s: Setting hybridization function from Weiss function guess.
+[INFO ] 14:51:07:51s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[INFO ] 14:51:07:51s: 0.0: ts: 0, ml: -1, index: 4.94066e-324 getIndex: 2
+[DEBUG] 14:51:07:51s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 2
+[INFO ] 14:51:07:51s: 0.5: ts: 0.5, ml: -0.5, index: 0.5 getIndex: 2
+[DEBUG] 14:51:07:51s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5
+[INFO ] 14:51:07:51s: 1.0: ts: 1, ml: 0.5, index: 1.5 getIndex: 0
+[DEBUG] 14:51:07:51s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 4
+[INFO ] 14:51:07:51s: 1.5: ts: 1.5, ml: 0, index: 1.5 getIndex: 0
+[DEBUG] 14:51:07:51s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 3.5
+[INFO ] 14:51:07:51s: 12: ts: 12, ml: 1, index: 13 getIndex: 2
+[DEBUG] 14:51:07:51s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[INFO ] 14:51:07:51s: 13: ts: 13, ml: 0, index: 13 getIndex: 2
+[DEBUG] 14:51:07:51s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[INFO ] 14:51:07:51s: 15: ts: 15, ml: -36, index: 15 getIndex: 2
+[DEBUG] 14:51:07:51s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 37
+[INFO ] 14:51:07:51s: 1: ts: 1, ml: 7, index: 8 getIndex: 0
+[DEBUG] 14:51:07:51s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 40
+[INFO ] 14:51:07:51s: 45: ts: 45, ml: 13, index: 58 getIndex: -1
+[ERROR] 14:51:07:51s: Could not compute next index 58 returned 1
+[DEBUG] 14:51:07:51s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15
+[INFO ] 14:51:07:51s: 55: ts: 55, ml: 3, index: 58 getIndex: -1
+[ERROR] 14:51:07:51s: Could not compute next index 58 returned -1
+[DEBUG] 14:51:07:51s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 5
+[INFO ] 14:56:15:56s: Setting hybridization function from Weiss function guess.
+[INFO ] 14:56:15:56s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[DEBUG] 14:56:15:56s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 0.0: 2
+[DEBUG] 14:56:15:56s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 0.5: 1.5
+[DEBUG] 14:56:15:56s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.0: 1
+[DEBUG] 14:56:15:56s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5: 0.5
+[DEBUG] 14:56:15:56s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 12: 39
+[DEBUG] 14:56:15:56s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 13: 39
+[DEBUG] 14:56:15:56s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15: 37
+[DEBUG] 14:56:15:56s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1: 9
+[DEBUG] 14:56:15:56s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 45: 46
+[DEBUG] 14:56:15:56s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 55: 36
+[INFO ] 14:58:52:58s: Setting hybridization function from Weiss function guess.
+[INFO ] 14:58:52:58s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[DEBUG] 14:58:52:58s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 0.0: 2
+[DEBUG] 14:58:52:58s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 0.5: 1.5
+[DEBUG] 14:58:52:58s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.0: 1
+[DEBUG] 14:58:52:58s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5: 3.5
+[DEBUG] 14:58:52:58s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 12: 39
+[DEBUG] 14:58:52:58s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 13: 39
+[DEBUG] 14:58:52:58s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15: 37
+[DEBUG] 14:58:52:58s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1: 9
+[DEBUG] 14:58:52:58s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 45: 46
+[DEBUG] 14:58:52:58s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 55: 36
+[INFO ] 15:02:41:02s: Setting hybridization function from Weiss function guess.
+[INFO ] 15:02:41:02s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[INFO ] 15:02:41:02s: 0.0: ts: 0, ml: -1, index: 4.94066e-324 getIndex: 2
+[DEBUG] 15:02:41:02s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 2
+[INFO ] 15:02:41:02s: 0.5: ts: 0.5, ml: -0.5, index: 0.5 getIndex: 2
+[DEBUG] 15:02:41:02s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5
+[INFO ] 15:02:41:02s: 1.0: ts: 1, ml: 0.5, index: 1.5 getIndex: 0
+[DEBUG] 15:02:41:02s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1
+[INFO ] 15:02:41:02s: 1.5: ts: 1.5, ml: -0.5, index: 1.5 getIndex: 0
+[DEBUG] 15:02:41:02s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 3.5
+[INFO ] 15:02:41:02s: 12: ts: 12, ml: 1, index: 13 getIndex: 2
+[DEBUG] 15:02:41:02s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[INFO ] 15:02:41:02s: 13: ts: 13, ml: -38, index: 13 getIndex: 2
+[DEBUG] 15:02:41:02s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[INFO ] 15:02:41:02s: 15: ts: 15, ml: -36, index: 15 getIndex: 2
+[DEBUG] 15:02:41:02s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 37
+[INFO ] 15:02:41:02s: 1: ts: 1, ml: 7, index: 8 getIndex: 0
+[DEBUG] 15:02:41:02s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 9
+[INFO ] 15:02:41:02s: 45: ts: 45, ml: 13, index: 58 getIndex: -1
+[DEBUG] 15:02:41:02s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 46
+[INFO ] 15:02:41:02s: 55: ts: 55, ml: 3, index: 58 getIndex: -1
+[DEBUG] 15:02:41:02s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 36
+[INFO ] 15:08:44:08s: Setting hybridization function from Weiss function guess.
+[INFO ] 15:08:44:08s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[INFO ] 15:08:44:08s: 0.0: ts: 0, ml: -1, index: 1 getIndex: 2
+[DEBUG] 15:08:44:08s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 2
+[INFO ] 15:08:44:08s: 0.5: ts: 0.5, ml: -0.5, index: 1.5 getIndex: 2
+[DEBUG] 15:08:44:08s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5
+[INFO ] 15:08:44:08s: 1.0: ts: 1, ml: 0.5, index: 1.5 getIndex: 0
+[DEBUG] 15:08:44:08s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1
+[INFO ] 15:08:44:08s: 1.5: ts: 1.5, ml: -0.5, index: 2.5 getIndex: 0
+[DEBUG] 15:08:44:08s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 3.5
+[INFO ] 15:08:44:08s: 12: ts: 12, ml: 1, index: 13 getIndex: 2
+[DEBUG] 15:08:44:08s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[INFO ] 15:08:44:08s: 13: ts: 13, ml: -38, index: 14 getIndex: 2
+[DEBUG] 15:08:44:08s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[INFO ] 15:08:44:08s: 15: ts: 15, ml: -36, index: 16 getIndex: 2
+[DEBUG] 15:08:44:08s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 37
+[INFO ] 15:08:44:08s: 1: ts: 1, ml: 7, index: 8 getIndex: 0
+[DEBUG] 15:08:44:08s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 9
+[INFO ] 15:08:44:08s: 45: ts: 45, ml: 13, index: 58 getIndex: -1
+[DEBUG] 15:08:44:08s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 46
+[INFO ] 15:08:44:08s: 55: ts: 55, ml: 3, index: 58 getIndex: -1
+[DEBUG] 15:08:44:08s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 36
+[INFO ] 15:12:39:12s: Setting hybridization function from Weiss function guess.
+[INFO ] 15:12:39:12s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[INFO ] 15:12:39:12s: 0.0: ts: 0, ml: -1, index: 1 getIndex: 2
+[DEBUG] 15:12:39:12s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 2
+[INFO ] 15:12:39:12s: 0.5: ts: 0.5, ml: -0.5, index: 1.5 getIndex: 2
+[DEBUG] 15:12:39:12s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5
+[INFO ] 15:12:39:12s: 1.0: ts: 1, ml: 0.5, index: 1.5 getIndex: 0
+[DEBUG] 15:12:39:12s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1
+[INFO ] 15:12:39:12s: 1.5: ts: 1.5, ml: -0.5, index: 2.5 getIndex: 0
+[DEBUG] 15:12:39:12s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 3.5
+[INFO ] 15:12:39:12s: 12: ts: 12, ml: 1, index: 13 getIndex: 2
+[DEBUG] 15:12:39:12s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[INFO ] 15:12:39:12s: 13: ts: 13, ml: -38, index: 14 getIndex: 2
+[DEBUG] 15:12:39:12s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 39
+[INFO ] 15:12:39:12s: 15: ts: 15, ml: -36, index: 16 getIndex: 2
+[DEBUG] 15:12:39:12s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 37
+[INFO ] 15:12:39:12s: 1: ts: 1, ml: 7, index: 8 getIndex: 0
+[DEBUG] 15:12:39:12s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 9
+[INFO ] 15:12:39:12s: 45: ts: 45, ml: 13, index: 58 getIndex: 0
+[DEBUG] 15:12:39:12s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15
+[INFO ] 15:12:39:12s: 55: ts: 55, ml: 3, index: 58 getIndex: 0
+[DEBUG] 15:12:39:12s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 5
+[INFO ] 15:15:14:15s: Setting hybridization function from Weiss function guess.
+[INFO ] 15:15:14:15s:  0:  -- 1.500000==2.000000 -- 3.000000==5.000000 -- 13.000000==51.000000
+ 1:  -- 8.000000==10.000000 -- 13.000000==41.000000
+
+[DEBUG] 15:15:14:15s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 0.0: 2
+[DEBUG] 15:15:14:15s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 0.5: 1.5
+[DEBUG] 15:15:14:15s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.0: 1
+[DEBUG] 15:15:14:15s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5: 3.5
+[DEBUG] 15:15:14:15s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 12: 39
+[DEBUG] 15:15:14:15s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 13: 39
+[DEBUG] 15:15:14:15s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 15: 37
+[DEBUG] 15:15:14:15s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1: 9
+[DEBUG] 15:15:14:15s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 45: 15
+[DEBUG] 15:15:14:15s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 55: 5
+[INFO ] 15:31:15:31s: Setting hybridization function from Weiss function guess.
+[INFO ] 15:31:15:31s:  0:  -- 1.000000==2.000000
+ 1: 
+
+[DEBUG] 15:31:15:31s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 0.0: 2
+[DEBUG] 15:31:15:31s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5: 0.5
+[DEBUG] 15:31:15:31s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5: 50
+[DEBUG] 15:31:15:31s@int DMFT::examples::_test_hyb(boost::mpi::communicator, boost::mpi::communicator, bool): 1.5: 50

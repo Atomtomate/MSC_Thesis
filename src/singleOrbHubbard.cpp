@@ -14,18 +14,18 @@ namespace DMFT
          *  @param[in]  p      parameters for this calculation
          */
         void setBetheSemiCirc(GreensFct &g, const RealT D, const Config &config)
-         {
+        {
             FFT fft(config.beta);
             //PhysRevB.72.035122
-            MatG g0(_CONFIG_maxMatsFreq, 2);
-            ImTG g0_it(_CONFIG_maxTBins , 2);
+            //MatG g0(_CONFIG_maxMatsFreq, 2);
+            //ImTG g0_it(_CONFIG_maxTBins , 2);
             for(int n=-_CONFIG_maxMatsFreq/2;n<_CONFIG_maxMatsFreq/2;n++){
                 const RealT mf = mFreqS(n + g.isSymmetric()*_CONFIG_maxMatsFreq/2, config.beta);
                 const RealT signMF = 2*(mf>=0)-1;
                 ComplexT tmp(0.0, 2.0*mf-2.0*signMF*std::sqrt(mf*mf + D*D));
                 tmp /= (D*D);
-                g0(n+_CONFIG_maxMatsFreq/2, UP) = tmp;
-                g0(n+_CONFIG_maxMatsFreq/2, DOWN) = tmp;
+                //g0(n+_CONFIG_maxMatsFreq/2, UP) = tmp;
+                //g0(n+_CONFIG_maxMatsFreq/2, DOWN) = tmp;
                 if(n < _CONFIG_maxMatsFreq)
                 {
                     g.setByMFreq(n + g.isSymmetric()*_CONFIG_maxMatsFreq/2,UP,tmp);
@@ -62,7 +62,7 @@ namespace DMFT
             {
                 int n_sym = n + hyb.isSymmetric()*_CONFIG_maxMatsFreq/2;
                 const RealT mf = mFreqS(n_sym, config.beta);
-                VLOG(3) << n << " <=> " << mf << " : " << g0.getByMFreq(n_sym,0) << " [-1]: " << ComplexT(0., mf) - 1./g0.getByMFreq(n_sym, 0);
+                VLOG(6) << n << " <=> " << mf << " : " << g0.getByMFreq(n_sym,0) << " [-1]: " << ComplexT(0., mf) - 1./g0.getByMFreq(n_sym, 0);
                 for(int s=0; s<_CONFIG_spins; s++)
                 {
                     //if(std::abs(n) < n_min)
@@ -345,31 +345,34 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
 
         int _test_hyb(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator)
         {
-            const int D = 1.0;          // half bandwidth
+            const int D = 2.0;          // half bandwidth
             const RealT a	= 1.0;
             const RealT t	= D/2.0;
-            const int burnin = 10000;
+            const int burnin = 5000;
             const RealT zeroShift = 0.51;
 
-            const RealT beta    = 20;
+            const RealT beta    = 50;
             const int U_l       = 4;
             GFTail tail;
             //hybTail.fitFct = &fit_sym_tail;
             tail.fitFct = &fit_sym_tail;
-            tail.nC = 5;
+            tail.nC = 6;
 
-            if(isGenerator)
-            {
+            DMFT::GreensFct g0(beta, true, true, tail);					// construct new Weiss green's function
+            DMFT::GreensFct hyb(beta, true, true, tail);					// construct new hybridization function
+            DMFT::GreensFct gImp(beta, true, true, tail);
+            DMFT::GreensFct gLoc(beta);
+            //for(double U_l = 0; U_l < 7; U_l += 2)
+            //{   
+                if(isGenerator)
+                {
                     std::string descr = "SBHubbardHyb_U" + std::to_string(static_cast<int>(U_l));
                     const RealT U       = U_l;
                     const RealT mu      = U/2.0;
                     DMFT::Config config(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator);
-                    DMFT::GreensFct g0(config.beta, true, true, tail);					// construct new Weiss green's function
-                    DMFT::GreensFct hyb(config.beta, true, true, tail);					// construct new Weiss green's function
-                    DMFT::GreensFct gImp(config.beta, true, true, tail);
-                    DMFT::GreensFct gLoc(config.beta);
                     setBetheSemiCirc(g0, D, config);
                     setBetheSemiCirc(gImp, D, config);
+                    LOG(INFO) << "Setting hybridization function from Weiss function guess.";
                     setHybFromG0(g0, hyb, D, config);
                     //IOhelper::plot(g0, config.beta, "Weiss Function");
                     //IOhelper::plot(hyb, config.beta, "Hybridization Function");
@@ -377,12 +380,12 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
                     LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator ;
                     DMFT::StrongCoupling impSolver(hyb, gImp, config, burnin);
                     DMFT::DMFT_BetheLattice<StrongCoupling> dmftSolver(descr, config, 0.0, impSolver, hyb, gImp, D, true);
-                    dmftSolver.solve(U, 50, true);
-                    exit(0);
+                    dmftSolver.solve(2,300000, true);
 
                     //(config.local.barrier)();                                           // wait to finish
-            }
-
+                //
+                }
+            //}
         }
     }	//end namespace examples
 }	//end namespace DMFT

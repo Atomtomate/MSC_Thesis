@@ -13,6 +13,7 @@ int main(int argc,char **argv)
     START_EASYLOGGINGPP(argc, argv);
     el::Configurations conf("debug_log.conf");
     el::Loggers::reconfigureAllLoggers(conf);
+    el::Loggers::addFlag(el::LoggingFlag::ColoredTerminalOutput);
     // MPI stuff
     MPI::Init(argc, argv); 
     boost::mpi::environment env(argc, argv);

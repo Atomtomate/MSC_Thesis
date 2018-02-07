@@ -37,43 +37,52 @@ namespace DMFT
                             if(config.local.rank() == 0) LOG(INFO) << "Computing new Weiss Green's function";
                             //TODO: vectorize
                             MatG tmpG0(_CONFIG_maxTBins,2);
+                            MatG sImp(_CONFIG_maxMatsFreq, _CONFIG_spins);
+                            ImTG sImp_it(_CONFIG_maxTBins, _CONFIG_spins);
+                            // DMFT equation
                             for(int n=0;n<_CONFIG_maxMatsFreq;n++){
+                                const int n_g0 = n + ((int)g0.isSymmetric() - 1)*_CONFIG_maxMatsFreq/2;
+                                const int n_se = n + ((int)selfE.isSymmetric() - 1)*_CONFIG_maxMatsFreq/2;
+                                const ComplexT iwn_se(0., mFreqS(n_se, config.beta));
                                 for(int s=0;s<_CONFIG_spins;s++){
                                     // set SC condition, enforcing Paramagnetic solution
                                     // use symmetry here
-                                    ComplexT tmp = ComplexT(config.mu, mFreqS(n,config.beta)) - (D/2.0)*(D/2.0)*gImp.getByMFreq(n,s);
-                                    VLOG(5) << n << ": " << ComplexT(config.mu, mFreqS(n,config.beta)) << " - " << (D/2.0)*(D/2.0)*gImp.getByMFreq(n,s) << " = " << tmp;
-                                    g0.setByMFreq(n,s, 1.0/tmp );
+                                    if(useHyb)
+                                    {
+                                        g0.setByMFreq(n_g0, s, 4.0*gImp.getByMFreq(n_g0,s)/(D*D));
+                                        selfE.setByMFreq(n_se, s, iwn_se - 1.0/gImp.getByMFreq(n_se, s) );
+                                    }
+                                    else
+                                    {
+                                        ComplexT tmp = ComplexT(config.mu, mFreqS(n_g0,config.beta)) - (D/2.0)*(D/2.0)*gImp.getByMFreq(n_g0,s);
+                                        VLOG(5) << n << "=> "<< n_g0 << ": " << ComplexT(config.mu, mFreqS(n_g0,config.beta)) << " - " << (D/2.0)*(D/2.0)*gImp.getByMFreq(n_g0,s) << " = " << tmp;
+                                        g0.setByMFreq(n_g0,s, 1.0/tmp );
+                                    }
                                 }
                             }
-                            if(useHyb)
+                            g0.markMSet();
+                            g0.transformMtoT();
+                            g0.setParaMagnetic();
+                            if(!useHyb)
                             {
-                                g0.transformMtoT();
+                                //only for WeakCoupling., this is now in update itself
+                                sImp = (g0.getMGF().cwiseInverse() - gImp.getMGF().cwiseInverse());
+                                selfE.setByMFreq(sImp);
+                                selfE.setParaMagnetic();
                                 g0.shift(config.U/2.0);
-                                g0.setParaMagnetic();
                             }
-                            else
-                            {
-
-                            }
+                            selfE.markMSet();
+                            selfE.transformMtoT();
                             if(dmftIt == 1)
                             {
                                 ioh.setIteration(0);
                                 ioh.writeToFile();
                             }
+                            
+                            //IOhelper::plot(gImp, config.beta, "before measure gImp Function " + std::to_string(dmftIt));
 
-                            //only for WeakCoupling., this is now in update itself
-                            //g0.shift(config.U/2.0);
-//TODO: use tail
-                            MatG sImp = (g0.getMGF().cwiseInverse() - gImp.getMGF().cwiseInverse());
-                            ImTG sImp_it(_CONFIG_maxTBins, 2);
-
-                            selfE.setByMFreq(sImp);
-                            selfE.setParaMagnetic();
-
-                            fft.transformMtoT(sImp,sImp_it,true); 
                             //TODO improve this naive loop
-                            for(long unsigned int i=0; i <= 20; i++){
+                            for(long unsigned int i=1; i <= 20; i++){
                                 iSolver.update(updates/20.0);
                                 LOG(INFO) << "MC Walker [" << config.world.rank() << "] at "<< " (" << (5*i) << "%) of iteration " << dmftIt << ". expansion order: " << iSolver.expansionOrder();
                             }
@@ -88,20 +97,16 @@ namespace DMFT
                                 LOG(INFO) << "measuring impurity Greens function";
                             }
                             iSolver.computeImpGF();
+                            gImp.setParaMagnetic();
+                            IOhelper::plot(gImp, config.beta, "after measure gIp Function " + std::to_string(dmftIt));
                             if(config.local.rank() == 0)
                             {
                                 LOG(INFO) << "forcing paramagnetic solution";
                                 LOG(INFO) << "Writing results";
                             }
-                            gImp.setParaMagnetic();
-                            if(useHyb)
-                            {
-
-                            }
-                            else
-                            {
-                                g0.setParaMagnetic();
-                            }
+                            //
+                            //TODO: even for cthyb?
+                            //g0.setParaMagnetic();
 
                             ioh.writeToFile();
 
