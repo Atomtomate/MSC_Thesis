@@ -19,6 +19,7 @@
 #include <set>			// multiset
 #include <vector>
 #include <cstddef>		// nullptr
+#include <stdexcept>
 
 #include <boost/mpi.hpp>
 #include <boost/serialization/vector.hpp>
@@ -43,7 +44,7 @@ namespace DMFT
     // TODO: consider adjustable maxMatsFreq
     static constexpr int _CONFIG_maxLPoly = 20;
     static constexpr int _CONFIG_tailOrder = 6;
-    static constexpr int _CONFIG_maxMatsFreq = 512;//4096;//4096;		// frequencies go from maxMatsFreq/2 to maxMatsFreq/2 - 1
+    static constexpr int _CONFIG_maxMatsFreq = 512;//8192;//4096;//4096;		// frequencies go from maxMatsFreq/2 to maxMatsFreq/2 - 1
     static constexpr int _CONTIG_minMF    = -static_cast<int>(_CONFIG_maxMatsFreq/2.0);
     static constexpr int _CONFIG_maxTBins =	512;//8192;//1024; 		// (default default 131072, 65536) powers of 2 make fft faster, both bins need to be equal for FFT
     static constexpr int _CONFIG_maxSBins = 4*8192;//16384;

@@ -5,9 +5,9 @@
 #include "Config.hpp"
 #include "GreensFct.hpp"
 #include "ImpSolver.hpp"
-#include "Segments.hpp"
 #include "IOhelper.hpp"
 #include "GFLPoly.hpp"
+#include "Segments.hpp"
 
 #include <boost/serialization/vector.hpp>
 #include <boost/accumulators/numeric/functional.hpp>
@@ -55,7 +55,7 @@ class StrongCoupling
         using AccT = boost::accumulators::accumulator_set<RealT, boost::accumulators::features<boost::accumulators::tag::sum, boost::accumulators::tag::variance > >;
         using AccMT = boost::accumulators::accumulator_set<RealT, boost::accumulators::stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance, boost::accumulators::tag::skewness, boost::accumulators::tag::kurtosis > >;
         using AccCT = boost::accumulators::accumulator_set<ComplexT, boost::accumulators::features<boost::accumulators::tag::sum, boost::accumulators::tag::moment<2> > >;
-        StrongCoupling(GreensFct &hybr, GreensFct &gImp, const Config& config, const unsigned int burninSteps);
+        StrongCoupling(GreensFct* const hybr, GreensFct* const gImp, const Config& config, const unsigned int burninSteps);
         virtual ~StrongCoupling();
 
 
@@ -84,7 +84,7 @@ class StrongCoupling
             return 0;
         }
 
-        inline GreensFct& getImpGF(void) {
+        inline GreensFct * const getImpGF(void) {
             return gImp;
         }
         void computeImpGF(void);
@@ -100,8 +100,8 @@ class StrongCoupling
         using ProposalRes = std::pair<RealT, bool>;
         trng::yarn2 r_time, r_timep, r_spin, r_insert, r_accept, r_shift;   // random number engines
         trng::uniform01_dist<> u;                                           // random number distribution
-        GreensFct &hyb;
-        GreensFct &gImp;
+        GreensFct* const hyb;
+        GreensFct* const gImp;
         GFLPoly gImpLPoly;
         const Config &conf;
         std::array<MatrixT,_CONFIG_spins> M;
@@ -119,6 +119,8 @@ class StrongCoupling
         std::array<std::array<ComplexT, _CONFIG_maxMatsFreq>, _CONFIG_spins> mfBins;
         std::array<std::array<RealT,_CONFIG_maxLPoly>,_CONFIG_spins> gl_c;
 
+        decltype(auto) tryZeroToFull(const unsigned f, const RealT fac, const RealT zetap);
+        decltype(auto) tryFullToZero(const unsigned f, const RealT fac, const RealT zetap);
         decltype(auto) tryInc(const RealT t, const RealT tp, const unsigned int f, const RealT fac, const RealT zetap = -1.);
         decltype(auto) tryDec(const unsigned int row, const unsigned int f, const RealT fac, const RealT zetap = -1.);
         decltype(auto) tryInsAntiSeg(const RealT t_n, const RealT tp_n, const unsigned int f_n, const RealT fac, const RealT zetap = -1.);
@@ -126,6 +128,7 @@ class StrongCoupling
 
         void updateContribution(void);
         void updateLPoly(void);
+
 
         /*! Positions row and col at index from at index to
          *  @param [out] A Matrix to be transformed
@@ -135,14 +138,20 @@ class StrongCoupling
         void swapRows(MatrixT *A, const int from, const int to);
         void MInc(MatrixT *A, const RowVectorT &R, const VectorT &Q, const RealT Sp, const int index);
         void MDec(MatrixT* A, const unsigned int row);
-        void rebuildM(const bool timeOrdered = false);
 
         inline RealT hybCall(RealT ts, RealT tf, const unsigned char flavor)
         {
             RealT t = std::fmod(tf,conf.beta) - std::fmod(ts,conf.beta);
-            // return -hyb.getByT(t, flavor, 1);
-            return -hyb(t,flavor);
+            //return -hyb.getByT(t, flavor, 1);
+            return -(*hyb)(t,flavor);
         }
+
+        // for debugging purposes
+        std::array<RealT,_CONFIG_spins> fullDet;
+        std::array<RealT,_CONFIG_spins> runningDet;
+        std::array<MatrixT,_CONFIG_spins> Minv;
+        void debug_test(const unsigned int f_n);
+        void rebuildM(const bool timeOrdered = false);
 };
 
 } //end namespace DMFT

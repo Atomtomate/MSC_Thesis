@@ -50,18 +50,17 @@ namespace DMFT
         static constexpr int TAIL_ORDER = 6;
 
         public:
-        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
             GreensFct(const RealT beta, const bool symmetric = false, bool fitTail = false, GFTail gft = GFTail()):
                 symmetric(symmetric), beta(beta), fft(beta), deltaIt(static_cast<RealT>(MAX_T_BINS)/beta), fit(fitTail), tailFitted(false), gft(gft)
-        {
-            g_it = ImTG::Zero(MAX_T_BINS, SPINS);
-            g_wn = MatG::Zero(MAX_M_FREQ, SPINS);
-            g_it_std = ImTG::Zero(MAX_T_BINS, SPINS);
-            g_wn_std = MatG::Zero(MAX_M_FREQ, SPINS);
-            expansionCoeffs = {};
-        }
+            {
+                g_it = ImTG::Zero(MAX_T_BINS, SPINS);
+                g_wn = MatG::Zero(MAX_M_FREQ, SPINS);
+                g_it_std = ImTG::Zero(MAX_T_BINS, SPINS);
+                g_wn_std = MatG::Zero(MAX_M_FREQ, SPINS);
+                expansionCoeffs = {};
+            }
 
-        GreensFct(GreensFct const&) = delete; // TODO: implement
+        //GreensFct(GreensFct const&) = delete; // TODO: implement
 
         virtual ~GreensFct(){}
 
@@ -100,7 +99,6 @@ namespace DMFT
             tSet = 0;
             tailFitted = false;
         }
-
 
         /*! Sets G(i \omega_n) = val
          *
@@ -222,8 +220,8 @@ namespace DMFT
         inline RealT operator() (const RealT t, const int spin) const
         {
             //REMARK: this implies that G(0) == G(0^-) 
-            if(t == 0.0) return g_it(1, spin);
-            const int sgn = 2*(t>0)-1;
+            //if(t == 0.0) return g_it(1, spin);
+            const int sgn = 2*(t>=0)-1;
             //if(t<0){ t+=beta; return -1.0*g_it(tIndex(t), spin);}
             return sgn*g_it( tIndex( t + (t<0)*beta ), spin);
         }
@@ -233,9 +231,9 @@ namespace DMFT
             VectorT res(t.size());
             for(int i =0; i < t.size(); i++)
             {
-                const int sgn = 2*(t[i]>0)-1;
-                if(t[i] == 0.0) res(i) = g_it(1, spin);
-                else res[i] = sgn*g_it( tIndex( t[i] + (t[i]<0)*beta ), spin);
+                const int sgn = 2*(t[i]>=0)-1;
+                //if(t[i] == 0.0) res(i) = g_it(1, spin);
+                res[i] = sgn*g_it( tIndex( t[i] + (t[i]<0)*beta ), spin);
             }
             return res;
         }
@@ -250,7 +248,7 @@ namespace DMFT
          */
         RealT getByT(const RealT t, int spin, const int order) const
         {
-            const int sgn = 2*(t>0)-1;
+            const int sgn = 2*(t>=0)-1;
             const RealT tp = t + (t<0)*beta; 
             const int index0 = tIndex( tp );
             const RealT h = tp*static_cast<RealT>(MAX_T_BINS)/beta - index0;
@@ -263,6 +261,21 @@ namespace DMFT
         }
 
         template <class T> RealT operator()(T) = delete; // C++11
+
+        void shiftZero(void)
+        {
+            if(symmetric)
+            {
+                const int n = g_it.rows();
+                g_it.block(n/2, 0, n/2 - 1, _CONFIG_spins) = g_it.bottomRows(n/2-1);
+                g_it.bottomRows(1) = g_it.topRows(1);
+            }else{
+                LOG(WARNING) << "skipping shift of zero mode for non symmetrici it GF.";
+            }
+            
+            //g_it(0,UP) = g_it( 1 ,UP) - (g_it(2, UP) - g_it(1, UP))/deltaIt ;
+            //g_it(0,DOWN) = g_it(1,DOWN) - (g_it(2, DOWN) - g_it(1, DOWN))/deltaIt ;
+        }
 
         /*! Return space separated string for the Matsubara Green's function.
          *  Format: \f$ \omega_n \quad Re[G_\downarrow (i \omega_n)] \quad  Im[G_\downarrow (i \omega_n)] \quad Re[G_\uparrow (i \omega_n)] \quad  Im[G_\uparrow (i \omega_n)]\f$ 
@@ -337,6 +350,7 @@ namespace DMFT
             //if(fit)
             //   fitTail(); 
             //fft.transformMtoT_naive(this);
+            //shiftZero();
         }
 
         /*! Does a FFT from Matsubara to imaginary time Green's function and stores it in target.
@@ -459,7 +473,6 @@ namespace DMFT
             {
                 for(int i = 0; i < nSamples && (i + gft.first < _CONFIG_maxMatsFreq); i++)
                 {
-                    if(i + gft.first > _CONFIG_maxMatsFreq) LOG(ERROR) << "too many values for tail fit requested";
                     for(int j = 0; j < gft.nC; j++)
                     {
                         A(i,j) = gft.fitFct( gft.first + i , j, beta);
@@ -472,9 +485,13 @@ namespace DMFT
                     if(!(isSymmetric() && j%2 == 0))
                         expansionCoeffs[f][j]  = fittedC(j);
                     else
+                    {
+                        if(std::abs(expansionCoeffs[f][j]) > 0.01) LOG(WARNING) << "even tail coefficient for symmetric GF non zero (bad fit)!";
                         expansionCoeffs[f][j]  = 0.;
+                    }
                 }
                 VLOG(4) << "Tail coef f = " << f << ": " << expansionCoeffs[f][0] << ", " << expansionCoeffs[f][1] << ", " << expansionCoeffs[f][2] << ", " << expansionCoeffs[f][3] << ", " << expansionCoeffs[f][4];
+                VLOG(4) << "debug fit: " << fittedC;
             }
             tailFitted = true;
         }
@@ -508,7 +525,7 @@ namespace DMFT
         }
 
         protected:
-        RealT beta;
+        const RealT beta;
         const bool symmetric;
         const bool fit;
 
@@ -519,7 +536,7 @@ namespace DMFT
         ImTG	g_it_std; // col major -> spin outer loop
         MatG	g_wn_std; // col major -> spin outer loop
         FFT 	fft;
-        RealT   deltaIt;
+        const RealT deltaIt;
         GFTail  gft;
 
         std::array<std::array<RealT,TAIL_ORDER>, _CONFIG_spins> expansionCoeffs;

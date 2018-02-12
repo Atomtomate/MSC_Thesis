@@ -60,6 +60,35 @@ namespace DMFT
         if(index >= gfList.size()) return 1;	// error, index out of range
         writeToFile(std::get<0>(gfList[index]), std::get<1>(gfList[index]));
         return 0;
+    } 
+ 
+    void IOhelper::writeFinalToFile(GreensFct& gf, const LogInfos& li) const
+    {
+        if(!c.isGenerator || c.local.rank() != 0) return ;
+        boost::filesystem::path file_maxent = outDir;
+        boost::filesystem::path file_maxent_config = outDir;
+        file_maxent /= boost::filesystem::path( std::string("f_") + li.filename + std::string(".out"));
+        file_maxent_config /= boost::filesystem::path( std::string("me_") + li.filename + std::string("conf.in"));
+        boost::filesystem::ofstream fmt, fmt_me_conf;
+        fmt.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
+        fmt_me_conf.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
+        const std::string me_conf_s = "BETA=" + std::to_string(c.beta) +
+                         "\nNDAT=" + std::to_string(_CONFIG_maxMatsFreq) +
+                         "\nNFREQ=1024\nDATASPACE=frequency\nKERNEL=fermionic\nPARTICLE_HOLE_SYMMETRY=true\nDATA=" +
+                            std::string("f_") + li.filename + std::string(".out");
+        try
+        {
+            fmt.open(file_maxent);
+            fmt_me_conf.open(file_maxent_config);
+            fmt << gf.getMaxEntString();
+            fmt_me_conf << me_conf_s;
+            fmt.close();
+            fmt_me_conf.close();
+        }
+        catch (boost::filesystem::ofstream::failure e)
+        {
+            LOG(ERROR) << "Error while writing Green\'s function to file: " << e.what();
+        }
     }
 
     int IOhelper::writeToFile(GreensFct& gf, std::string & name) const

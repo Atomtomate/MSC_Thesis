@@ -15,15 +15,15 @@ namespace DMFT
         class DMFT_BetheLattice
         {
             public:
-                DMFT_BetheLattice(std::string& outDir, const Config& config, RealT mixing, ImpSolver &solver, GreensFct &G0, GreensFct &GImp, const RealT D, bool useHyb = false):
+                DMFT_BetheLattice(std::string& outDir, const Config config, RealT mixing, ImpSolver& solver, GreensFct* G0, GreensFct * GImp, const RealT D, bool useHyb = false):
                     config(config), mixing(mixing), iSolver(solver), useHyb(useHyb), \
                     g0(G0), g0Info( useHyb ? "Hyb" : "G0" ), gImp(GImp), gImpInfo("GImp"), selfE(config.beta, true, false), seLInfo("SelfE"),\
-                    ioh(outDir, config), D(D), fft(config.beta)
+                    ioh(outDir, config), D(D)
                 {
                     std::string tmp( useHyb ? "Hyb_Guess" : "G0_Guess");
-                    ioh.writeToFile(g0,tmp);
-                    ioh.addGF(g0,   g0Info);
-                    ioh.addGF(gImp, gImpInfo);
+                    ioh.writeToFile(*g0,tmp);
+                    ioh.addGF(*g0,   g0Info);
+                    ioh.addGF(*gImp, gImpInfo);
                     ioh.addGF(selfE, seLInfo);
                 }
 
@@ -31,6 +31,7 @@ namespace DMFT
                 {
                     if(config.isGenerator)
                     {
+                        IOhelper::plot(*g0, config.beta, "Weiss Function");
                         //TODO: move IO from generator to accumulators
                         for(unsigned int dmftIt = 1;dmftIt < iterations+1; dmftIt++)
                         {  
@@ -41,7 +42,7 @@ namespace DMFT
                             ImTG sImp_it(_CONFIG_maxTBins, _CONFIG_spins);
                             // DMFT equation
                             for(int n=0;n<_CONFIG_maxMatsFreq;n++){
-                                const int n_g0 = n + ((int)g0.isSymmetric() - 1)*_CONFIG_maxMatsFreq/2;
+                                const int n_g0 = n + ((int)g0->isSymmetric() - 1)*_CONFIG_maxMatsFreq/2;
                                 const int n_se = n + ((int)selfE.isSymmetric() - 1)*_CONFIG_maxMatsFreq/2;
                                 const ComplexT iwn_se(0., mFreqS(n_se, config.beta));
                                 for(int s=0;s<_CONFIG_spins;s++){
@@ -49,27 +50,33 @@ namespace DMFT
                                     // use symmetry here
                                     if(useHyb)
                                     {
-                                        g0.setByMFreq(n_g0, s, 4.0*gImp.getByMFreq(n_g0,s)/(D*D));
-                                        selfE.setByMFreq(n_se, s, iwn_se - 1.0/gImp.getByMFreq(n_se, s) );
+                                        g0->setByMFreq(n_g0, s, + 4.*gImp->getByMFreq(n_g0,s)/(D*D));
+                                        //g0->setByMFreq(n_g0, s, - 4.0*gImp->getByMFreq(n_g0,s)/(D*D));
+                                        selfE.setByMFreq(n_se, s, iwn_se - 1.0/gImp->getByMFreq(n_se, s) );
                                     }
                                     else
                                     {
-                                        ComplexT tmp = ComplexT(config.mu, mFreqS(n_g0,config.beta)) - (D/2.0)*(D/2.0)*gImp.getByMFreq(n_g0,s);
-                                        VLOG(5) << n << "=> "<< n_g0 << ": " << ComplexT(config.mu, mFreqS(n_g0,config.beta)) << " - " << (D/2.0)*(D/2.0)*gImp.getByMFreq(n_g0,s) << " = " << tmp;
-                                        g0.setByMFreq(n_g0,s, 1.0/tmp );
+                                        ComplexT tmp = ComplexT(config.mu, mFreqS(n_g0,config.beta)) - (D/2.0)*(D/2.0)*gImp->getByMFreq(n_g0,s);
+                                        VLOG(5) << n << "=> "<< n_g0 << ": " << ComplexT(config.mu, mFreqS(n_g0,config.beta)) << " - " << (D/2.0)*(D/2.0)*gImp->getByMFreq(n_g0,s) << " = " << tmp;
+                                        g0->setByMFreq(n_g0,s, 1.0/tmp );
                                     }
                                 }
                             }
-                            g0.markMSet();
-                            g0.transformMtoT();
-                            g0.setParaMagnetic();
+                            g0->shift(config.U/2.0);
+                            g0->markMSet();
+                            g0->transformMtoT();
+
+                            //IOhelper::plot(*g0, config.beta, "Hyb Fct iteration " + std::to_string(dmftIt));
+                            //IOhelper::plot(*gImp, config.beta, "Imp GF iteration " + std::to_string(dmftIt));
+                            //exit(0);
+                            g0->setParaMagnetic();
                             if(!useHyb)
                             {
                                 //only for WeakCoupling., this is now in update itself
-                                sImp = (g0.getMGF().cwiseInverse() - gImp.getMGF().cwiseInverse());
+                                sImp = (g0->getMGF().cwiseInverse() - gImp->getMGF().cwiseInverse());
                                 selfE.setByMFreq(sImp);
                                 selfE.setParaMagnetic();
-                                g0.shift(config.U/2.0);
+                                g0->shift(config.U/2.0);
                             }
                             selfE.markMSet();
                             selfE.transformMtoT();
@@ -86,9 +93,9 @@ namespace DMFT
                                 iSolver.update(updates/20.0);
                                 LOG(INFO) << "MC Walker [" << config.world.rank() << "] at "<< " (" << (5*i) << "%) of iteration " << dmftIt << ". expansion order: " << iSolver.expansionOrder();
                             }
-                            //g0.shift(config.U/2.0);
+                            //g0->shift(config.U/2.0);
 
-                            //IOhelper::plot(g0, config.beta, "Weiss Function" + std::to_string(dmftIt));
+                            //IOhelper::plot(*g0, config.beta, "Weiss Function" + std::to_string(dmftIt));
 
                             ioh.setIteration(dmftIt);
                             if(config.local.rank() == 0)
@@ -97,8 +104,8 @@ namespace DMFT
                                 LOG(INFO) << "measuring impurity Greens function";
                             }
                             iSolver.computeImpGF();
-                            gImp.setParaMagnetic();
-                            IOhelper::plot(gImp, config.beta, "after measure gIp Function " + std::to_string(dmftIt));
+                            //gImp->setParaMagnetic();
+                            IOhelper::plot(*gImp, config.beta, "after measure gIp Function " + std::to_string(dmftIt));
                             if(config.local.rank() == 0)
                             {
                                 LOG(INFO) << "forcing paramagnetic solution";
@@ -106,7 +113,7 @@ namespace DMFT
                             }
                             //
                             //TODO: even for cthyb?
-                            //g0.setParaMagnetic();
+                            //g0*.setParaMagnetic();
 
                             ioh.writeToFile();
 
@@ -116,7 +123,7 @@ namespace DMFT
                     }
                     else
                     {
-                        //MCAccumulator<_CONFIG_maxSBins> *mcAcc = new MCAccumulator<_CONFIG_maxSBins>(g0,config);
+                        //MCAccumulator<_CONFIG_maxSBins> *mcAcc = new MCAccumulator<_CONFIG_maxSBins>(*g0,config);
                         //mcAcc->collect();
                         //TODO: compute GImp
                         //TODO: compute new g0
@@ -129,14 +136,12 @@ namespace DMFT
 
             private:
                 // general settings
-                const Config&	config;
+                const Config	config;
                 IOhelper	    ioh;
-
-                FFT fft;
 
                 // lattice specific
                 // TODO separate class
-                const RealT D;
+                RealT D;
                 const bool useHyb;
                 RealT mixing;
 
@@ -144,9 +149,9 @@ namespace DMFT
                 LogInfos	g0Info;
                 LogInfos	gImpInfo;
                 LogInfos	seLInfo;
-                GreensFct&	g0;
-                GreensFct&	gImp;
-                GreensFct       selfE;
+                GreensFct*  g0;
+                GreensFct*	gImp;
+                GreensFct   selfE;
         };
 } // end namespace DMFT
 #endif

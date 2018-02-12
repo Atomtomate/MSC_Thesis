@@ -27,7 +27,7 @@ VPATH    := src:src/examples
 
 # ========== compiler flags, includes ========== 
 # TODO: remember to use  -guide and  -profile-loops=all 
-CXXFLAGS.DEBUG    := -O2 -parallel -g -xHost -traceback -ansi-alias -ftrapuv -debug extended -Wextra -debug parallel -qopt-report=4 -qopt-report-phase ipo -D EIGEN_NO_STATIC_ASSERT
+CXXFLAGS.DEBUG    := -O2 -pg -ggdb -Wextra -D EIGEN_NO_STATIC_ASSERT # -debug parallel  -ftrapuv -traceback -parallel
 CXXFLAGS.PROFILE  := -O3 -pg -D EIGEN_NO_STATIC_ASSERT #-xHost -fno-alias -profile-functions -profile-loops=all -profile-loops-report=2 
 #-profile-functions -profile-loops=all -profile-loops-report=2 -guide -ipo -no-prec-div
 CXXFLAGS.PARALLEL := -O2 -Wall -fno-alias -parallel
@@ -76,11 +76,11 @@ clangTest: $(OBJ_DIR) $(OBJ_FILES)
 
 debug: CXXFLAGS += $(CXXFLAGS.DEBUG)
 debug: $(OBJ_DIR) $(OBJ_FILES)
-	$(CXX) $(CXXFLAGS) $(filter-out $(OBJ_DIR),$^) $(LIBS) $(LDFLAGS) -o ImpSolv_$@
+	$(CXX) $(filter-out $(OBJ_DIR),$^) $(CXXFLAGS) $(LIBS) $(LDFLAGS) -o ImpSolv_$@
 
 release: CXXFLAGS += $(CXXFLAGS.FAST)
 release: $(OBJ_DIR) $(OBJ_FILES)
-	$(CXX) $(CXXFLAGS) $(filter-out $(OBJ_DIR),$^) $(LIBS) $(LDFLAGS) -o ImpSolv_$@
+	$(CXX) $(filter-out $(OBJ_DIR),$^) $(CXXFLAGS) $(LIBS) $(LDFLAGS) -o ImpSolv_$@
 
 profile: CXXFLAGS += $(CXXFLAGS.PROFILE)
 profile: $(OBJ_DIR) $(OBJ_FILES)

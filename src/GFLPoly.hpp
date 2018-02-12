@@ -17,7 +17,7 @@ namespace DMFT
     {
         public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-            GFLPoly(GreensFct& gf, const Config& conf): gf(gf), conf(conf)
+            GFLPoly(GreensFct* const gf, const Config& conf): gf(gf), conf(conf)
             {
                 ComplexT mo(-1.,0.);
                 ComplexT i(0.,1.);
@@ -96,15 +96,15 @@ namespace DMFT
                     }
                 }
                 computeTail();
-                gf.setByMFreq(g_mf);
-                gf.setByT(g_it);
-                gf.markMSet();
-                gf.markTSet();
+                gf->setByMFreq(g_mf);
+                gf->setByT(g_it);
+                gf->markMSet();
+                gf->markTSet();
             }
 
 
         private:
-            GreensFct& gf;
+            GreensFct * gf;
             const Config& conf;
             std::array<Eigen::Matrix<RealT, _CONFIG_maxLPoly,1>,_CONFIG_spins> Gl;
             CMatrixT Tnl;

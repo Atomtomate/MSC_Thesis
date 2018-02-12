@@ -1,0 +1,9 @@
+SBH*/
+IPT*/
+obj/
+logs/
+*.out
+*.o
+*.txt
+*.log
+ImpSolv*

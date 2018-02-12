@@ -21,7 +21,6 @@ namespace DMFT
             fftw_complex fftw3_input[_CONFIG_maxTBins];
             fftw_complex fftw3_output[_CONFIG_maxTBins];
 
-
             fftw_plan planMtoT;
             fftw_plan planTtoM;
             RealT fft_tmin;
@@ -43,7 +42,7 @@ namespace DMFT
             fft_wmin = mFreq(0,_beta);
             fft_dt   = _beta/static_cast<RealT>(_CONFIG_maxTBins);      // for FFT matsFreq == TBins
             fft_dw   = 2.0*boost::math::constants::pi<RealT>()/_beta;
-            fft_tmin = 0.0;//fft_dt/2.0;
+            fft_tmin = 0;//fft_dt/2.0;
         }
 
             virtual ~FFT()

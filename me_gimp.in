@@ -1,0 +1,8 @@
+BETA=10                  #inverse temperature
+#OMEGA_MAX=25             #the spectral function is wider than omega=10
+NDAT=512                 #num of data points
+NFREQ=1024                #num of output frequencies
+DATASPACE=frequency      #!$G(i\omega)$!
+KERNEL=fermionic         #fermionic|bosonic values
+PARTICLE_HOLE_SYMMETRY=true #generated at half-filling
+DATA="f_gImp.out"            #location of data file

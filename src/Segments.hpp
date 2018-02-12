@@ -226,6 +226,16 @@ namespace DMFT
                 return fullLine[f];
             }
 
+            inline const bool isEmpty(const unsigned int f) const
+            {
+                return (lines[f].size() == 0 ? true : false);
+            }
+
+            inline unsigned int size(const unsigned int f) const
+            {
+                return lines[f].size();
+            }
+
             int insertSegment(const RealT ts, const RealT tf, const unsigned int f)
             {
                 if(maxl(ts, f) < (tf-ts) || tf < ts) return -1;                   // no valid sgment

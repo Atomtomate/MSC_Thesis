@@ -50,6 +50,8 @@ class IOhelper//: public mglDraw
 		 */
 		int writeToFile(void) const;
 
+        void writeFinalToFile(GreensFct& gf, const LogInfos& li) const;
+
 		/*! Write specific Green's function to file.
 		 *  @param  [in]  handle obtained through addGF(const GreensFct* gf, LogInfos l); 
 		 */
@@ -57,19 +59,19 @@ class IOhelper//: public mglDraw
 
 		/*! Write specific Green's function one time to file.
 		 *  @param  [in]  gf    Green's function
-                 *  @param  [in]  name  filename
+         *  @param  [in]  name  filename
 		 */
-                int writeToFile(GreensFct& gf, std::string & name) const;
+       int writeToFile(GreensFct& gf, std::string & name) const;
                 
 
-                void readFromFile(GreensFct& gf, const std::string files_it, const std::string files_mf) const;
-                
-                /*! Plot Green's function using GnuPlot
-                 *  @param  [in] gf     Green's function
-                 */
-                static void plot(GreensFct& gf, RealT beta, std::string title);
-                static void plot(ImTG& gf, RealT beta, std::string title);
-                static void plot(MatG& gf, RealT beta, std::string title);
+        void readFromFile(GreensFct& gf, const std::string files_it, const std::string files_mf) const;
+        
+        /*! Plot Green's function using GnuPlot
+         *  @param  [in] gf     Green's function
+         */
+        static void plot(GreensFct& gf, RealT beta, std::string title);
+        static void plot(ImTG& gf, RealT beta, std::string title);
+        static void plot(MatG& gf, RealT beta, std::string title);
 
 		/*! Adds Green's function to pool
 		 *  @param  gf	constant pointer to Green''s function
@@ -80,10 +82,10 @@ class IOhelper//: public mglDraw
 			return gfList.size()-1;
 		}
 
-                inline void removeGF(size_t handle)
-                {
-                    gfList.erase(gfList.begin()+handle);
-                }
+        inline void removeGF(size_t handle)
+        {
+            gfList.erase(gfList.begin()+handle);
+        }
 
 
 		void setIteration(unsigned i) {iteration = i;}

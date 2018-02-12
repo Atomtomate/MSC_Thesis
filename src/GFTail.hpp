@@ -24,7 +24,7 @@ namespace DMFT
         // no function pointer because we want to accept lambdas which capture
         // for example beta
         //(int)(_CONFIG_maxMatsFreq/30)
-        GFTail() : nC(5), first( _CONFIG_maxMatsFreq/20 ), last(_CONFIG_maxMatsFreq-10), fitFct([](int n, int i, RealT beta) { return std::pow(1.0/DMFT::ComplexT(0.,mFreqS(n, beta)),i);}) {}
+        GFTail() : nC(5), first( std::max(_CONFIG_maxMatsFreq/20, 20) ), last(_CONFIG_maxMatsFreq-10), fitFct([](int n, int i, RealT beta) { return std::pow(1.0/DMFT::ComplexT(0.,mFreqS(n, beta)),i);}) {}
         std::function<ComplexT(int, int, RealT)> fitFct;                               
         unsigned int first;
         unsigned int last;
