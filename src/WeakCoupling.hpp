@@ -4,12 +4,14 @@
 #include "Config.hpp"
 #include "GreensFct.hpp"
 #include "ImpSolver.hpp"
+#include "ExpOrderAcc.hpp"
 
 #include <boost/serialization/vector.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
-#include <boost/accumulators/statistics/moment.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/statistics/density.hpp>
 
 #include <iostream>
 #include <tuple>
@@ -38,7 +40,7 @@ namespace DMFT
     {
         public:
 
-            using AccT = boost::accumulators::accumulator_set<RealT, boost::accumulators::features<boost::accumulators::tag::sum, boost::accumulators::tag::moment<2> > >;
+            using AccT = boost::accumulators::accumulator_set<RealT, boost::accumulators::features<boost::accumulators::tag::sum, boost::accumulators::tag::variance > >;
             // ========== Definitions ==========
             /*! Constructor for the WeakCoupling solver
              *  @param [in]  g0				Weiss Green's function
@@ -49,13 +51,13 @@ namespace DMFT
              *  @param [in]  beta			temperature
              *  @param [in]  burningSteps	disregard first values during simulation until reasonable stable state is achieved TODO: auto gen
              */
-            WeakCoupling(GreensFct &g0, GreensFct &gImp, const Config& config, const RealT zeroShift, const unsigned int burninSteps);
+            WeakCoupling(GreensFct * const g0, GreensFct * const gImp, const Config * const config, const RealT zeroShift, const unsigned int burninSteps);
 
             virtual ~WeakCoupling();
 
-            inline int expansionOrder(void) {return n;}
+            inline int expansionOrder(void) {return M[0].rows();}
 
-            inline RealT avgN(void) {return static_cast<RealT>(totN)/(steps-burninSteps);};
+            inline RealT avgN(void) {return static_cast<RealT>(-1)/(steps-burninSteps);};
 
 
             /*!	@brief	Updates the time ordered spin configuration and the inverse
@@ -94,13 +96,13 @@ namespace DMFT
             void computeImpGF_OLD(void);
             /*! @return impurity Green's function. sample and call compute first!
             */
-            inline GreensFct& getImpGF(void) {
+            inline GreensFct *const getImpGF(void) {
 
                 //if(gImp_NeedsUpdate) LOG(WARNING) << "Impurity Green's function requested but not compted";
                 return gImp;
             }
 
-            inline GreensFct& getWeissGF(void) {
+            inline GreensFct *const getWeissGF(void) {
 
                 //if(gImp_NeedsUpdate) LOG(WARNING) << "Impurity Green's function requested but not compted";
                 return g0;
@@ -143,9 +145,9 @@ namespace DMFT
                 confs.push_back(c);
                 const auto gfSize = gfCache[UP].size();
                 gfCache[UP].conservativeResize(gfSize+1);
-                gfCache[UP](gfSize) = g0(std::get<0>(c),UP);
+                gfCache[UP](gfSize) = (*g0)(std::get<0>(c),UP);
                 gfCache[DOWN].conservativeResize(gfSize+1);
-                gfCache[DOWN](gfSize) = g0(std::get<0>(c),DOWN);
+                gfCache[DOWN](gfSize) = (*g0)(std::get<0>(c),DOWN);
             }
             //TODO: erase requires non const lvalue, implement cache
             inline void deleteConfig(const int pos){
@@ -174,11 +176,11 @@ namespace DMFT
             trng::uniform01_dist<> u; // random number distribution
 
             //REMARK: there should probably be some check of ownership, smart pointer could be used but are slow
-            GreensFct   &g0;			// reference to Weiss GF
-            GreensFct   &gImp;			// sampled impurity GF
+            GreensFct *const g0;			// reference to Weiss GF
+            GreensFct *const gImp;			// sampled impurity GF
             //MCAccumulator acc;
 
-            const Config& config;
+            const Config * const config;
             std::array<MatrixT,2> M;
             std::array<VectorT,2> gfCache;	                // cached access to Weiss GF at current vertex points
             SConfigL confs;
@@ -188,7 +190,7 @@ namespace DMFT
             int lastSign;						// needed when proposal is rejected
             long totalSign;
             int n; 					// expansion order (number of used rows/cols)
-            long totN;
+            ExpOrderAcc<1> expOrdAcc;
             const RealT zeroShift;				// auxiliary ising shift
             std::array< AccT, _CONFIG_maxSBins> itBinsUP;
             std::array< AccT, _CONFIG_maxSBins> itBinsDOWN;
@@ -198,11 +200,16 @@ namespace DMFT
 
             /*! Call Weiss function G0(t1-t2, spin) - alpha(s_ext)_{t1-t2}
              */
-            inline RealT g0Call(RealT t1, int spin, int s_ext, RealT t2)
+            inline RealT g0Call(const RealT t1, const int spin, const int s_ext, const RealT t2) const
             {
                 const RealT t = t1-t2;
-                if(t != 0.0) return g0(t,spin);
-                return g0(0.0,spin) - (0.5 + (2*(s_ext==spin)-1)*zeroShift);
+                if(t != 0.0) return (*g0)(t,spin);
+                return -(*g0)(0.0,spin) - (0.5 + (2*(s_ext==spin)-1)*zeroShift);
+            }
+            inline RealT g0Call_od(const RealT t1,const int spin,const RealT t2) const
+            {
+                const RealT t = t1-t2;
+                return -(*g0)(t,spin);
             }
     };
 

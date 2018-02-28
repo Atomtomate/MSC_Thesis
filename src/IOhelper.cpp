@@ -6,6 +6,12 @@ namespace DMFT
     {
         initDir(_outDir);
     };
+    
+    IOhelper::IOhelper(const Config& c): c(c)
+    {
+        std::string cp = c.outDir;
+        initDir(cp);
+    };
 
     void IOhelper::initDir(std::string& _outDir)
     {
@@ -18,8 +24,6 @@ namespace DMFT
                 if(!boost::filesystem::is_directory(outDir))
                     LOG(ERROR) << "Output directory for IOhelper could not be created!";
             }
-
-
         }
         catch(boost::filesystem::filesystem_error const & err)
         {
@@ -62,28 +66,50 @@ namespace DMFT
         return 0;
     } 
  
-    void IOhelper::writeFinalToFile(GreensFct& gf, const LogInfos& li) const
+    void IOhelper::writeFinalToFile(GreensFct& gf, const LogInfos& li, const bool selfE, const RealT U) const
     {
         if(!c.isGenerator || c.local.rank() != 0) return ;
         boost::filesystem::path file_maxent = outDir;
+        boost::filesystem::path file_pade = outDir;
         boost::filesystem::path file_maxent_config = outDir;
+        boost::filesystem::path file_pade_config = outDir;
         file_maxent /= boost::filesystem::path( std::string("f_") + li.filename + std::string(".out"));
+        file_pade /= boost::filesystem::path( std::string("f_") + li.filename + std::string(".pade.out"));
         file_maxent_config /= boost::filesystem::path( std::string("me_") + li.filename + std::string("conf.in"));
-        boost::filesystem::ofstream fmt, fmt_me_conf;
+        file_pade_config /= boost::filesystem::path( std::string("pade_") + li.filename + std::string("conf.in"));
+        boost::filesystem::ofstream fmt, fmtp, fmt_me_conf, fmt_pade_conf;
         fmt.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
+        fmtp.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
         fmt_me_conf.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
+        fmt_pade_conf.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
+        const std::string se_add = selfE ? std::string("\nSELF=true\nNORM=")+std::to_string(U*U/4.) : "";
         const std::string me_conf_s = "BETA=" + std::to_string(c.beta) +
                          "\nNDAT=" + std::to_string(_CONFIG_maxMatsFreq) +
                          "\nNFREQ=1024\nDATASPACE=frequency\nKERNEL=fermionic\nPARTICLE_HOLE_SYMMETRY=true\nDATA=" +
-                            std::string("f_") + li.filename + std::string(".out");
+                            std::string("f_") + li.filename + std::string(".out") + se_add;
+        //const std::string pade_conf_s = "imag.BETA=" +std::to_string(c.beta) + "\nimag.NDAT="+ std::to_string(_CONFIG_maxMatsFreq) +\
+        //                                 "\nimag.STATISTICS=Fermi\nimag.NEGATIVE_DATA=false\nimag.DATA="+std::string("f_")+li.filename+std::string(".pade.out")+\
+        //                                 "\nreal.NFREQ=" + std::to_string(_CONFIG_maxMatsFreq) + "\nreal.OUTPUT="  + li.filename+std::string(".pade.cont")+\
+        //                                 "\nreal.FREQUENCY_GRID=linear\npade.PADE_NUMERATOR_DEGREE ="+ std::to_string(_CONFIG_maxMatsFreq/2-1)+\
+        //                                 "\npade.PADE_DENOMINATOR_DEGREE =" + std::to_string(_CONFIG_maxMatsFreq/2);
+        const std::string pade_conf_s = "imag.BETA=" +std::to_string(c.beta) + "\nimag.NDAT=257\nimag.STATISTICS=Fermi\nimag.NEGATIVE_DATA=false\nimag.DATA="+\
+                                         std::string("f_")+li.filename+std::string(".pade.out")+\
+                                         "\nreal.NFREQ=257\nreal.OUTPUT=" + li.filename+std::string(".pade.cont") + \
+                                         "\nreal.FREQUENCY_GRID=linear\npade.PADE_NUMERATOR_DEGREE=128\npade.PADE_DENOMINATOR_DEGREE=128";
         try
         {
             fmt.open(file_maxent);
+            fmtp.open(file_pade);
             fmt_me_conf.open(file_maxent_config);
+            fmt_pade_conf.open(file_pade_config);
             fmt << gf.getMaxEntString();
+            fmtp << gf.getPadeString();
             fmt_me_conf << me_conf_s;
+            fmt_pade_conf << pade_conf_s;
             fmt.close();
+            fmtp.close();
             fmt_me_conf.close();
+            fmt_pade_conf.close();
         }
         catch (boost::filesystem::ofstream::failure e)
         {
@@ -91,7 +117,7 @@ namespace DMFT
         }
     }
 
-    int IOhelper::writeToFile(GreensFct& gf, std::string & name) const
+    int IOhelper::writeToFile(GreensFct& gf, std::string& name) const
     {
         if(!c.isGenerator || c.local.rank() != 0) return 0;
         LogInfos tmp(name);
@@ -129,6 +155,27 @@ namespace DMFT
             LOG(ERROR) << "Error while writing Matsubara Green\'s function to file: " << e.what();
             LOG(ERROR) << "Error while writing Green\'s function to file: " << e.what();
         }
+    }
+
+    int IOhelper::writeToFile(const std::string& text, const std::string& file)
+    {
+        if(!c.isGenerator || c.local.rank() != 0) return -1;
+        boost::filesystem::path _file = outDir;
+        _file	/= boost::filesystem::path(file + std::string(".out"));
+        boost::filesystem::ofstream _outStream;
+        _outStream.exceptions( std::ofstream::failbit | std::ofstream::badbit );
+        try
+        {
+            _outStream.open(_file);
+            _outStream << text;
+            _outStream.close();
+        }
+        catch (boost::filesystem::ofstream::failure e)
+        {
+            LOG(ERROR) << "Error while writing Matsubara Green\'s function to file: " << e.what();
+            LOG(ERROR) << "Error while writing Green\'s function to file: " << e.what();
+        }
+        return 1;
     }
 
     void IOhelper::readFromFile(GreensFct& gf, const std::string files_it, const std::string files_mf) const

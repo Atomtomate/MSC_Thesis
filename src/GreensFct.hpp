@@ -192,7 +192,7 @@ namespace DMFT
             }
             if(symmetric)
             {
-                if(n<0) return -g_wn(-n,spin);
+                if(n<0) return -g_wn(-n-1,spin);
                 else return g_wn(n,spin);
             }
             else
@@ -285,11 +285,15 @@ namespace DMFT
         std::string getMGFstring(void) const
         {
             std::stringstream res;
-            res << std::fixed << std::setw(10)<< "\t mFreq \tSpin UP Re \t Spin UP Im \t Spin DOWN Re \t Spin DOWN Im \tSpin UP Re Err \t Spin UP Im Err \t Spin DOWN Re Err \t Spin DOWN Im Err \n";
+            res << std::fixed << std::setw(16)<< "\t mFreq \tSpin UP Re \t Spin UP Im \t Spin DOWN Re \t Spin DOWN Im \tSpin UP Re Err \t Spin UP Im Err \t Spin DOWN Re Err \t Spin DOWN Im Err \n";
             for(int n=0; n < MAX_M_FREQ; n++)
             {
                 RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
-                res << std::setprecision(10) << wn << "\t" <<  g_wn(n,UP).real() << "\t" << g_wn(n,UP).imag() << "\t" << g_wn(n,DOWN).real() << "\t" << g_wn(n,DOWN).imag() << "\t" <<  g_wn_std(n,UP).real() << "\t" << g_wn_std(n,UP).imag() << "\t" << g_wn_std(n,DOWN).real() << "\t" << g_wn_std(n,DOWN).imag() << "\n" ;
+                ComplexT errU = (g_wn_std(n,UP) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,UP);
+                ComplexT errD = (g_wn_std(n,DOWN) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,DOWN);
+                res << std::setprecision(14) << wn << "\t" <<  g_wn(n,UP).real() << "\t" << g_wn(n,UP).imag() << "\t" << g_wn(n,DOWN).real() << "\t" << g_wn(n,DOWN).imag() << "\t"\
+                    << 0. << "\t" << errU.imag() << "\t" << 0. << "0." << errD.imag() << "\n";
+                    //TODO: debug:<<g_wn_std(n,UP).real() << "\t" << g_wn_std(n,UP).imag() << "\t" << g_wn_std(n,DOWN).real() << "\t" << g_wn_std(n,DOWN).imag() << "\n" ;
             }
             for(int n=MAX_M_FREQ; n < 2*MAX_M_FREQ*fit; n++)
             {
@@ -297,28 +301,41 @@ namespace DMFT
                 ComplexT mExp[2];
                 mExp[UP] = getTail( wn, UP);
                 mExp[DOWN] = getTail( wn, DOWN);
-                res << std::setprecision(10) << wn << "\t" <<  mExp[UP].real() << "\t" << mExp[UP].imag() << "\t" << mExp[DOWN].real() << "\t" << mExp[DOWN].imag() << "\n" ;
+                res << std::setprecision(16) << wn << "\t" <<  mExp[UP].real() << "\t" << mExp[UP].imag() << "\t" << mExp[DOWN].real() << "\t" << mExp[DOWN].imag() << "\n" ;
             }
             return res.str();
         }
 
-        std::string getMaxEntString(int spin = UP) const
+        std::string getPadeString(int spin = UP) const
         {
             //if(!mSet) return "";
             std::stringstream res;
-            res << std::fixed << std::setw(10);
+            res << std::fixed << std::setw(16);
             for(int n=0; n < MAX_M_FREQ; n++)
             {
                 ComplexT err = (g_wn_std(n,spin) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,spin);
                 RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
-                res << std::setprecision(10) << wn << "\t" << g_wn(n,spin).imag() << "\t" << err.imag() << "\n";
+                res << std::setprecision(16) << wn << "\t" << 0. << "\t" << g_wn(n,spin).imag() << "\n";
+            }
+            return res.str();
+        }
+        std::string getMaxEntString(int spin = UP) const
+        {
+            //if(!mSet) return "";
+            std::stringstream res;
+            res << std::fixed << std::setw(16);
+            for(int n=0; n < MAX_M_FREQ; n++)
+            {
+                ComplexT err = (g_wn_std(n,spin) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,spin);
+                RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
+                res << std::setprecision(16) << wn << "\t" << g_wn(n,spin).imag() << "\t" << err.imag() << "\n";
             }
             for(int n=MAX_M_FREQ; n < 5*MAX_M_FREQ*fit; n++)
             {
                 RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
                 ComplexT mExp[2];
                 mExp[UP] = getTail( wn, spin);
-                res << std::setprecision(10) << wn << "\t" << mExp[UP].imag() << "\t"<< 1.0/(MAX_M_FREQ*MAX_M_FREQ)<< "\n" ;
+                res << std::setprecision(16) << wn << "\t" << mExp[UP].imag() << "\t"<< 1.0/(MAX_M_FREQ*MAX_M_FREQ)<< "\n" ;
             }
             return res.str();
         }
@@ -332,10 +349,10 @@ namespace DMFT
         {
             //if(!tSet) return "";
             std::stringstream res;
-            res << std::fixed << std::setw(10)<< "iTime \tSpin up \tSpin down \tSpin up Err\tSpin down Err\n";
+            res << std::fixed << std::setw(16)<< "iTime \tSpin up \tSpin down \tSpin up Err\tSpin down Err\n";
             for(int i =0; i < MAX_T_BINS; i++)
             {
-                res << std::setprecision(10) << std::setw(10) << (beta*i)/MAX_T_BINS << "\t"\
+                res << std::setprecision(16) << std::setw(16) << (beta*i)/MAX_T_BINS << "\t"\
                     << g_it(i,UP)<< "\t" << g_it(i,DOWN) << "\t" << g_it_std(i,UP) << "\t" << g_it_std(i,DOWN) <<"\n";
             }
             return res.str();
@@ -377,7 +394,8 @@ namespace DMFT
 
         /*! Does a FFT from imaginary time to Matsubara Green's function and stores it.
         */
-        void transformTtoM(void){ fft.transformTtoM(g_it, g_wn); markMSet(); }   
+        //void transformTtoM(void){ fft.transformTtoM_naive(this); markMSet(); }   
+        void transformTtoM(void){ transformTtoM(g_wn); markMSet(); }   
 
         /*! Does a FFT from imaginary time to Matsubara Green's function and stores it in target.
          *  @param	[out]	Eigen::ArrayXXcd where Matsubara Green's function will be stored
@@ -524,7 +542,7 @@ namespace DMFT
             return res;
         }
 
-        protected:
+        public:
         const RealT beta;
         const bool symmetric;
         const bool fit;

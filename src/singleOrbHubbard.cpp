@@ -119,7 +119,7 @@ namespace DMFT
                 LOG(INFO) << "initializing: " << descr;
                 setBetheSemiCirc(g0, D, conf);
                 setBetheSemiCirc(gImp, D, conf);
-                DMFT::WeakCoupling impSolver(g0, gImp, conf, zeroShift, burnin);
+                DMFT::WeakCoupling impSolver(&g0, &gImp, &conf, zeroShift, burnin);
                 DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, conf, 0, impSolver, &g0, &gImp, D);
 
                 LOG(INFO) << "80k MC samples";
@@ -157,7 +157,7 @@ namespace DMFT
                 gImp_2.setByT(gImp.getItGF());
                 gImp_2.setByMFreq(gImp.getMGF());
 
-                DMFT::WeakCoupling impSolver(g0_2, gImp_2, conf, zeroShift, burnin);
+                DMFT::WeakCoupling impSolver(&g0_2, &gImp_2, &conf, zeroShift, burnin);
                 DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, conf, 0, impSolver, &g0_2, &gImp_2, D);
 
                 LOG(INFO) << "80k MC samples";
@@ -244,7 +244,7 @@ namespace DMFT
                   */
 
                 LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator == " << config.isGenerator ;
-                DMFT::WeakCoupling impSolver(g0, gImp, config, zeroShift, burnin);
+                DMFT::WeakCoupling impSolver(&g0, &gImp, &config, zeroShift, burnin);
                 if(use_bethe)
                 {
                     DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, config, mixing, impSolver, &g0, &gImp, D);
@@ -316,16 +316,13 @@ namespace DMFT
                     setBetheSemiCirc(gImp, D, config);
 
                     LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator ;
-                    DMFT::WeakCoupling impSolver(g0, gImp, config, zeroShift, burnin);
+                    DMFT::WeakCoupling impSolver(&g0, &gImp, &config, zeroShift, burnin);
                     DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, config, 0.0, impSolver, &g0, &gImp, D);
                     dmftSolver.solve(5*U_l, 100000, true);
 
                     //(config.local.barrier)();                                           // wait to finish
                 }
-
             }
-
-
         }
 
 DMFT::ComplexT fit_sym_tail(int n, int i, const RealT beta)
@@ -384,9 +381,10 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
                     setHybFromG0(g0, *hyb, D, config);
                     //IOhelper::plot(*hyb, config.beta, "Hybridization Function");
                     //IOhelper::plot(g0, config.beta, "Weiss Function");
+                    IOhelper::plot(*gImp, config.beta, "Impurity Function");
 
-                    LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator ;
-                    DMFT::StrongCoupling impSolver(hyb, gImp, config, burnin);
+                    LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator;
+                    DMFT::StrongCoupling impSolver(hyb, gImp, &config, burnin);
                     DMFT::DMFT_BetheLattice<StrongCoupling> dmftSolver(descr, config, 0.0, impSolver, hyb, gImp, D, true);
                     dmftSolver.solve(25,8000000, true);
 
@@ -398,28 +396,73 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
             delete(hyb);
         }
 
-    void _test_IPT(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator)
+    void _test_average_PO(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator)
     {
             const int D = 1.0;          // half bandwidth
             const RealT a	= 1.0;
             const RealT t	= D/2.0;
-            const int burnin = 30000;
+            const int burnin = 20000;
+            const RealT beta  = 128;
+            DMFT::GFTail tail;
+            const RealT zeroShift = 0.504;
+            tail.fitFct = &fit_sym_tail;
+            std::string descrINT = "expOrder_CTINT";
+            std::string descrHYB = "expOrder_CTHYB";
+            for(RealT U : {0.0, 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5.0, 5.5, 6.0})//{})
+            {
+                DMFT::GreensFct* g0 = new DMFT::GreensFct(beta, true, true, tail);
+                DMFT::GreensFct* gImp = new DMFT::GreensFct(beta, true, true, tail);
+                DMFT::GreensFct* hyb = new  DMFT::GreensFct(beta, true, true, tail);					// construct new hybridization function
+                DMFT::GreensFct gLoc(beta);
+                RealT mu    = U/2.;
+                DMFT::Config configHYB(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, descrHYB);
+                DMFT::Config configINT(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, descrINT);
 
-            const RealT beta  = 10;
-            const RealT U     = 1;
-            const RealT mu    = U/2.;
+                LOG(INFO) << "setting up initial guess for CT-INT at U = " << U;
+                setBetheSemiCirc(*g0, D, configINT);
+                setBetheSemiCirc(*gImp, D, configINT);
+                LOG(INFO) << "initializing rank " << configINT.world.rank() << ". isGenerator ==" << configINT.isGenerator ;
+                DMFT::WeakCoupling impSolverINT(g0, gImp, &configINT, zeroShift, burnin);
+                DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolverINT(descrINT, configINT, 0.0, impSolverINT, g0, gImp, D);
+                dmftSolverINT.solve(1, 8000000, true);
 
-            DMFT::Config config(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator);
+
+                LOG(INFO) << "setting up initial guess for CT-HYB at U = " << U;
+                setBetheSemiCirc(*g0, D, configHYB);
+                setBetheSemiCirc(*gImp, D, configHYB);
+                setHybFromG0(*g0, *hyb, D, configHYB);
+                LOG(INFO) << "initializing rank " << configHYB.world.rank() << ". isGenerator ==" << configHYB.isGenerator ;
+                DMFT::StrongCoupling impSolverHYB(hyb, gImp, &configHYB, burnin);
+                DMFT::DMFT_BetheLattice<StrongCoupling> dmftSolverHYB(descrHYB, configHYB, 0.0, impSolverHYB, hyb, gImp, D, true);
+                dmftSolverHYB.solve(1, 8000000, true);
+   
+                //exit(0);
+                delete(g0);
+                delete(hyb);
+                delete(gImp);
+            }
+    }
+
+    void _test_IPT(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator)
+    {
+            const int D = 1.0;          // half bandwidth
+            const RealT t	= D/2.0;
+
+            const RealT beta  = 40;
             DMFT::GFTail tail;
             tail.fitFct = &fit_sym_tail;
-
             DMFT::GreensFct* g0 = new DMFT::GreensFct(beta, true, true, tail);
             DMFT::GreensFct* gImp = new DMFT::GreensFct(beta, true, true, tail);
-            setBetheSemiCirc(*gImp, D, config);
-            std::string descr = "IPT_Bethe_U" + std::to_string(static_cast<int>(U));
-            auto ipt_solver = DMFT::IPT(descr, g0, gImp, config, D);
-            LOG(INFO) << "Solv impurity problem using IPT.";
-            ipt_solver.solve(40);
+            std::string descr = "IPT_Bethe_PT";
+            for(RealT U : {2., 4., 6.})
+            {
+                RealT mu    = U/2.;
+                DMFT::Config config(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator);
+                setBetheSemiCirc(*gImp, D, config);
+                auto ipt_solver = DMFT::IPT(descr, g0, gImp, config, D);
+                LOG(INFO) << "Solv impurity problem using IPT for U = " + std::to_string(U);
+                ipt_solver.solve(1, true);
+            }
             delete(gImp);
             delete(g0);
     }

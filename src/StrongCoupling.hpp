@@ -8,6 +8,8 @@
 #include "IOhelper.hpp"
 #include "GFLPoly.hpp"
 #include "Segments.hpp"
+#include "ExpOrderAcc.hpp"
+
 
 #include <boost/serialization/vector.hpp>
 #include <boost/accumulators/numeric/functional.hpp>
@@ -53,9 +55,8 @@ class StrongCoupling
 {
     public:
         using AccT = boost::accumulators::accumulator_set<RealT, boost::accumulators::features<boost::accumulators::tag::sum, boost::accumulators::tag::variance > >;
-        using AccMT = boost::accumulators::accumulator_set<RealT, boost::accumulators::stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance, boost::accumulators::tag::skewness, boost::accumulators::tag::kurtosis > >;
         using AccCT = boost::accumulators::accumulator_set<ComplexT, boost::accumulators::features<boost::accumulators::tag::sum, boost::accumulators::tag::moment<2> > >;
-        StrongCoupling(GreensFct* const hybr, GreensFct* const gImp, const Config& config, const unsigned int burninSteps);
+        StrongCoupling(GreensFct* const hybr, GreensFct* const gImp, const Config *const config, const unsigned int burninSteps);
         virtual ~StrongCoupling();
 
 
@@ -73,14 +74,14 @@ class StrongCoupling
             RealT res = 0;
             for(int f =0; f < _CONFIG_spins; f++)
             {
-                res += boost::accumulators::mean(expOrd[f]);
+                //res += boost::accumulators::mean(expOrd[f]);
             }
             return res/_CONFIG_spins;
         }
         int expansionOrder(void)
         {
             if(steps>burninSteps)
-                return boost::accumulators::mean(expOrd[0]);
+                //return boost::accumulators::mean(expOrd[0]);
             return 0;
         }
 
@@ -103,7 +104,7 @@ class StrongCoupling
         GreensFct* const hyb;
         GreensFct* const gImp;
         GFLPoly gImpLPoly;
-        const Config &conf;
+        Config const * const conf;
         std::array<MatrixT,_CONFIG_spins> M;
         Segments<_CONFIG_spins> segments;
         // segmentCache[FLAVOR][TIME_OF_INSERT]. {first - segment start time, second - segment end time}
@@ -114,7 +115,7 @@ class StrongCoupling
 
         int lastSign;						                            // needed when proposal is rejected
         long int totalSign;
-        std::array<AccMT, _CONFIG_spins> expOrd;
+        ExpOrderAcc<_CONFIG_spins> expOrd;
         std::array<std::array< AccT, _CONFIG_maxTBins>, _CONFIG_spins> itBins;
         std::array<std::array<ComplexT, _CONFIG_maxMatsFreq>, _CONFIG_spins> mfBins;
         std::array<std::array<RealT,_CONFIG_maxLPoly>,_CONFIG_spins> gl_c;
@@ -141,7 +142,7 @@ class StrongCoupling
 
         inline RealT hybCall(RealT ts, RealT tf, const unsigned char flavor)
         {
-            RealT t = std::fmod(tf,conf.beta) - std::fmod(ts,conf.beta);
+            RealT t = std::fmod(tf,conf->beta) - std::fmod(ts,conf->beta);
             //return -hyb.getByT(t, flavor, 1);
             return -(*hyb)(t,flavor);
         }

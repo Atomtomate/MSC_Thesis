@@ -21,10 +21,12 @@ namespace DMFT
                 }
             };
 
-            Segments(const Config &conf): conf(&conf), fullLine({})
+            Segments(const Config * conf): conf(conf), fullLine({})
             {
                 for(int i = 0; i < NFLAVORS; i++) fullLine[i] = false;
             }
+
+            //Segments(const Segments& other) = default;
 
             /*! Computed correct time ordered list of segments for periodic bc
              *

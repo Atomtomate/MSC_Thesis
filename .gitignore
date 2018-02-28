@@ -3,7 +3,10 @@ IPT*/
 obj/
 logs/
 *.out
+*.in
 *.o
 *.txt
 *.log
+*.pdf
+*.png
 ImpSolv*

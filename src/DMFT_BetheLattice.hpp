@@ -31,7 +31,7 @@ namespace DMFT
                 {
                     if(config.isGenerator)
                     {
-                        IOhelper::plot(*g0, config.beta, "Weiss Function");
+                        //IOhelper::plot(*g0, config.beta, "Weiss Function");
                         //TODO: move IO from generator to accumulators
                         for(unsigned int dmftIt = 1;dmftIt < iterations+1; dmftIt++)
                         {  
@@ -62,13 +62,11 @@ namespace DMFT
                                     }
                                 }
                             }
-                            g0->shift(config.U/2.0);
-                            g0->markMSet();
-                            g0->transformMtoT();
 
                             //IOhelper::plot(*g0, config.beta, "Hyb Fct iteration " + std::to_string(dmftIt));
                             //IOhelper::plot(*gImp, config.beta, "Imp GF iteration " + std::to_string(dmftIt));
                             //exit(0);
+
                             g0->setParaMagnetic();
                             if(!useHyb)
                             {
@@ -77,6 +75,8 @@ namespace DMFT
                                 selfE.setByMFreq(sImp);
                                 selfE.setParaMagnetic();
                                 g0->shift(config.U/2.0);
+                                g0->markMSet();
+                                g0->transformMtoT();
                             }
                             selfE.markMSet();
                             selfE.transformMtoT();
@@ -105,7 +105,7 @@ namespace DMFT
                             }
                             iSolver.computeImpGF();
                             //gImp->setParaMagnetic();
-                            IOhelper::plot(*gImp, config.beta, "after measure gIp Function " + std::to_string(dmftIt));
+                            //IOhelper::plot(*gImp, config.beta, "after measure gIp Function " + std::to_string(dmftIt));
                             if(config.local.rank() == 0)
                             {
                                 LOG(INFO) << "forcing paramagnetic solution";

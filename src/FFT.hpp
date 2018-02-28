@@ -69,8 +69,6 @@ namespace DMFT
             void transformMtoT(const MatG& from, ImTG& to, const std::vector<std::array<RealT,2> >& tail, bool symmetric);
 
             void transformMtoT_naive(const MatG& from, ImTG& to) const;
-
-            void transformTtoM_naive(const ImTG &from, MatG &to) const;
             void transformMtoT_naive(GreensFct* gf) const;
 
             /*! performs a convolution of f and g using fft
@@ -100,6 +98,8 @@ namespace DMFT
              */
             void transformTtoM(const ImTG& from, MatG& to);
 
+            void transformTtoM_naive(const ImTG &from, MatG &to) const;
+            void transformTtoM_naive(GreensFct* gf) const;
     };
 
 }   //end namespace DMFT

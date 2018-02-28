@@ -39,6 +39,7 @@ class IOhelper//: public mglDraw
     public:
         //TODO: thread safe console output
 		IOhelper(std::string& _outDir, const Config& c);
+        IOhelper(const Config& c);
                 
                 /*! initialize (new) output dir
                  *  @param [in] _outDir directory path from current working dir
@@ -49,8 +50,9 @@ class IOhelper//: public mglDraw
 		 *  note that GF must be queued for logging before calling this function.
 		 */
 		int writeToFile(void) const;
+        int writeToFile(const std::string& text, const std::string& file);
 
-        void writeFinalToFile(GreensFct& gf, const LogInfos& li) const;
+        void writeFinalToFile(GreensFct& gf, const LogInfos& li, const bool selfE = false, const RealT U = 0.) const;
 
 		/*! Write specific Green's function to file.
 		 *  @param  [in]  handle obtained through addGF(const GreensFct* gf, LogInfos l); 
@@ -96,7 +98,7 @@ class IOhelper//: public mglDraw
 		std::vector<GFListEl> gfList;
 		unsigned iteration;
 		boost::filesystem::path outDir;
-                const Config& c;
+        const Config& c;
 
 		void writeToFile(GreensFct& gf, const LogInfos& li) const;
 };
