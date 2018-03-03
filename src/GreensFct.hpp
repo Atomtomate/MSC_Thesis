@@ -3,7 +3,6 @@
 
 #include "Config.hpp"
 #include "Constants.h"
-#include "FFT.hpp"
 #include "GFTail.hpp"
 
 #include <boost/math/special_functions/legendre.hpp>
@@ -20,6 +19,8 @@ namespace DMFT
 //{
 //    return std::pow(1./DMFT::ComplexT(0., DMFT::mFreqS(n, 10.)),i);
 //}
+    
+    class FFT;
 
     /*ComplexT defaultTail(int n, int i)
     {
@@ -40,17 +41,18 @@ namespace DMFT
      *  TODO: convert symmetric to template paramter when C++17 becomes standard
      *  TODO: remember to add site dependency for hubbard model
      */
-    class GreensFct//: public VecExpression<GreensFct>
+    template<int MAX_M_FREQ,int MAX_T_BINS>
+    class GreensFctBase//: public VecExpression<GreensFct>
     {
 
         //ComplexT (*tailFunc)(int, int);
-        static constexpr int MAX_T_BINS = _CONFIG_maxTBins;
-        static constexpr int MAX_M_FREQ = _CONFIG_maxMatsFreq;
+        //static constexpr int MAX_T_BINS = _CONFIG_maxTBins;
+        //static constexpr int MAX_M_FREQ = _CONFIG_maxMatsFreq;
         static constexpr int SPINS	= 2;
         static constexpr int TAIL_ORDER = 6;
 
         public:
-            GreensFct(const RealT beta, const bool symmetric = false, bool fitTail = false, GFTail gft = GFTail()):
+            GreensFctBase(const RealT beta, const bool symmetric = false, bool fitTail = false, GFTail gft = GFTail()):
                 symmetric(symmetric), beta(beta), fft(beta), deltaIt(static_cast<RealT>(MAX_T_BINS)/beta), fit(fitTail), tailFitted(false), gft(gft)
             {
                 g_it = ImTG::Zero(MAX_T_BINS, SPINS);
@@ -62,7 +64,7 @@ namespace DMFT
 
         //GreensFct(GreensFct const&) = delete; // TODO: implement
 
-        virtual ~GreensFct(){}
+        virtual ~GreensFctBase(){}
 
         /*! Call this after setting \f$ G(\tau) \f$ 
          *  @return 1 if previously set, 0 otherwise
@@ -182,21 +184,29 @@ namespace DMFT
          *
          *  @return
          */
-        inline ComplexT getByMFreq(const int n, const unsigned int spin) const
+        inline ComplexT getByMFreq(const int n, const unsigned int spin)
         {
-            if(std::abs(n) >= g_wn.rows())
-            {
-                VLOG(5) << "using tail data instead of measured data, for wn: " << getMFreq(n) << " = " <<  getTail(getMFreq(n), spin);
-                if(!tailFitted) LOG(WARNING) << "requesting tail without having called fit";
-                return getTail(getMFreq(n), spin);
-            }
             if(symmetric)
             {
+                if(std::abs(n) >= g_wn.rows())
+                {
+                    VLOG(5) << "using tail data instead of measured data, for wn: " << getMFreq(n) << " = " <<  getTail(getMFreq(n), spin);
+                    if(!tailFitted) fitTail(); 
+                    //LOG(WARNING) << "requesting tail without having called fit";
+                    return getTail(getMFreq(n), spin);
+                }
                 if(n<0) return -g_wn(-n-1,spin);
                 else return g_wn(n,spin);
             }
             else
             {
+                if(((n + g_wn.rows()/2) >= g_wn.rows()) || ((n + g_wn.rows()/2) < 0.))
+                {
+                    VLOG(5) << "using tail data instead of measured data, for wn: " << getMFreq(n) << " = " <<  getTail(getMFreq(n), spin);
+                    if(!tailFitted) fitTail();
+                    //LOG(WARNING) << "requesting tail without having called fit";
+                    return getTail(getMFreq(n), spin);
+                }
                 return g_wn(n+g_wn.rows()/2,spin);
             }
         }
@@ -291,7 +301,7 @@ namespace DMFT
                 RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
                 ComplexT errU = (g_wn_std(n,UP) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,UP);
                 ComplexT errD = (g_wn_std(n,DOWN) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,DOWN);
-                res << std::setprecision(14) << wn << "\t" <<  g_wn(n,UP).real() << "\t" << g_wn(n,UP).imag() << "\t" << g_wn(n,DOWN).real() << "\t" << g_wn(n,DOWN).imag() << "\t"\
+                res << std::setprecision(24) << wn << "\t" <<  g_wn(n,UP).real() << "\t" << g_wn(n,UP).imag() << "\t" << g_wn(n,DOWN).real() << "\t" << g_wn(n,DOWN).imag() << "\t"\
                     << 0. << "\t" << errU.imag() << "\t" << 0. << "0." << errD.imag() << "\n";
                     //TODO: debug:<<g_wn_std(n,UP).real() << "\t" << g_wn_std(n,UP).imag() << "\t" << g_wn_std(n,DOWN).real() << "\t" << g_wn_std(n,DOWN).imag() << "\n" ;
             }
@@ -301,7 +311,7 @@ namespace DMFT
                 ComplexT mExp[2];
                 mExp[UP] = getTail( wn, UP);
                 mExp[DOWN] = getTail( wn, DOWN);
-                res << std::setprecision(16) << wn << "\t" <<  mExp[UP].real() << "\t" << mExp[UP].imag() << "\t" << mExp[DOWN].real() << "\t" << mExp[DOWN].imag() << "\n" ;
+                res << std::setprecision(24) << wn << "\t" <<  mExp[UP].real() << "\t" << mExp[UP].imag() << "\t" << mExp[DOWN].real() << "\t" << mExp[DOWN].imag() << "\n" ;
             }
             return res.str();
         }
@@ -310,32 +320,57 @@ namespace DMFT
         {
             //if(!mSet) return "";
             std::stringstream res;
-            res << std::fixed << std::setw(16);
+            res << std::fixed << std::setw(24);
             for(int n=0; n < MAX_M_FREQ; n++)
             {
                 ComplexT err = (g_wn_std(n,spin) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,spin);
                 RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
-                res << std::setprecision(16) << wn << "\t" << 0. << "\t" << g_wn(n,spin).imag() << "\n";
+                res << std::setprecision(24) << wn << "\t" << 0. << "\t" << g_wn(n,spin).imag() << "\n";
             }
             return res.str();
         }
-        std::string getMaxEntString(int spin = UP) const
+        std::string getMaxEntString(const bool selfE = false, int spin = UP)
         {
             //if(!mSet) return "";
             std::stringstream res;
-            res << std::fixed << std::setw(16);
+            res << std::fixed << std::setw(24);
+            auto out = g_wn.col(spin);
+            if(selfE)
+            {
+                RealT c0 = out(MAX_M_FREQ-1).real();
+                RealT c1;
+                if(symmetric)
+                {
+                    c1 = out(MAX_M_FREQ-1).imag();
+                }
+                else
+                {
+                    c1 = out(0).imag();
+                }
+                for(unsigned int n = 0; n < MAX_M_FREQ; n++)
+                {
+                    RealT wn = mFreqS(n - symmetric*(MAX_M_FREQ/2), beta);
+                    out(n) = (out(n)-c0)/(c1*wn);
+                }
+            }
             for(int n=0; n < MAX_M_FREQ; n++)
             {
-                ComplexT err = (g_wn_std(n,spin) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,spin);
+                ComplexT err = (g_wn_std(n,spin) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+100.0)), 1.0/(2.0*(n*n+100.0))) : g_wn_std(n,spin);
                 RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
-                res << std::setprecision(16) << wn << "\t" << g_wn(n,spin).imag() << "\t" << err.imag() << "\n";
+                res << std::setprecision(24) << wn << "\t" << out(n).imag() << "\t" << err.imag() << "\n";
             }
-            for(int n=MAX_M_FREQ; n < 5*MAX_M_FREQ*fit; n++)
+            return res.str();
+        }
+
+        std::string getMaxEntItString(int spin = UP) const
+        {
+            std::stringstream res;
+            res << std::fixed << std::setw(24);
+            for(unsigned t = 0; t < MAX_T_BINS; t++)
             {
-                RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
-                ComplexT mExp[2];
-                mExp[UP] = getTail( wn, spin);
-                res << std::setprecision(16) << wn << "\t" << mExp[UP].imag() << "\t"<< 1.0/(MAX_M_FREQ*MAX_M_FREQ)<< "\n" ;
+                RealT err = (g_it_std(t,spin) == 0.0) ? (1.0/(2.0*(t*t+100.0))) : g_it_std(t,spin);
+                RealT tau = t*beta/MAX_T_BINS;
+                res << std::setprecision(24) << tau << "\t" << g_it(t,spin) << "\t" << err << "\n";
             }
             return res.str();
         }
@@ -349,10 +384,10 @@ namespace DMFT
         {
             //if(!tSet) return "";
             std::stringstream res;
-            res << std::fixed << std::setw(16)<< "iTime \tSpin up \tSpin down \tSpin up Err\tSpin down Err\n";
+            res << std::fixed << std::setw(24)<< "iTime \tSpin up \tSpin down \tSpin up Err\tSpin down Err\n";
             for(int i =0; i < MAX_T_BINS; i++)
             {
-                res << std::setprecision(16) << std::setw(16) << (beta*i)/MAX_T_BINS << "\t"\
+                res << std::setprecision(24) << std::setw(24) << (beta*i)/MAX_T_BINS << "\t"\
                     << g_it(i,UP)<< "\t" << g_it(i,DOWN) << "\t" << g_it_std(i,UP) << "\t" << g_it_std(i,DOWN) <<"\n";
             }
             return res.str();
@@ -400,7 +435,7 @@ namespace DMFT
         /*! Does a FFT from imaginary time to Matsubara Green's function and stores it in target.
          *  @param	[out]	Eigen::ArrayXXcd where Matsubara Green's function will be stored
          */
-        void transformTtoM(MatG& target){ fft.transformTtoM(g_it, target); markMSet(); }
+        void transformTtoM(MatG& target){ fft.transformTtoM(g_it, target, symmetric); markMSet(); }
 
         /*! Compute \f[ ()G(i \omega_n)^{-1} - s)^{-1}  \f] and also transform to \f[ G(\tau) \f].
          *  @param  [in]  s shift
@@ -414,7 +449,7 @@ namespace DMFT
          *
          *  @param [in] other MatG
          */
-        MatG invAdd(GreensFct& other)
+        MatG invAdd(GreensFctBase& other)
         {
             MatG res(1,1);
             fitTail();
@@ -578,6 +613,8 @@ namespace DMFT
     };
 
 
+    typedef GreensFctBase<_CONFIG_maxMatsFreq, _CONFIG_maxTBins> GreensFct;
+    typedef GreensFctBase<2*_CONFIG_maxMatsFreq, 2*_CONFIG_maxTBins> GreensFctFull;
     //using GreensFct = GreensFct;	// useless for now, may be useful for later changes to GreensFct
     //using GreensFct = GreensFct<_CONFIG_maxTBins, _CONFIG_maxMatsFreq, _CONFIG_spins>;
 }	//end namespace DMFT

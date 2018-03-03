@@ -38,9 +38,15 @@ namespace DMFT
                 boost::filesystem::ofstream fs;
                 fs.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
                 fs.open (file);
+                fs << std::string("solver: \t") << c.solver << std::endl;
                 fs << std::string("beta:\t") << c.beta << std::endl;
                 fs << std::string("U:   \t") << c.U << std::endl;
                 fs << std::string("mu:  \t") << c.mu << std::endl;
+                fs << std::string("half BW:  \t") << c.D << std::endl;
+                fs << std::string("N_MF: \t") << c.mfCount << std::endl;
+                fs << std::string("N_IT: \t") << c.itCount << std::endl;
+                fs << std::string("solver: \t") << c.solver << std::endl;
+                fs << std::string("additional info: \t") << c.info << std::endl;
                 fs.close();
             }
         }
@@ -69,46 +75,68 @@ namespace DMFT
     void IOhelper::writeFinalToFile(GreensFct& gf, const LogInfos& li, const bool selfE, const RealT U) const
     {
         if(!c.isGenerator || c.local.rank() != 0) return ;
+        std::string b_str = std::to_string(c.beta);
+        std::string u_str = std::to_string(std::max(1.5*U,3.0));
+        std::string mu_str = std::to_string(std::min(-1.5*U,-3.0));
+        std::string nmf = std::to_string(std::min(_CONFIG_maxMatsFreq, 128));
+        std::string file_name = li.filename;
+        std::replace(b_str.begin(), b_str.end(), '.', '_');
+        //std::replace(u_str.begin(), u_str.end(), '.', '_');
+        //std::replace(mu_str.begin(), mu_str.end(), '.', '_');
+        std::replace(file_name.begin(), file_name.end(), '.', '_');
         boost::filesystem::path file_maxent = outDir;
+        boost::filesystem::path file_maxent_it = outDir;
         boost::filesystem::path file_pade = outDir;
         boost::filesystem::path file_maxent_config = outDir;
         boost::filesystem::path file_pade_config = outDir;
-        file_maxent /= boost::filesystem::path( std::string("f_") + li.filename + std::string(".out"));
-        file_pade /= boost::filesystem::path( std::string("f_") + li.filename + std::string(".pade.out"));
-        file_maxent_config /= boost::filesystem::path( std::string("me_") + li.filename + std::string("conf.in"));
-        file_pade_config /= boost::filesystem::path( std::string("pade_") + li.filename + std::string("conf.in"));
-        boost::filesystem::ofstream fmt, fmtp, fmt_me_conf, fmt_pade_conf;
+        file_maxent /= boost::filesystem::path( std::string("f_") + file_name + std::string(".out"));
+        file_maxent_it /= boost::filesystem::path( std::string("f_") + file_name + std::string(".it.out"));
+        file_pade /= boost::filesystem::path( std::string("f_") + file_name + std::string(".pade.out"));
+        file_maxent_config /= boost::filesystem::path( std::string("me_") + file_name + std::string("conf.in"));
+        file_pade_config /= boost::filesystem::path( std::string("pade_") + file_name + std::string("conf.in"));
+        boost::filesystem::ofstream fmt, fmt_it, fmtp, fmt_me_conf, fmt_pade_conf;
         fmt.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
+        fmt_it.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
         fmtp.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
         fmt_me_conf.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
         fmt_pade_conf.exceptions ( std::ofstream::failbit | std::ofstream::badbit );
-        const std::string se_add = selfE ? std::string("\nSELF=true\nNORM=")+std::to_string(U*U/4.) : "";
+        const std::string se_add = selfE ? std::string("\nSELF=true\nNORM=")+std::to_string(U*U/16.) : "";
         const std::string me_conf_s = "BETA=" + std::to_string(c.beta) +
-                         "\nNDAT=" + std::to_string(_CONFIG_maxMatsFreq) +
-                         "\nNFREQ=1024\nDATASPACE=frequency\nKERNEL=fermionic\nPARTICLE_HOLE_SYMMETRY=true\nDATA=" +
-                            std::string("f_") + li.filename + std::string(".out") + se_add;
+                         "\nNDAT=" + nmf +\
+                         "\nBACKCONTINUE=false\nMAX_IT=10000" + \
+                        "\nNFREQ=200\nDATASPACE=frequency\nKERNEL=fermionic\nPARTICLE_HOLE_SYMMETRY=true\nDATA=" +
+                            std::string("f_") + file_name + std::string(".out") + se_add;
+                         //"\nOMEGA_MIN=" + mu_str + "\nOMEGA_MAX=" + u_str +\
         //const std::string pade_conf_s = "imag.BETA=" +std::to_string(c.beta) + "\nimag.NDAT="+ std::to_string(_CONFIG_maxMatsFreq) +\
         //                                 "\nimag.STATISTICS=Fermi\nimag.NEGATIVE_DATA=false\nimag.DATA="+std::string("f_")+li.filename+std::string(".pade.out")+\
         //                                 "\nreal.NFREQ=" + std::to_string(_CONFIG_maxMatsFreq) + "\nreal.OUTPUT="  + li.filename+std::string(".pade.cont")+\
         //                                 "\nreal.FREQUENCY_GRID=linear\npade.PADE_NUMERATOR_DEGREE ="+ std::to_string(_CONFIG_maxMatsFreq/2-1)+\
         //                                 "\npade.PADE_DENOMINATOR_DEGREE =" + std::to_string(_CONFIG_maxMatsFreq/2);
-        const std::string pade_conf_s = "imag.BETA=" +std::to_string(c.beta) + "\nimag.NDAT=257\nimag.STATISTICS=Fermi\nimag.NEGATIVE_DATA=false\nimag.DATA="+\
-                                         std::string("f_")+li.filename+std::string(".pade.out")+\
-                                         "\nreal.NFREQ=257\nreal.OUTPUT=" + li.filename+std::string(".pade.cont") + \
-                                         "\nreal.FREQUENCY_GRID=linear\npade.PADE_NUMERATOR_DEGREE=128\npade.PADE_DENOMINATOR_DEGREE=128";
+        const std::string pade_conf_s = "imag.BETA=" + std::to_string(c.beta) + "\nimag.NDAT=513\nimag.STATISTICS=Fermi\nimag.NEGATIVE_DATA=false\nimag.DATA="+\
+                                         std::string("f_") + file_name + std::string(".pade.out")+\
+                                         "\nreal.NFREQ=513\nreal.OUTPUT=" + file_name + std::string(".pade.cont") + \
+                                         "\nreal.FREQUENCY_GRID="+ ((U < 4) ? "linear" : "log") +"\nreal.OMEGA_MIN=" + mu_str + "\nreal.OMEGA_MAX=" + u_str +\
+                                         "\npade.PADE_NUMERATOR_DEGREE=256\npade.PADE_DENOMINATOR_DEGREE=256";
         try
         {
             fmt.open(file_maxent);
-            fmtp.open(file_pade);
             fmt_me_conf.open(file_maxent_config);
-            fmt_pade_conf.open(file_pade_config);
-            fmt << gf.getMaxEntString();
-            fmtp << gf.getPadeString();
+            fmt << gf.getMaxEntString(selfE);
+            //if(!selfE)
+            //{
+                fmt_it.open(file_maxent_it);
+                fmt_it << gf.getMaxEntItString();
+                fmt_it.close();
+            //}*/
             fmt_me_conf << me_conf_s;
-            fmt_pade_conf << pade_conf_s;
             fmt.close();
-            fmtp.close();
             fmt_me_conf.close();
+            //pade:
+            fmtp.open(file_pade);
+            fmt_pade_conf.open(file_pade_config);
+            fmtp << gf.getPadeString();
+            fmt_pade_conf << pade_conf_s;
+            fmtp.close();
             fmt_pade_conf.close();
         }
         catch (boost::filesystem::ofstream::failure e)

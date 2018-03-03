@@ -1,7 +1,4 @@
 #include "FFT.hpp"
-#ifndef GREENS_FCT_HPP_
-#include "GreensFct.hpp"
-#endif
 #ifndef IOHELPER_H_
 #include "IOhelper.hpp"
 #endif
@@ -12,12 +9,11 @@ namespace DMFT
         ComplexT FFT::tail(const RealT wn, const std::vector<std::array<RealT,2> >& tail, const int spin) const
         {
             ComplexT iwn(0.0, wn);
-            ComplexT res = ComplexT(0.,0.);
-            for(int i = 0; i < tail.size(); i++)
-            {
-                res += tail[i][spin]*(std::pow(iwn, -i));
-            }
-            //ComplexT res = tail[0][spin] + tail[1][spin]/iwn - tail[2][spin]/(wn*wn) - tail[3][spin]/(iwn*wn*wn) + tail[4][spin]/(wn*wn*wn*wn);
+            //for(int i = 0; i < tail.size(); i++)
+            //{
+            //    res += tail[i][spin]*(std::pow(iwn, -i));
+            //}
+            ComplexT res = tail[0][spin] + tail[1][spin]/iwn - tail[2][spin]/(wn*wn) - tail[3][spin]/(iwn*wn*wn) + tail[4][spin]/(wn*wn*wn*wn);
             //return 1./iwn;
             return res;
         }
@@ -47,63 +43,56 @@ namespace DMFT
         {
             //TODO: this is a stupid workaround because the plan creation is not thread safe
             const int tBins = _CONFIG_maxTBins;
-            fftw_complex fftw3_input[tBins];
+            fftw_complex fftw3_input[_CONFIG_maxMatsFreq];
             fftw_complex fftw3_output[tBins];
-            fft_tmin = 0;
             auto planMtoT = fftw_plan_dft_1d(tBins,fftw3_input,fftw3_output,FFTW_FORWARD,FFTW_ESTIMATE);
-            const RealT absErr = 0.01;
-            const int nMF = from.rows();
             VLOG(5) << "transforming M to T, coeffs: " << tail_coeff[0][0] << ", " << tail_coeff[1][0] << ", " << tail_coeff[2][0] << ", " << tail_coeff[3][0] << ", " << tail_coeff[4][0] << ", " << tail_coeff[5][0];
-            const int shift = static_cast<int>((tBins - nMF)/2);
+            // setting parameters
+            fft_dt   = _beta/(tBins+1);
+            fft_tmin = 0.;// 0.5*_beta/tBins;
+            const int nMF = from.rows();
+            const int n_min = symmetric ? 0 : -nMF/2;
+            const int n_max = n_min + nMF;
+            const RealT n_fac = symmetric ? 2 : 1;
+            fft_wmin = mFreqS( n_min, _beta);
             for(int s=0;s<2;s++){
-                fft_wmin = symmetric ? mFreqS( - nMF, _beta) : mFreq(0, _beta);
-                VLOG(6) << "fft_wmin: " << fft_wmin;
+                if(std::abs(tail_coeff[1][s] - 1.0) > 0.1) LOG(WARNING) << "unexpected tail coefficient, only symmetric GF tested! Expected 1, got " << tail_coeff[1][s];
+                // preparing fftw input
                 memset(fftw3_input, 0, tBins*sizeof(fftw_complex));
-                for(int n=0; n < symmetric * nMF; n++)          // construct negative wn for symmetric GF
+                for(int n = n_min; n < n_max; n++)          // construct negative wn for symmetric GF
                 {
-                    const RealT wn = mFreqS(n - nMF, _beta);
-                    ComplexT input_tmp =  (-1.0*std::exp( ComplexT(0.0,-fft_tmin * wn ))*from((nMF-n-1),s) - tail_coeff[1][s]/ComplexT(0.,wn) )/_beta;
-                    VLOG(7) << nMF-n-1 << ", " << wn << ". tmp: " << std::exp( ComplexT(0.0,-fft_tmin * wn )) << " * " << -1.0*from((nMF-n-1),s) << " - " << -tail(wn, tail_coeff, s) << " = " << input_tmp;
-                    fftw3_input[n][0] = input_tmp.real();
-                    fftw3_input[n][1] = input_tmp.imag();
-                }
-                for(int n = symmetric * nMF; n < (1+symmetric) * nMF; n++){
-                    const RealT wn = symmetric ? mFreqS(n - nMF, _beta) : mFreq(n, _beta);
-                    ComplexT input_tmp =  (std::exp( ComplexT(0.0,-fft_tmin * wn ))*from(n%nMF,s) - tail_coeff[1][s]/ComplexT(0.,wn))/_beta;
-                    VLOG(7) << "n: " << n << ", wn: " << wn << ". tmp: " << std::exp( ComplexT(0.0,-fft_tmin * wn )) << " * " << from(n%nMF,s) << " + " << -tail(wn, tail_coeff, s) << " = " << input_tmp;
-                    fftw3_input[n][0] = input_tmp.real();
-                    fftw3_input[n][1] = input_tmp.imag();
-                    //LOG(ERROR) << fftw3_input[n][0] << ", " << fftw3_input[n][1];
+                    const RealT wn = mFreqS(n, _beta);
+                    ComplexT input_tmp =  (n_fac*std::exp( ComplexT(0.0,-fft_tmin * wn ))*(from(n+n_min,s) + 1.0*ComplexT(0.,tail_coeff[1][s]/wn)))/_beta; // - tail_coeff[1][s]/ComplexT(0.,wn) 
+                    fftw3_input[n+n_min][0] = input_tmp.real();
+                    fftw3_input[n+n_min][1] = input_tmp.imag();
                 }
 
+                // transforming
                 fftw_execute(planMtoT);
 
-                fft_dt   = _beta/(tBins);
-                bool force_symm = true; //TODO: this should be obtained form symmetry of GF
-                for(int n=0;n<_CONFIG_maxTBins/2;n++){
-                    const RealT tau_k = fft_dt*(n);
-                    ComplexT tmp = ComplexT(fftw3_output[n][0],fftw3_output[n][1]);
-                    to(n,s) =  (tmp*std::exp(ComplexT(0.0,-fft_wmin*tau_k))).real()  - 0.5*tail_coeff[1][s];
-                    to(_CONFIG_maxTBins-n-1,s) = to(n,s);
-                    //fftw3_output[n][0] = tmp.real() + ftTail(tau_k, tail_coeff, s); // -0.5 FT of - 1.0/(ComplexT(0.0,mFreq(n,_beta)))
-                    //fftw3_output[n][1] = tmp.imag();
-                    //fftw3_output[n][0];
+                // preparing output
+                for(int t=0; t<tBins; t++){
+                    const RealT tau_k = fft_dt*(t+1);
+                    ComplexT tmp = ComplexT(fftw3_output[t][0],fftw3_output[t][1]);
+                    to(t,s) =  (tmp*std::exp(ComplexT(0.0, -fft_wmin*(tau_k - fft_tmin)))).real() - 0.5*tail_coeff[1][s]; //  - 0.5*tail_coeff[1][s]
+                    //to(_CONFIG_maxTBins-n-1,s) = to(n,s);
                 }
-                /*const RealT tau_k = fft_dt*_CONFIG_maxTBins;
-                ComplexT tmp = ComplexT(fftw3_output[0][0],fftw3_output[0][1]);
-                to(_CONFIG_maxTBins-1,s) =  (tmp*std::exp(ComplexT(0.0,-fft_wmin*tau_k))).real()  - 0.5*tail_coeff[1][s];
-                */
-                //TODO: test std::copy
             }
         }
 
-        void FFT::transformTtoM(const ImTG& from, MatG& to)
+        void FFT::transformTtoM(const ImTG& from, MatG& to, bool symmetric)
         {
-            //LOG(WARNING) << "untested";
+            //fft_dt   = _beta/(tBins+2);
+            //fft_tmin = fft_dt;
+            const RealT tBins = static_cast<RealT>(_CONFIG_maxTBins);
+            const int nMF = from.rows();
+            const int n_min = symmetric ? 0 : -nMF/2;
+            const int n_max = n_min + nMF;
+            fft_wmin = mFreqS( n_min, _beta);
             for(int s=0;s<2;s++){
                 memset(fftw3_input, 0, _CONFIG_maxTBins*sizeof(fftw_complex));
                 for(int n=0;n<_CONFIG_maxTBins;n++){
-                    RealT tau_k = fft_dt*n + fft_tmin;
+                    const RealT tau_k = fft_dt*n + fft_tmin;
                     ComplexT input_tmp = (std::exp( ComplexT(0.0,fft_wmin * tau_k))) * from(n,s);
                     fftw3_input[n][0] = input_tmp.real();
                     fftw3_input[n][1] = input_tmp.imag();
@@ -112,11 +101,8 @@ namespace DMFT
 
                 for(int n=0;n<_CONFIG_maxMatsFreq;n++){
                     RealT mf =  mFreq(n,_beta);
-                    ComplexT tmp = ComplexT(fftw3_output[n][0],fftw3_output[n][1])*ComplexT(_beta/_CONFIG_maxTBins,0.0);
-                    tmp = tmp*std::exp(ComplexT(0.0,-fft_tmin*mf));
-                    fftw3_output[n][0] = tmp.real();
-                    fftw3_output[n][1] = tmp.imag();
-                    to(n,s) = tmp;
+                    ComplexT tmp = _beta*ComplexT(fftw3_output[n][0],fftw3_output[n][1])/tBins;
+                    to(n,s) = tmp*std::exp(ComplexT(0.0,-fft_tmin*(mf-fft_wmin)));
                 }
             }
         }
@@ -163,7 +149,7 @@ namespace DMFT
             }
         }
 
-        void FFT::transformTtoM_naive(GreensFct* gf) const
+        /*void FFT::transformTtoM_naive(GreensFct* gf) const
         {
             const RealT dtau = _beta/(_CONFIG_maxTBins-1);
             for(int s=0;s<_CONFIG_spins;s++)
@@ -185,14 +171,15 @@ namespace DMFT
                     gf->setByMFreq(ng,s,dtau*sum);
                 }
             }
-        }
+        }*/
         
-        void FFT::transformMtoT_naive(GreensFct* gf) const
+        /*void FFT::transformMtoT_naive(GreensFct* gf) const
         { 
+            LOG(WARNING) << "debug function, use transformMtoT instead";
             if( std::abs(gf->getTailCoef(1, 0) - 1.)  > 0.01 || std::abs(gf->getTailCoef(1, 1)-1) >0.01 ) LOG(WARNING) << "Unexpected tail coefficient: " << gf->getTailCoef(1, 0) << ", "<<gf->getTailCoef(1, 1);
             ImTG new_gf(_CONFIG_maxTBins, _CONFIG_spins);
-            const tau_min = 0.;
-            const w_min = 0.;
+            const RealT tau_min = 0.;
+            const RealT w_min = 0.;
             for(int s=0;s<_CONFIG_spins;s++)
             {
                 for(int t=0;t<_CONFIG_maxTBins;t++)
@@ -202,14 +189,13 @@ namespace DMFT
                     for(int n=0;n<_CONFIG_maxMatsFreq;n++)
                     {
                         RealT wn = mFreqS(n,_beta);
-                        ComplexT c = _beta*std::exp(ComplexT(0., tau_min*(wn - w_min)))/_CONFIG_maxTBins;
-                        //2.0*c*
+                        //ComplexT c = _beta*std::exp(ComplexT(0., tau_min*(wn - w_min)))/_CONFIG_maxTBins;
                     }
                     new_gf(t,s) = std::real(sum);
                 }
             }
             gf->setByT(new_gf);
-        }
+        }*/
 
 
         void FFT::conv(const ImTG& kernel, const ImTG& g, ImTG& res)

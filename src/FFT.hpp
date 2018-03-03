@@ -4,13 +4,13 @@
 #include "Config.hpp"
 
 #include "fftw3.h"
+//#include "GreensFct.hpp"
 #include <algorithm>
 
 //TODO: use fftw3-mpi and/or GPU fft
 //#include "gnuplot-iostream.h"
 namespace DMFT
 {
-    class GreensFct;
     class FFT
     {
 
@@ -69,7 +69,7 @@ namespace DMFT
             void transformMtoT(const MatG& from, ImTG& to, const std::vector<std::array<RealT,2> >& tail, bool symmetric);
 
             void transformMtoT_naive(const MatG& from, ImTG& to) const;
-            void transformMtoT_naive(GreensFct* gf) const;
+            //void transformMtoT_naive(GreensFct* gf) const;
 
             /*! performs a convolution of f and g using fft
              *  fp = FFT(f), gp = FFT(g) -> iFFT(fp * gp): the result is int f(t' - t) g(t) dt 
@@ -96,10 +96,10 @@ namespace DMFT
              *  @param [in] from    ImTGF as Eigen::ArrayXXd
              *  @param [out] to     MatGF as Eigen::ArrayXXcd
              */
-            void transformTtoM(const ImTG& from, MatG& to);
+            void transformTtoM(const ImTG& from, MatG& to, bool symmetric);
 
             void transformTtoM_naive(const ImTG &from, MatG &to) const;
-            void transformTtoM_naive(GreensFct* gf) const;
+            //void transformTtoM_naive(GreensFct* gf) const;
     };
 
 }   //end namespace DMFT

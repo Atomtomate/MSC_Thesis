@@ -110,12 +110,13 @@ namespace DMFT
             DMFT::GreensFct gImp(beta, true, true);
             DMFT::GreensFct gLoc(beta);
 
+            const std::string solverType = "CT-INT";
             for(double U = 0.2; U < 8.2; U += 0.2)
             {   
                 std::stringstream stream;
                 stream << std::fixed << std::setprecision(1) << "hysteresis_Uincr_b" << beta << "U" << U;
                 std::string descr = stream.str();
-                Config conf(beta, U/2.0, U, _CONFIG_maxMatsFreq, _CONFIG_maxTBins, world,local,isGenerator); 
+                Config conf(beta, U/2.0, U, D, _CONFIG_maxMatsFreq, _CONFIG_maxTBins, world,local, isGenerator, "CT-INT"); 
                 LOG(INFO) << "initializing: " << descr;
                 setBetheSemiCirc(g0, D, conf);
                 setBetheSemiCirc(gImp, D, conf);
@@ -147,7 +148,7 @@ namespace DMFT
                 std::stringstream stream;
                 stream << std::fixed << std::setprecision(1) << "hysteresis_Udecr_b" << beta << "U" << U;
                 std::string descr = stream.str();
-                Config conf(beta, U/2.0, U, _CONFIG_maxMatsFreq, _CONFIG_maxTBins, world,local,isGenerator); 
+                Config conf(beta, U/2.0, U, D, _CONFIG_maxMatsFreq, _CONFIG_maxTBins, world,local,isGenerator, solverType); 
                 LOG(INFO) << "initializing: " << descr;
                 DMFT::GreensFct g0_2(beta, true, true);				// construct new Weiss green's function
                 DMFT::GreensFct gImp_2(beta, true, true);
@@ -196,9 +197,10 @@ namespace DMFT
         int _test_PT(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator, bool use_bethe, double mixing)
         {
 
+            std::string solverType = "CT-INT";
             if(isGenerator)
             {
-                DMFT::Config config(64.0, 1.3, 2.6, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator);
+                DMFT::Config config(64.0, 1.3, 2.6, 1.0, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType);
                 if(config.world.rank() == 0){
                     LOG(INFO) << "Testing with Bethe lattice guess, sc energy density, U = " << config.U;
                     LOG(INFO) << "Setting D = 1, t = D/2.0, a = 1";
@@ -300,7 +302,7 @@ namespace DMFT
 
             const RealT beta    = 10;
 
-
+            const std::string solverType = "CT-INT";
             if(isGenerator)
             {
                 for(int U_l : {1,2,3,4,5})
@@ -308,7 +310,7 @@ namespace DMFT
                     std::string descr = "SBHubbardTest/U" + std::to_string(static_cast<int>(U_l));
                     const RealT U       = U_l;
                     const RealT mu      = U/2.0;
-                    DMFT::Config config(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator);
+                    DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType);
                     DMFT::GreensFct g0  (config.beta, true, true);					// construct new Weiss green's function
                     DMFT::GreensFct gImp(config.beta, true, true);
                     DMFT::GreensFct gLoc(config.beta);
@@ -367,6 +369,7 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
             DMFT::GreensFct* hyb = new  DMFT::GreensFct(beta, true, true, tail);					// construct new hybridization function
             DMFT::GreensFct* gImp = new DMFT::GreensFct(beta, true, true, tail);
             DMFT::GreensFct gLoc(beta);
+            const std::string solverType = "CT-HYB";
             //for(double U_l = 0; U_l < 7; U_l += 2)
             //{   
                 if(isGenerator)
@@ -374,7 +377,7 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
                     std::string descr = "SBHubbardHyb_U" + std::to_string(static_cast<int>(U_l));
                     const RealT U       = U_l;
                     const RealT mu      = U/2.0;
-                    DMFT::Config config(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator);
+                    DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType);
                     setBetheSemiCirc(g0, D, config);
                     setBetheSemiCirc(*gImp, D, config);
                     LOG(INFO) << "Setting hybridization function from Weiss function guess.";
@@ -407,7 +410,9 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
             const RealT zeroShift = 0.504;
             tail.fitFct = &fit_sym_tail;
             std::string descrINT = "expOrder_CTINT";
+            const std::string solverTypeI = "CT-INT";
             std::string descrHYB = "expOrder_CTHYB";
+            const std::string solverTypeH = "CT-HYB";
             for(RealT U : {0.0, 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5.0, 5.5, 6.0})//{})
             {
                 DMFT::GreensFct* g0 = new DMFT::GreensFct(beta, true, true, tail);
@@ -415,8 +420,8 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
                 DMFT::GreensFct* hyb = new  DMFT::GreensFct(beta, true, true, tail);					// construct new hybridization function
                 DMFT::GreensFct gLoc(beta);
                 RealT mu    = U/2.;
-                DMFT::Config configHYB(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, descrHYB);
-                DMFT::Config configINT(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, descrINT);
+                DMFT::Config configHYB(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverTypeH, descrHYB);
+                DMFT::Config configINT(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverTypeI, descrINT);
 
                 LOG(INFO) << "setting up initial guess for CT-INT at U = " << U;
                 setBetheSemiCirc(*g0, D, configINT);
@@ -454,17 +459,46 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
             DMFT::GreensFct* g0 = new DMFT::GreensFct(beta, true, true, tail);
             DMFT::GreensFct* gImp = new DMFT::GreensFct(beta, true, true, tail);
             std::string descr = "IPT_Bethe_PT";
-            for(RealT U : {2., 4., 6.})
+            const std::string solverType = "IPT";
+            for(RealT U : {0., 1., 2., 2.5, 3., 4.})
             {
                 RealT mu    = U/2.;
-                DMFT::Config config(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator);
+                DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType);
                 setBetheSemiCirc(*gImp, D, config);
                 auto ipt_solver = DMFT::IPT(descr, g0, gImp, config, D);
-                LOG(INFO) << "Solv impurity problem using IPT for U = " + std::to_string(U);
-                ipt_solver.solve(1, true);
+                LOG(INFO) << "Solve impurity problem using IPT for U = " + std::to_string(U);
+                ipt_solver.solve(20, 100, false);
             }
             delete(gImp);
             delete(g0);
+    }
+
+    void _IPT_PD(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator)
+    {
+            const int D = 1;          // half bandwidth
+            const RealT t	= D/2.0;
+            const std::string solverType = "IPT";
+
+            for(RealT beta : {20., 60., 200.})
+            {
+                DMFT::GFTail tail;
+                tail.fitFct = &fit_sym_tail;
+                DMFT::GreensFct* g0 = new DMFT::GreensFct(beta, true, true, tail);
+                DMFT::GreensFct* gImp = new DMFT::GreensFct(beta, true, true, tail);
+                std::string descr = "IPT_Bethe_PD";
+                //for(RealT U : {0.5, 1.0, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3., 4.0})
+                for(RealT U : {2.0, 2.4, 2.8, 3.0})
+                {
+                    RealT mu    = U/2.;
+                    DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType, descr);
+                    setBetheSemiCirc(*gImp, D, config);
+                    auto ipt_solver = DMFT::IPT(descr, g0, gImp, config, D);
+                    LOG(INFO) << "Solv impurity problem using IPT for beta = " +std::to_string(beta) + ", U = " + std::to_string(U);
+                    ipt_solver.solve(50, 200, false, true);
+                }
+                delete(gImp);
+                delete(g0);
+            }
     }
     }	//end namespace examples
 }	//end namespace DMFT

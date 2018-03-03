@@ -22,10 +22,10 @@ int main(int argc,char **argv)
     bool isGenerator = (world.size() > 1) ? (world.rank() > 0) : 1;
     boost::mpi::communicator local = world.split(isGenerator ? 0 : 1);
 
-    double U = 2.5;
-    double beta = 20.0;
-    double mixing = 0;
-    double mu = U/2.0;
+    constexpr double U = 2.5;
+    constexpr double beta = 20.0;
+    constexpr double mixing = 0;
+    constexpr double mu = U/2.0;
     // ========== configure logging		============
     if(world.rank() == 0)
     {
@@ -47,7 +47,8 @@ int main(int argc,char **argv)
     //DMFT::examples::_test_PT(local, world, isGenerator, true, 0.0);
     //DMFT::examples::_test_hysteresis(local, world, isGenerator);
     //
-    DMFT::examples::_test_IPT(local, world, isGenerator);
+    //DMFT::examples::_test_IPT(local, world, isGenerator);
+    DMFT::examples::_IPT_PD(local, world, isGenerator);
     //DMFT::examples::_test_average_PO(local, world, isGenerator);
     //
     //DMFT::examples::_test_hyb(local, world, isGenerator);
