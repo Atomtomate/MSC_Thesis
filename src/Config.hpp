@@ -46,9 +46,9 @@ namespace DMFT
     // redundancy
     static constexpr int _CONFIG_maxLPoly = 20;
     static constexpr int _CONFIG_tailOrder = 6;
-    static constexpr int _CONFIG_maxMatsFreq = 2048;//8192;//4096;//4096;		// frequencies go from maxMatsFreq/2 to maxMatsFreq/2 - 1
+    static constexpr int _CONFIG_maxMatsFreq = 32;//4096;//4096;		// frequencies go from maxMatsFreq/2 to maxMatsFreq/2 - 1
     static constexpr int _CONTIG_minMF    = -static_cast<int>(_CONFIG_maxMatsFreq/2.0);
-    static constexpr int _CONFIG_maxTBins =	2048;//1024; 		// (default default 131072, 65536) powers of 2 make fft faster, both bins need to be equal for FFT
+    static constexpr int _CONFIG_maxTBins =	2*_CONFIG_maxMatsFreq;//1024; 		// (default default 131072, 65536) powers of 2 make fft faster, both bins need to be equal for FFT
     static constexpr int _CONFIG_maxSBins = 4*8192;//16384;
     static constexpr int _CONFIG_spins = 2;
     enum SPIN {DOWN = 0, UP = 1};
@@ -131,7 +131,7 @@ namespace DMFT
             const int min = static_cast<int>(mfCount/2.0);
             for(int n= -min; n<static_cast<int>((mfCount-1)/2.0);n+=1)
             {
-                mfGrid(n + min) = PI*(2.0*n+1)/beta;
+                //mfGrid(n + min) = PI*(2.0*n+1)/beta;
             }
         }
 

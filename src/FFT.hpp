@@ -28,11 +28,17 @@ namespace DMFT
             RealT fft_dt;
             RealT fft_wmin;
 
-        //TODO: this can all be obtained from GrennFct object directly
+        //TODO: this can all be obtained from GreenFct object directly
             ComplexT tail(const RealT wn, const std::vector<std::array<RealT,2> >& tail, const int spin) const;
 
-        //TODO: this can all be obtained from GrennFct object directly
+        //TODO: this can all be obtained from GreenFct object directly
             RealT ftTail(const RealT tau, const std::vector<std::array<RealT,2> >& tail, const int spin) const;
+
+            RealT t1(RealT tailc1, RealT c1, RealT t)
+            {
+                if(c1 < 0) return -tailc1*std::exp(c1*(_beta - t))/(1.+ std::exp(c1 * _beta));
+                return -tailc1*std::exp(-c1*t)/(1.+ std::exp(-c1 * _beta));
+            }
 
         public:
             FFT(const RealT beta): _beta(beta)
@@ -42,7 +48,8 @@ namespace DMFT
             fft_wmin = mFreq(0,_beta);
             fft_dt   = _beta/static_cast<RealT>(_CONFIG_maxTBins);      // for FFT matsFreq == TBins
             fft_dw   = 2.0*boost::math::constants::pi<RealT>()/_beta;
-            fft_tmin = 0;//fft_dt/2.0;
+            fft_tmin =  0.;//0.5*fft_dt;
+            //fft_tmin = 0;//fft_dt/2.0;
         }
 
             virtual ~FFT()
@@ -97,8 +104,9 @@ namespace DMFT
              *  @param [out] to     MatGF as Eigen::ArrayXXcd
              */
             void transformTtoM(const ImTG& from, MatG& to, bool symmetric);
+            void transformTtoM_test(const ImTG& from, MatG& to, bool symmetric);
 
-            void transformTtoM_naive(const ImTG &from, MatG &to) const;
+            void transformTtoM_naive(const ImTG &from, MatG &to);
             //void transformTtoM_naive(GreensFct* gf) const;
     };
 

@@ -1,0 +1,45 @@
+
+                if(false)
+                {
+                    ComplexT input_tmp0 = (-0.5);
+                    //ComplexT tmp0 = std::exp( ComplexT(0.0,loc_fft_wmin * loc_fft_tmin)) * (from(0,s) - (from(1,s)-from(0,s))/2.);
+                    ComplexT input_tmp1 = std::exp( ComplexT(0.0,loc_fft_wmin * (loc_fft_dt + loc_fft_tmin))) * from(0,s);
+                    fftw3_input[0][0] = input_tmp0.real();
+                    fftw3_input[0][1] = input_tmp0.imag();
+                    fftw3_input[1][0] = input_tmp1.real();
+                    fftw3_input[1][1] = input_tmp1.imag();
+                    LOG(WARNING) << 0 << ": " << fftw3_input[0][0] << ",1: " << fftw3_input[1][0] ;
+                    for(int t=1; t<_CONFIG_maxTBins; t++){
+                        const RealT tau_k0 = loc_fft_dt*t*2 + loc_fft_tmin;
+                        const RealT tau_k1 = loc_fft_dt + tau_k0;
+                        input_tmp0 = std::exp( ComplexT(0.0,loc_fft_wmin * tau_k0)) * from(t,s);
+                        input_tmp1 = std::exp( ComplexT(0.0,loc_fft_wmin * tau_k1)) * (from(t,s) + ((from(t,s)-from(t-1,s))/2.));
+                        fftw3_input[2*t][0] = input_tmp0.real();
+                        fftw3_input[2*t][1] = input_tmp0.imag();
+                        fftw3_input[2*t+1][0] = input_tmp1.real();
+                        fftw3_input[2*t+1][1] = input_tmp1.imag();
+                        LOG(WARNING) << "tauk0: " << tau_k0 << ", tauk1: " << tau_k1 << ": (" << from(t,s) << " - " << from(t-1,s) << ")/2 = " << ((from(t,s)-from(t-1,s))/2.)  << " => " << (from(t,s) + ((from(t,s)-from(t-1,s))/2.));
+                        LOG(WARNING) << t << ": " << fftw3_input[2*t][0] << "," << t+1 << " " << fftw3_input[2*t+1][0] ;
+                    }
+                    
+                }
+                for(int t =0; t< tBins; t++)
+                    LOG(ERROR) <<ComplexT(fftw3_output[t][0],fftw3_output[t][1]) << " : " << _beta*ComplexT(fftw3_output[t][0],fftw3_output[t][1])/static_cast<RealT>(tBins)*std::exp(ComplexT(0.0,loc_fft_tmin*(mFreqS(t + n_min,_beta)-loc_fft_wmin)));
+                exit(0);
+
+
+
+                if(symmetric)
+                {
+                    from2(0) = from(0,s);
+                    from2(tBins-1) = from(_CONFIG_maxTBins-1);
+                    from2(_CONFIG_maxMatsFreq-1) = from(nh,s) + (from(nh-1,s)-from(nh-2,s))/2.;
+                    from2(_CONFIG_maxMatsFreq)   = from(nh,s) + (from(nh-1,s)-from(nh-2,s))/2.;
+                    for(int t=1; t < _CONFIG_maxTBins/2; t++)
+                    {
+                        from2(2*t-1) = from(t,s) - (from(t,s)-from(t-1,s))/2.;
+                        from2(2*t) = from(t,s) ;
+                        from2(tBins-2*t) = from(t,s) - (from(t,s)-from(t-1,s))/2.;
+                        from2(tBins-2*t-1) = from(nMF-t-1,s);
+                    }
+                }

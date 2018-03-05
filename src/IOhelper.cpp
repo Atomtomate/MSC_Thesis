@@ -255,7 +255,7 @@ namespace DMFT
         for(int n=-_CONFIG_maxMatsFreq/2;n<_CONFIG_maxMatsFreq/2;n++)
         {
             mgf_down.push_back( std::make_pair( mFreqS(n, beta), gf.getByMFreq(n,0).imag() ) );
-            mgf_up.push_back( std::make_pair( mFreqS(n, beta), gf.getByMFreq(n,1).imag() ) );
+            mgf_up.push_back( std::make_pair( mFreqS(n+_CONFIG_maxMatsFreq/2, beta), gf.getByMFreq(n+_CONFIG_maxMatsFreq/2,1).imag() ) );
         }
         for(RealT i=0;i<beta;i+=beta/_CONFIG_maxTBins)
         {
@@ -266,8 +266,8 @@ namespace DMFT
         gp1 << "set terminal x11\n";
         gp2 << "set terminal x11\n";
         gp1 << "set output ' " << title << "_MF.png'\n";
-        gp1 << "plot" << gp1.file1d( mgf_down ) << "with points title ' " <<  title <<  " Matsubara GF, sigma down', "
-            << gp1.file1d( mgf_up ) << "with points title ' " <<  title <<  " Matsubara GF, sigma up'" << std::endl;
+        gp1 << "plot" << gp1.file1d( mgf_down ) << "with points title ' " <<  title <<  " Matsubara GF, -MF/2 - MF/2', "
+            << gp1.file1d( mgf_up ) << "with points title ' " <<  title <<  " Matsubara GF, 0 to MF '" << std::endl;
         gp2 << "set output ' " << title << "_IT.png'\n";
         gp2 << "plot" << gp2.file1d( itgf_up) << "with points title ' " <<  title <<  " iTime GF, sigma down', "
             << gp2.file1d( itgf_down ) << "with points title ' " <<  title <<  " iTime GF. sigma up'" << std::endl;

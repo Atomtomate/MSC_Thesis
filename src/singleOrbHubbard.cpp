@@ -38,6 +38,16 @@ namespace DMFT
             //g.setByT(g0_it);
             g.fitTail();
             g.transformMtoT();
+            LOG(WARNING) << g.g_wn;
+            LOG(WARNING) << "and";
+            LOG(WARNING) << g.g_it;
+            LOG(INFO) << " --- ";
+            g.transformTtoM();
+            LOG(ERROR) << g.g_wn;
+            LOG(INFO) << " --- ";
+            g.transformMtoT();
+            LOG(WARNING) << g.g_it;
+            exit(0);
         }
 
         void setBetheSemiCirc_naive(GreensFct &g, const RealT D, const Config &config)
@@ -479,7 +489,7 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
             const RealT t	= D/2.0;
             const std::string solverType = "IPT";
 
-            for(RealT beta : {20., 60., 200.})
+            for(RealT beta : {20., 60., 400.})
             {
                 DMFT::GFTail tail;
                 tail.fitFct = &fit_sym_tail;
@@ -487,14 +497,14 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
                 DMFT::GreensFct* gImp = new DMFT::GreensFct(beta, true, true, tail);
                 std::string descr = "IPT_Bethe_PD";
                 //for(RealT U : {0.5, 1.0, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3., 4.0})
-                for(RealT U : {2.0, 2.4, 2.8, 3.0})
+                for(RealT U : {2.0, 3.0, 4.0, 5.0})
                 {
                     RealT mu    = U/2.;
                     DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType, descr);
                     setBetheSemiCirc(*gImp, D, config);
                     auto ipt_solver = DMFT::IPT(descr, g0, gImp, config, D);
                     LOG(INFO) << "Solv impurity problem using IPT for beta = " +std::to_string(beta) + ", U = " + std::to_string(U);
-                    ipt_solver.solve(50, 200, false, true);
+                    ipt_solver.solve(50, 100, false, true);
                 }
                 delete(gImp);
                 delete(g0);
