@@ -24,6 +24,7 @@ namespace examples{
    int _test_hyb(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator);
    void _test_IPT(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator);
    void _IPT_PD(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator);
+   void _IPT_Z(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator);
    int _test_PT(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator, bool use_bethe, double mxing);
    int _test_SOH(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator);
    void _test_average_PO(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator);

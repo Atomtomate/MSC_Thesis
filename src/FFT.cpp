@@ -117,8 +117,6 @@ namespace DMFT
                     fftw3_input[n][0] = input_tmp.real();
                     fftw3_input[n][1] = input_tmp.imag();
                 }
-                //fftw3_input[tBins-1][0] = 0.;
-                //fftw3_input[tBins-1][1] = 0.;
                 fftw_execute(planTtoM);
 
                 //RealT fac = -0.5*_beta*(from(0,s)+1.0)*from(nMF-1,s)/static_cast<RealT>(tBins) ;
@@ -129,8 +127,6 @@ namespace DMFT
                     //*std::exp(ComplexT(0.0,loc_fft_tmin*(mf-loc_fft_wmin)));
                 }
             }
-            //LOG(ERROR) << to;
-            //exit(0);
         }
 
 
@@ -164,8 +160,6 @@ namespace DMFT
                         from2(2*t-1) = from(t-1,s) + (from(t,s)-from(t-1,s))/2.;
                     }
                 }
-                //LOG(ERROR) << from2;
-                //exit(0);
                 else
                 {
                     from2 = from.col(s);
@@ -189,7 +183,6 @@ namespace DMFT
                     {
                         to((n+nMF/2)%nMF,s) = tmp*std::exp(ComplexT(0.0,loc_fft_tmin*(mf-loc_fft_wmin)));
                     }
-                    //LOG(WARNING) << 1./mFreqS(2*n, _beta)  << " : " << to(n,s); 
                 }
             }
         }
@@ -235,10 +228,9 @@ namespace DMFT
 
                     }
                     //(n+nh)%nMF
-                    LOG(ERROR) << dt*sum - ComplexT(0., 1./mf);
+            //        LOG(ERROR) << dt*sum - ComplexT(0., 1./mf);
                     //to(n-n_min, s) = ComplexT(0., std::imag(dt*sum));
                 }
-                exit(0);
             }
         }
 

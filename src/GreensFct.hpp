@@ -65,6 +65,33 @@ namespace DMFT
         //GreensFct(GreensFct const&) = delete; // TODO: implement
 
         virtual ~GreensFctBase(){}
+        
+        GreensFctBase(const GreensFctBase& other): beta(other.beta), symmetric(other.symmetric), fit(other.fit), deltaIt(other.deltaIt), fft(other.beta)
+        {
+             tailFitted = other.tailFitted;
+             g_it = other.g_it;
+             g_wn = other.g_wn;
+             g_it_std = other.g_it_std;
+             g_wn_std = other.g_wn_std;
+             gft = other.gft;
+             expansionCoeffs = other.expansionCoeffs;
+             mSet = other.mSet;
+             tSet = other.tSet;
+        }
+        GreensFctBase& operator=(const GreensFctBase& other)
+        {
+            if((beta != other.beta) || (symmetric != other.symmetric) || (fit != other.fit) || (deltaIt != other.deltaIt))
+                throw std::logic_error("Cannot copy Greens function object with different temperatures.");
+             tailFitted = other.tailFitted;
+             g_it = other.g_it;
+             g_wn = other.g_wn;
+             g_it_std = other.g_it_std;
+             g_wn_std = other.g_wn_std;
+             gft = other.gft;
+             expansionCoeffs = other.expansionCoeffs;
+             mSet = other.mSet;
+             tSet = other.tSet;
+        }
 
         /*! Call this after setting \f$ G(\tau) \f$ 
          *  @return 1 if previously set, 0 otherwise
@@ -158,9 +185,10 @@ namespace DMFT
          */
         inline void setByT(const RealT t, const int spin, const RealT val, const RealT std = 0.0)
         {
-            const int i = tIndex(t);
+            const int sgn = 2*((t >= 0) && (t < beta))-1;
+            const int i = tIndex(t + (t < 0)*beta);
             //if(t==1) g_it(0,spin) = val;	// NOTE: redudant since tIndex shifts up from 0, remove?
-            g_it(i,spin) = val;
+            g_it(i,spin) = sgn*val;
             g_it_std(i,spin) = std;
             mSet = 0;
         }
@@ -231,7 +259,7 @@ namespace DMFT
         {
             //REMARK: this implies that G(0) == G(0^-) 
             //if(t == 0.0) return g_it(1, spin);
-            const int sgn = 2*(t>=0)-1;
+            const int sgn = 2*((t >= 0) && (t < beta))-1;
             //if(t<0){ t+=beta; return -1.0*g_it(tIndex(t), spin);}
             return sgn*g_it( tIndex( t + (t<0)*beta ), spin);
         }
@@ -241,7 +269,7 @@ namespace DMFT
             VectorT res(t.size());
             for(int i =0; i < t.size(); i++)
             {
-                const int sgn = 2*(t[i]>=0)-1;
+                const int sgn = 2*((t[i] >= 0) && (t[i] < beta))-1;
                 //if(t[i] == 0.0) res(i) = g_it(1, spin);
                 res[i] = sgn*g_it( tIndex( t[i] + (t[i]<0)*beta ), spin);
             }
@@ -258,7 +286,7 @@ namespace DMFT
          */
         RealT getByT(const RealT t, int spin, const int order) const
         {
-            const int sgn = 2*(t>=0)-1;
+            const int sgn = 2*((t >= 0) && (t < beta))-1;
             const RealT tp = t + (t<0)*beta; 
             const int index0 = tIndex( tp );
             const RealT h = tp*static_cast<RealT>(MAX_T_BINS)/beta - index0;
@@ -292,27 +320,23 @@ namespace DMFT
          *  
          *  @return string with data.
          */
-        std::string getMGFstring(void) const
+        std::string getMGFstring(int spin = -1) const
         {
             std::stringstream res;
-            res << std::fixed << std::setw(16)<< "\t mFreq \tSpin UP Re \t Spin UP Im \t Spin DOWN Re \t Spin DOWN Im \tSpin UP Re Err \t Spin UP Im Err \t Spin DOWN Re Err \t Spin DOWN Im Err \n";
-            for(int n=0; n < MAX_M_FREQ; n++)
+            if(spin == -1)
             {
-                RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
-                ComplexT errU = (g_wn_std(n,UP) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,UP);
-                ComplexT errD = (g_wn_std(n,DOWN) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,DOWN);
-                res << std::setprecision(14) << wn << "\t" <<  g_wn(n,UP).real() << "\t" << g_wn(n,UP).imag() << "\t" << g_wn(n,DOWN).real() << "\t" << g_wn(n,DOWN).imag() << "\t"\
-                    << 0. << "\t" << errU.imag() << "\t" << 0. << "0." << errD.imag() << "\n";
-                    //TODO: debug:<<g_wn_std(n,UP).real() << "\t" << g_wn_std(n,UP).imag() << "\t" << g_wn_std(n,DOWN).real() << "\t" << g_wn_std(n,DOWN).imag() << "\n" ;
+                res << std::fixed << std::setw(24)<< "\t mFreq \tSpin UP Re \t Spin UP Im \t Spin DOWN Re \t Spin DOWN Im \tSpin UP Re Err \t Spin UP Im Err \t Spin DOWN Re Err \t Spin DOWN Im Err \n";
+                for(int n=0; n < MAX_M_FREQ; n++)
+                {
+                    RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
+                    ComplexT errU = (g_wn_std(n,UP) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,UP);
+                    ComplexT errD = (g_wn_std(n,DOWN) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,DOWN);
+                    res << std::setprecision(24) << wn << "\t" <<  g_wn(n,UP).real() << "\t" << g_wn(n,UP).imag() << "\t" << g_wn(n,DOWN).real() << "\t" << g_wn(n,DOWN).imag() << "\t"\
+                        << 0. << "\t" << errU.imag() << "\t" << 0. << "0." << errD.imag() << "\n";
+                }
+                return res.str();
             }
-            /*for(int n=MAX_M_FREQ; n < 2*MAX_M_FREQ*fit; n++)
-            {
-                RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
-                ComplexT mExp[2];
-                mExp[UP] = getTail( wn, UP);
-                mExp[DOWN] = getTail( wn, DOWN);
-                res << std::setprecision(14) << wn << "\t" <<  mExp[UP].real() << "\t" << mExp[UP].imag() << "\t" << mExp[DOWN].real() << "\t" << mExp[DOWN].imag() << "\n" ;
-            }*/
+
             return res.str();
         }
 
@@ -320,45 +344,40 @@ namespace DMFT
         {
             //if(!mSet) return "";
             std::stringstream res;
-            res << std::fixed << std::setw(14);
+            res << std::fixed << std::setw(24);
             for(int n=0; n < MAX_M_FREQ; n++)
             {
                 ComplexT err = (g_wn_std(n,spin) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,spin);
                 RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
-                res << std::setprecision(14) << wn << "\t" << 0. << "\t" << g_wn(n,spin).imag() << "\n";
+                res << std::setprecision(24) << wn << "\t" << 0. << "\t" << g_wn(n,spin).imag() << "\n";
             }
             return res.str();
         }
-        std::string getMaxEntString(const bool selfE = false, int spin = UP)
+        std::string getMaxEntString(const bool full = false, int spin = UP)
         {
             //if(!mSet) return "";
             std::stringstream res;
-            res << std::fixed << std::setw(14);
+            res << std::fixed << std::setw(24);
             auto out = g_wn.col(spin);
-            if(false)
+            if(full)
             {
-                RealT c0 = out(MAX_M_FREQ-1).real();
-                RealT c1;
-                if(symmetric)
+                res << std::fixed << std::setw(24)<< "\t mFreq \t Re \t Re Err \t Im \t Im Err" << std::endl;
+                for(int n=0; n < MAX_M_FREQ; n++)
                 {
-                    c1 = out(MAX_M_FREQ-1).imag();
-                }
-                else
-                {
-                    c1 = out(0).imag();
-                }
-                for(unsigned int n = 0; n < MAX_M_FREQ; n++)
-                {
-                    RealT wn = mFreqS(n - symmetric*(MAX_M_FREQ/2), beta);
-                    out(n) = (out(n)-c0)/(c1*wn);
+                    ComplexT err = (g_wn_std(n,spin) == ComplexT(0.0,0.0)) ? ComplexT(1.0,1.0)/(2.0*(n*n+100.0)) : g_wn_std(n,spin);
+                    RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
+                    res << std::setprecision(24) << wn << "\t" << out(n).real() << "\t" << err.real() << "\t" << out(n).imag() << "\t" << err.imag() << std::endl;//err.imag() << "\n";
                 }
             }
-            for(int n=0; n < MAX_M_FREQ; n++)
+            else
             {
-                ComplexT err = (g_wn_std(n,spin) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+100.0)), 1.0/(2.0*(n*n+100.0))) : g_wn_std(n,spin);
-                RealT err_out = std::max(err.imag(), 0.0001);
-                RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
-                res << std::setprecision(14) << wn << "\t" << out(n).imag() << "\t" << err_out << std::endl;//err.imag() << "\n";
+                for(int n=0; n < MAX_M_FREQ; n++)
+                {
+                    ComplexT err = (g_wn_std(n,spin) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+100.0)), 1.0/(2.0*(n*n+100.0))) : g_wn_std(n,spin);
+                    RealT err_out = std::max(err.imag(), 0.0001);
+                    RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
+                    res << std::setprecision(24) << wn << "\t" << out(n).imag() << "\t" << err_out << std::endl;//err.imag() << "\n";
+                }
             }
             return res.str();
         }
@@ -366,13 +385,13 @@ namespace DMFT
         std::string getMaxEntItString(int spin = UP) const
         {
             std::stringstream res;
-            res << std::fixed << std::setw(14);
+            res << std::fixed << std::setw(24);
             for(unsigned t = 0; t < MAX_T_BINS; t++)
             {
                 RealT err = (g_it_std(t,spin) == 0.0) ? (1.0/(2.0*(t*t+100.0))) : g_it_std(t,spin);
                 RealT err_out = std::max(err, 0.0001);
                 RealT tau = t*beta/MAX_T_BINS;
-                res << std::setprecision(14) << tau << "\t" << g_it(t,spin) << "\t" << err_out << "\n";
+                res << std::setprecision(24) << tau << "\t" << g_it(t,spin) << "\t" << err_out << "\n";
             }
             return res.str();
         }
@@ -386,10 +405,10 @@ namespace DMFT
         {
             //if(!tSet) return "";
             std::stringstream res;
-            res << std::fixed << std::setw(14)<< "iTime \tSpin up \tSpin down \tSpin up Err\tSpin down Err\n";
+            res << std::fixed << std::setw(24)<< "iTime \tSpin up \tSpin down \tSpin up Err\tSpin down Err\n";
             for(int i =0; i < MAX_T_BINS; i++)
             {
-                res << std::setprecision(14) << std::setw(14) << (beta*i)/MAX_T_BINS << "\t"\
+                res << std::setprecision(24) << std::setw(24) << (beta*i)/MAX_T_BINS << "\t"\
                     << g_it(i,UP)<< "\t" << g_it(i,DOWN) << "\t" << g_it_std(i,UP) << "\t" << g_it_std(i,DOWN) <<"\n";
             }
             return res.str();
@@ -607,8 +626,9 @@ namespace DMFT
          *  @return index for lookup in g_it
          */
         inline int tIndex(const RealT t) const {
-            const int res = static_cast<int>(t*deltaIt);
-            return res; // TODO: test for +(res == 0);
+            return ((static_cast<int>(t*deltaIt))%_CONFIG_maxTBins);
+            //if(symmetric && res >= _CONFIG_maxTBins/2)
+            //    res = _CONFIG_maxTBins - res -1;
         }
 
 

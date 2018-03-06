@@ -72,13 +72,13 @@ namespace DMFT
         return 0;
     } 
  
-    void IOhelper::writeFinalToFile(GreensFct& gf, const LogInfos& li, const bool selfE, const RealT U) const
+    void IOhelper::writeFinalToFile(GreensFct& gf, const LogInfos& li, const bool selfE, const RealT U, const bool it_out) const
     {
         if(!c.isGenerator || c.local.rank() != 0) return ;
         std::string b_str = std::to_string(c.beta);
         std::string u_str = std::to_string(std::max(1.5*U,3.0));
         std::string mu_str = std::to_string(std::min(-1.5*U,-3.0));
-        std::string nmf = std::to_string(std::min(_CONFIG_maxMatsFreq, 128));
+        std::string nmf = std::to_string(std::min(_CONFIG_maxMatsFreq, 512));
         std::string file_name = li.filename;
         std::replace(b_str.begin(), b_str.end(), '.', '_');
         //std::replace(u_str.begin(), u_str.end(), '.', '_');
@@ -104,7 +104,7 @@ namespace DMFT
         const std::string me_conf_s = "BETA=" + std::to_string(c.beta) +
                          "\nNDAT=" + nmf +\
                          "\nBACKCONTINUE=false\nMAX_IT=10000" + \
-                        "\nNFREQ=200\nDATASPACE=frequency\nKERNEL=fermionic\nPARTICLE_HOLE_SYMMETRY=true\nDATA=" +
+                        "\nNFREQ=1024\nDATASPACE=frequency\nKERNEL=fermionic\nPARTICLE_HOLE_SYMMETRY=true\nDATA=" +
                             std::string("f_") + file_name + std::string(".out") + se_add;
                          //"\nOMEGA_MIN=" + mu_str + "\nOMEGA_MAX=" + u_str +\
         //const std::string pade_conf_s = "imag.BETA=" +std::to_string(c.beta) + "\nimag.NDAT="+ std::to_string(_CONFIG_maxMatsFreq) +\
@@ -122,12 +122,12 @@ namespace DMFT
             fmt.open(file_maxent);
             fmt_me_conf.open(file_maxent_config);
             fmt << gf.getMaxEntString(selfE);
-            //if(!selfE)
-            //{
+            if(it_out)
+            {
                 fmt_it.open(file_maxent_it);
                 fmt_it << gf.getMaxEntItString();
                 fmt_it.close();
-            //}*/
+            }
             fmt_me_conf << me_conf_s;
             fmt.close();
             fmt_me_conf.close();

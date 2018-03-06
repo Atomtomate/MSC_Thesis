@@ -61,15 +61,11 @@ namespace DMFT
             g0->markMSet();
             //g0->shift(config.U/2.0);
             g0->transformMtoT();
-            g0->transformTtoM();
-            LOG(ERROR) << g0->g_wn;
-            LOG(WARNING) << g0->g_it;
-            exit(0);
 
             for(int f = 0; f < _CONFIG_spins; f++){
             for(unsigned int it = 0; it < _CONFIG_maxTBins; it++)
             {
-                RealT t = config.beta*(it+1)/(_CONFIG_maxTBins+1);
+                RealT t = config.beta*(it)/(_CONFIG_maxTBins);
                 // shifted Self energy, without config.U/2. for non ph symmetrized
                 // config.U/2. -  
                 selfE.setByT(t, f, config.U*config.U*(*g0)(t,f)*(*g0)(t,f)*(*g0)(t,f));
@@ -98,7 +94,7 @@ namespace DMFT
         }
         statAcc.setGF(*gImp);
         statAccSE.setGF(selfE);
-        ioh.writeFinalToFile(*gImp, gImpInfo, false, config.U);
-        ioh.writeFinalToFile(selfE, seLInfo, true, config.U);
+        //ioh.writeFinalToFile(*gImp, gImpInfo, false, config.U, false);
+        ioh.writeFinalToFile(selfE, seLInfo, true, config.U, false);
     }
 }
