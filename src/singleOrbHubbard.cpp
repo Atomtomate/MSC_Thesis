@@ -220,21 +220,21 @@ namespace DMFT
             std::string solverType = "CT-INT";
             if(isGenerator)
             {
-                if(config.world.rank() == 0){
-                    LOG(INFO) << "Testing with Bethe lattice guess, sc energy density, U = " << config.U;
-                    LOG(INFO) << "Setting D = 1, t = D/2.0";
-                }
                 const int D = 1.0;          // half bandwidth
                 const RealT t	= D/2.0;
                 const int burnin = 30000;
                 const RealT zeroShift = 0.5045;//0.5016;
                 const RealT beta = 64.;
                 const RealT U = 2.6;
-                const RealT mu = U/2.
+                const RealT mu = U/2.;
 
                 DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType);
                 std::string descr = "BetheLatticePT";
 
+                if(config.world.rank() == 0){
+                    LOG(INFO) << "Testing with Bethe lattice guess, sc energy density, U = " << config.U;
+                    LOG(INFO) << "Setting D = 1, t = D/2.0";
+                }
                 DMFT::GreensFct g0  (config.beta, true, true);
                 DMFT::GreensFct gImp(config.beta, true, true);
                 DMFT::GreensFct gLoc(config.beta);
@@ -297,15 +297,17 @@ namespace DMFT
             const RealT t	= D/2.0;
             const int burnin = 10000;
             const RealT zeroShift = 0.505;
-
             const RealT beta    = 20;
+
+            GFTail tail;
+            tail.fitFct = &fit_sym_tail;
 
             const std::string solverType = "CT-INT";
             if(isGenerator)
             {
-                for(int U_l : {1,2,3,4})
+                for(int U_l : {3})
                 {
-                    std::string descr = "SBHubbardTest/U" + std::to_string(static_cast<int>(U_l));
+                    std::string descr = "CTINT/U" + std::to_string(static_cast<int>(U_l));
                     const RealT U       = U_l;
                     const RealT mu      = U/2.0;
                     DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType);
@@ -318,8 +320,8 @@ namespace DMFT
 
                     LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator ;
                     DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
-                    DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, config, 0.0, impSolver, &g0, &gImp, D);
-                    dmftSolver.solve(5*U_l, 100000, true);
+                    DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, config, 0.0, impSolver, g0, gImp, D, false);
+                    dmftSolver.solve(1, 1000000, true);
                     //(config.local.barrier)();
                     delete(g0);
                     delete(gImp);
@@ -339,8 +341,8 @@ namespace DMFT
             const RealT beta    = 64;
             const int U_l       = 10;
             GFTail tail;
-            //hybTail.fitFct = &fit_sym_tail;
             tail.fitFct = &fit_sym_tail;
+            //hybTail.fitFct = &fit_sym_tail;
             tail.nC = 6;
             tail.first = 20;
             tail.last = 200 ;

@@ -56,9 +56,9 @@ class DMFT_BetheLattice
                             }
                             else
                             {
-                                ComplexT tmp = ComplexT(config.mu, mFreqS(n_g0,config.beta)) - (D/2.0)*(D/2.0)*gImp->getByMFreq(n_g0,s);
+                                ComplexT tmp = ComplexT(0., mFreqS(n_g0, config.beta)) - (D/2.0)*(D/2.0)*gImp->getByMFreq(n_g0, s);
                                 VLOG(5) << n << "=> "<< n_g0 << ": " << ComplexT(config.mu, mFreqS(n_g0,config.beta)) << " - " << (D/2.0)*(D/2.0)*gImp->getByMFreq(n_g0,s) << " = " << tmp;
-                                g0->setByMFreq(n_g0,s, 1.0/tmp );
+                                g0->setByMFreq(n_g0, s, 1.0/tmp );
                             }
                         }
                     }
