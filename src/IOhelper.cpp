@@ -120,8 +120,8 @@ namespace DMFT
         try
         {
             fmt.open(file_maxent);
-            fmt_me_conf.open(file_maxent_config);
-            fmt << gf.getMaxEntString(selfE);
+            fmt << gf.getMaxEntString(selfE, 10);
+            /*fmt_me_conf.open(file_maxent_config);
             if(it_out)
             {
                 fmt_it.open(file_maxent_it);
@@ -137,7 +137,7 @@ namespace DMFT
             fmtp << gf.getPadeString();
             fmt_pade_conf << pade_conf_s;
             fmtp.close();
-            fmt_pade_conf.close();
+            fmt_pade_conf.close();*/
         }
         catch (boost::filesystem::ofstream::failure e)
         {

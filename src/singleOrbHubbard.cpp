@@ -483,16 +483,16 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
             std::vector<DMFT::GreensFct> g0_bak;
             std::vector<DMFT::GreensFct> gImp_bak;
             std::array<RealT,3> betal = {133., 200., 400};
-            RealT U = 0.0;
+            RealT U = 2.0;
             for(int i = 0; i < betal.size(); i++)//
             {
                 RealT beta = betal[i];
                 g0_bak.emplace_back(beta, true, true, tail);
                 gImp_bak.emplace_back(beta, true, true, tail);;
-                U = 0.;
+                U = 2.5;
                 std::string descr = "IPT_Bethe_Z_from_0__";
                 //for(RealT U : {0.5, 1.0, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3., 4.0})
-                while(U < 4.0) //
+                while(U <= 3.5) //
                 {
                     DMFT::GreensFct* g0 = new DMFT::GreensFct(beta, true, true, tail);
                     DMFT::GreensFct* gImp = new DMFT::GreensFct(beta, true, true, tail);
@@ -501,9 +501,9 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
                     setBetheSemiCirc(*gImp, D, config);
                     auto ipt_solver = DMFT::IPT(descr, g0, gImp, config, D);
                     LOG(INFO) << "Solving impurity problem using IPT for beta = " +std::to_string(beta) + ", U = " + std::to_string(U);
-                    ipt_solver.solve(50, 100, false, true);
+                    ipt_solver.solve(80, 400, false, true);
                     U += U_inc;
-                    if(U>=4.0 && beta == 400.)
+                    if(U>=2.5 && beta == 400.)
                     {
                         g0_bak[i] = (*g0);
                         gImp_bak[i] = (*gImp);
@@ -517,7 +517,8 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
             for(int i = 0; i < betal.size(); i++)//
             {
                 RealT beta = betal[i];
-                while(U >= 0.)
+                U = 3.5;
+                while(U >= 2.5)
                 {
                     DMFT::GreensFct g0(g0_bak[i]);
                     DMFT::GreensFct gImp(gImp_bak[i]);
@@ -525,7 +526,7 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
                     DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType, descr);
                     auto ipt_solver = DMFT::IPT(descr, &g0, &gImp, config, D);
                     LOG(INFO) << "Solving impurity problem using IPT for beta = " +std::to_string(beta) + ", U = " + std::to_string(U);
-                    ipt_solver.solve(50, 100, false, true);
+                    ipt_solver.solve(80, 400, false, true);
                     U -= U_inc;
                 }
             }
@@ -537,14 +538,27 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
             const int D = 1;          // half bandwidth
             const RealT t	= D/2.0;
             const std::string solverType = "IPT";
-
-            for(RealT beta : {5., 10., 11., 12., 13., 14., 15., 16., 17., 18., 19., 20., 22., 24., 26., 28., 30., 34., 38., 42., 44., 46., 50., 55., 60., 65., 70., 80., 90., 100., 133., 200., 400.})//
+            DMFT::GFTail tail;
+            tail.fitFct = &fit_sym_tail;
+            const RealT U_min = 2.3;
+            const RealT U_max = 3.5;
+            const RealT U_inc = 0.01;
+            std::vector<RealT> betal(120);
+            RealT T_max = 0.06;
+            RealT T_min = 0.0025; 
+            RealT dt = (T_max - T_min)/120;
+            for(int i = 0; i < 120; i++)
+                betal[i] = 1./(T_min + i*dt);
+            RealT U = U_min;
+            for(int i = 4; i < betal.size(); i++)//
             {
-                DMFT::GFTail tail;
-                tail.fitFct = &fit_sym_tail;
-                std::string descr = "IPT_Bethe_PD";
-                //for(RealT U : {0.5, 1.0, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3., 4.0})
-                for(RealT U : {2.0, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.4, 4.6, 4.8, 5.0}) //
+                RealT beta = betal[i];
+                LOG(INFO) << "starting hysteresis for beta = " << beta;
+                DMFT::GreensFct* gImp_bak = new DMFT::GreensFct(beta, true, true, tail);
+                U = U_min;
+                //if(i < 32) U = U_max;
+                std::string descr = "IPT_PD_Z_03";
+                while(U <= U_max) //
                 {
                     DMFT::GreensFct* g0 = new DMFT::GreensFct(beta, true, true, tail);
                     DMFT::GreensFct* gImp = new DMFT::GreensFct(beta, true, true, tail);
@@ -553,11 +567,35 @@ DMFT::ComplexT tmp(DMFT::ComplexT x, int i)
                     setBetheSemiCirc(*gImp, D, config);
                     auto ipt_solver = DMFT::IPT(descr, g0, gImp, config, D);
                     LOG(INFO) << "Solving impurity problem using IPT for beta = " +std::to_string(beta) + ", U = " + std::to_string(U);
-                    ipt_solver.solve(50, 100, false, true);
+                    ipt_solver.solve(80, 100, false, false);
+                    U += U_inc;
+                    if((U>=(U_max - U_inc)))
+                    {
+                        (*gImp_bak) = (*gImp);
+                    }else{
+                        delete(gImp);
+                        delete(g0);
+                    }
+                }
+                std::string descrB = "IPT_PD_Z_30";
+                LOG(INFO) << "Using converged solution as initial guess";
+                U = U_max;
+                while(U >= U_min)
+                {
+                    DMFT::GreensFct* g0 = new DMFT::GreensFct(beta, true, true, tail);
+                    DMFT::GreensFct* gImp = new DMFT::GreensFct(beta, true, true, tail);
+                    (*gImp) = (*gImp_bak);
+                    RealT mu    = U/2.;
+                    DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType, descrB);
+                    auto ipt_solver = DMFT::IPT(descrB, g0, gImp, config, D);
+                    LOG(INFO) << "Solving impurity problem using IPT for beta = " +std::to_string(beta) + ", U = " + std::to_string(U) << " with IG in MI phase";
+                    ipt_solver.solve(80, 100, false, false);
+                    U -= U_inc;
                     delete(gImp);
                     delete(g0);
                 }
+                delete(gImp_bak);
             }
-    }
+        }
     }	//end namespace examples
 }	//end namespace DMFT

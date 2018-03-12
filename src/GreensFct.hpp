@@ -353,7 +353,7 @@ namespace DMFT
             }
             return res.str();
         }
-        std::string getMaxEntString(const bool full = false, int spin = UP)
+        std::string getMaxEntString(const bool full = false, const int max_mf_out = MAX_M_FREQ, int spin = UP)
         {
             //if(!mSet) return "";
             std::stringstream res;
@@ -362,7 +362,7 @@ namespace DMFT
             if(full)
             {
                 res << std::fixed << std::setw(24)<< "\t mFreq \t Re \t Re Err \t Im \t Im Err" << std::endl;
-                for(int n=0; n < MAX_M_FREQ; n++)
+                for(int n=0; n < max_mf_out; n++)
                 {
                     ComplexT err = (g_wn_std(n,spin) == ComplexT(0.0,0.0)) ? ComplexT(1.0,1.0)/(2.0*(n*n+100.0)) : g_wn_std(n,spin);
                     RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);

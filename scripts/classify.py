@@ -6,6 +6,7 @@ import matplotlib as mpl
 import seaborn as sns
 import re
 from scipy.stats import norm, stats
+import uncertainties as unc
 import os
 import glob
 import re
@@ -20,10 +21,10 @@ regU = r"U([0-9]+\_[0-9]+)"
 regb = r"b([0-9]+\_[0-9]+)"
 regSeMe = r"f_SelfE(.+)[0-9]+\.out$"
 data = []
-se_data = []
 pade_str = r'*pade.cont'
 me_str = r'*avspec.dat'
-se_str = r'f_SelfE*0.out'
+se04_str = r'IPT_Hyst_04/f_SelfE*0.out'
+se40_str = r'IPT_Hyst_40/f_SelfE*0.out'
 
 """ returns the width of suppress spectral weight around the fermi level
 """
@@ -54,8 +55,10 @@ def comp_Z(se_data):
         d = se_data[ui][ii][-max_points:]	# list of lowest temperatur for given U
 	w0l = np.pi/d[:,0]			# zero Matsubara Frequency
 	dRSigma = d[:,2]/w0l			# approximation for the derivative of SE at w=0
-	dRSigma = stats.linregress(1./np.array(d[:,0]), dRSigma).intercept
-	Z.append([u,1./(1.-dRSigma)])
+	res = stats.linregress(1./np.array(d[:,0]), dRSigma)
+	rr = unc.ufloat(res.intercept,res.stderr)
+	rr = (1./(1.-rr))
+	Z.append([u,rr.n,rr.std_dev])
     return np.array(Z)
 
 """ compute critical value of U for all temparatures.
@@ -68,6 +71,17 @@ def comp_pt(data):
     for beta in beta_list:
         d20 = np.array(data[np.where(data == beta)[0]])
         d20s = np.array(sorted(d20, key=lambda el : el[1]))
+
+def read_se(path):
+    se_data = []
+    for filename in glob.glob(path):
+        with open(filename, 'r') as infile:
+	    infile.readline()
+            dat = np.fromstring(infile.readline(), sep=' ')
+	    U = float(re.search(regU, filename).group(0)[1:].replace("_","."))
+            b = float(re.search(regb, filename).group(0)[1:].replace("_","."))
+            se_data.append([b,U,dat[3]])
+    return np.array(se_data)
 
 
 if use_pade:
@@ -91,19 +105,37 @@ if use_me:
             d = comp_d(dat)
             data.append([b,U,d])
 print("done reading MaxEnt data\n")
-i = 0
-for filename in glob.glob(se_str):
-    with open(filename, 'r') as infile:
-	infile.readline()
-        dat = np.fromstring(infile.readline(), sep=' ')
-	U = float(re.search(regU, filename).group(0)[1:].replace("_","."))
-        b = float(re.search(regb, filename).group(0)[1:].replace("_","."))
-        se_data.append([b,U,dat[3]])
-print("done reading Self Energy data\n")
-data = np.array(data)
-se_data = np.array(se_data)
-Zlist = comp_Z(se_data)
 
+data = np.array(data)
+
+
+
+def plotZ():
+    se04_data = read_se(se04_str)
+    se40_data = read_se(se40_str)
+    Z04list = comp_Z(se04_data)
+    Z40list = comp_Z(se40_data)
+    y04 = np.clip(Z04list[:,1],a_min=0.00001, a_max=None)
+    y40 = np.clip(Z40list[:,1],a_min=0.00001, a_max=None)
+    #pti = np.argmax(y < 0.0001)
+    #yerr = np.clip(Zlist[:,2], a_min=0.,a_max=1.)
+    #yerr[pti:] = 0.
+    #y[pti:] = 0.
+    plt.semilogy(Z40list[:,0], y40, "o-", ms=3.0, markevery=4, label="init U = 4")
+    plt.semilogy(Z04list[:,0], y04, 'o-', alpha=0.4, ms=4.0, markevery=4, label="init U = 0")
+    plt.xlabel(r"U")
+    plt.ylabel(r"Z")
+    plt.legend()
+    plt.show() 
+    plt.plot(Z40list[:,0], y40, "o", ms=3.0, label="init U = 4")
+    plt.plot(Z04list[:,0], y04, 'o', alpha=0.4, ms=4.0, label="init U = 0")
+    plt.xlabel(r"U")
+    plt.ylabel(r"Z")
+    plt.legend()
+    plt.show()    
+
+
+#def plotA():
 nb = np.unique(data[:,0]).shape[0]
 bSorted = np.unique(data[:,0])
 bSorted.sort()
@@ -119,6 +151,6 @@ for el in data:
 plt.imshow(image.T, interpolation='bilinear', cmap='viridis')
 ax = plt.gca()
 ax.set_xticklabels(uSorted)
-ax.set_yticklabels(1./bSorted)
+ax.set_yticklabels(bSorted)
 plt.show()
 
