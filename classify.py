@@ -134,18 +134,18 @@ se_data_to = read_se(se32_str,1)#se40_str, 1)
 #data_from = read_A(me_FROM0_str)
 print("read from MI to metal")
 #data_to = read_A(me_TO0_str)
-se_data_from = read_se(se23_str,)#se04_str, 1)
+se_data_from = read_se(se23_str,1)#se04_str, 1)
 print("read from metal to MI")
 
 
 
 def plotZ():
-    se04_data = read_se(se23_str)#se04_str)
-    se40_data = read_se(se32_str)#se40_str)
+    se04_data = read_se(se04_str)
+    se40_data = read_se(se40_str)
     Z04list = comp_Z0(se04_data)
     Z40list = comp_Z0(se40_data)
-    y04 = np.clip(Z04list[:,1],a_min=0.00001, a_max=None)
-    y40 = np.clip(Z40list[:,1],a_min=0.00001, a_max=None)
+    y04 = np.clip(Z04list[:,1],a_min=0.0001, a_max=None)
+    y40 = np.clip(Z40list[:,1],a_min=0.0001, a_max=None)
     #pti = np.argmax(y < 0.0001)
     #yerr = np.clip(Zlist[:,2], a_min=0.,a_max=1.)
     #yerr[pti:] = 0.

@@ -23750,3 +23750,129 @@
 [INFO ] 11:13:23:13s: Solving impurity problem using IPT for beta = 62.827225, U = 2.580000 with IG in MI phase
 [INFO ] 11:13:33:13s: Solving impurity problem using IPT for beta = 62.827225, U = 2.570000 with IG in MI phase
 [INFO ] 11:13:43:13s: Solving impurity problem using IPT for beta = 62.827225, U = 2.560000 with IG in MI phase
+[INFO ] 11:13:52:13s: Solving impurity problem using IPT for beta = 62.827225, U = 2.550000 with IG in MI phase
+[INFO ] 11:14:02:14s: Solving impurity problem using IPT for beta = 62.827225, U = 2.540000 with IG in MI phase
+[INFO ] 11:14:12:14s: Solving impurity problem using IPT for beta = 62.827225, U = 2.530000 with IG in MI phase
+[INFO ] 11:14:22:14s: Solving impurity problem using IPT for beta = 62.827225, U = 2.520000 with IG in MI phase
+[INFO ] 11:14:32:14s: Solving impurity problem using IPT for beta = 62.827225, U = 2.510000 with IG in MI phase
+[INFO ] 11:14:42:14s: Solving impurity problem using IPT for beta = 62.827225, U = 2.500000 with IG in MI phase
+[INFO ] 11:14:52:14s: Solving impurity problem using IPT for beta = 62.827225, U = 2.490000 with IG in MI phase
+[INFO ] 11:15:02:15s: Solving impurity problem using IPT for beta = 62.827225, U = 2.480000 with IG in MI phase
+[INFO ] 11:15:12:15s: Solving impurity problem using IPT for beta = 62.827225, U = 2.470000 with IG in MI phase
+[INFO ] 11:15:22:15s: Solving impurity problem using IPT for beta = 62.827225, U = 2.460000 with IG in MI phase
+[INFO ] 11:15:31:15s: Solving impurity problem using IPT for beta = 62.827225, U = 2.450000 with IG in MI phase
+[INFO ] 11:15:41:15s: Solving impurity problem using IPT for beta = 62.827225, U = 2.440000 with IG in MI phase
+[INFO ] 11:15:51:15s: Solving impurity problem using IPT for beta = 62.827225, U = 2.430000 with IG in MI phase
+[INFO ] 11:16:01:16s: Solving impurity problem using IPT for beta = 62.827225, U = 2.420000 with IG in MI phase
+[INFO ] 11:16:12:16s: Solving impurity problem using IPT for beta = 62.827225, U = 2.410000 with IG in MI phase
+[INFO ] 11:16:22:16s: Solving impurity problem using IPT for beta = 62.827225, U = 2.400000 with IG in MI phase
+[INFO ] 11:16:32:16s: Solving impurity problem using IPT for beta = 62.827225, U = 2.390000 with IG in MI phase
+[INFO ] 11:16:42:16s: Solving impurity problem using IPT for beta = 62.827225, U = 2.380000 with IG in MI phase
+[INFO ] 11:16:51:16s: Solving impurity problem using IPT for beta = 62.827225, U = 2.370000 with IG in MI phase
+[INFO ] 11:17:01:17s: Solving impurity problem using IPT for beta = 62.827225, U = 2.360000 with IG in MI phase
+[INFO ] 11:17:11:17s: Solving impurity problem using IPT for beta = 62.827225, U = 2.350000 with IG in MI phase
+[INFO ] 11:17:21:17s: Solving impurity problem using IPT for beta = 62.827225, U = 2.340000 with IG in MI phase
+[INFO ] 11:17:31:17s: Solving impurity problem using IPT for beta = 62.827225, U = 2.330000 with IG in MI phase
+[INFO ] 11:17:41:17s: Solving impurity problem using IPT for beta = 62.827225, U = 2.320000 with IG in MI phase
+[INFO ] 11:17:51:17s: Solving impurity problem using IPT for beta = 62.827225, U = 2.310000 with IG in MI phase
+[INFO ] 11:18:01:18s: Solving impurity problem using IPT for beta = 62.827225, U = 2.300000 with IG in MI phase
+[INFO ] 11:18:11:18s: starting hysteresis for beta = 60.9911
+[INFO ] 11:18:11:18s: Solving impurity problem using IPT for beta = 60.991105, U = 2.300000
+[INFO ] 11:18:21:18s: Solving impurity problem using IPT for beta = 60.991105, U = 2.310000
+[INFO ] 11:18:31:18s: Solving impurity problem using IPT for beta = 60.991105, U = 2.320000
+[INFO ] 11:18:41:18s: Solving impurity problem using IPT for beta = 60.991105, U = 2.330000
+[INFO ] 11:18:51:18s: Solving impurity problem using IPT for beta = 60.991105, U = 2.340000
+[INFO ] 11:19:00:19s: Solving impurity problem using IPT for beta = 60.991105, U = 2.350000
+[INFO ] 11:19:10:19s: Solving impurity problem using IPT for beta = 60.991105, U = 2.360000
+[INFO ] 11:19:21:19s: Solving impurity problem using IPT for beta = 60.991105, U = 2.370000
+[INFO ] 11:19:31:19s: Solving impurity problem using IPT for beta = 60.991105, U = 2.380000
+[INFO ] 11:19:41:19s: Solving impurity problem using IPT for beta = 60.991105, U = 2.390000
+[INFO ] 11:19:51:19s: Solving impurity problem using IPT for beta = 60.991105, U = 2.400000
+[INFO ] 11:20:01:20s: Solving impurity problem using IPT for beta = 60.991105, U = 2.410000
+[INFO ] 11:20:11:20s: Solving impurity problem using IPT for beta = 60.991105, U = 2.420000
+[INFO ] 11:20:21:20s: Solving impurity problem using IPT for beta = 60.991105, U = 2.430000
+[INFO ] 11:20:31:20s: Solving impurity problem using IPT for beta = 60.991105, U = 2.440000
+[INFO ] 11:20:41:20s: Solving impurity problem using IPT for beta = 60.991105, U = 2.450000
+[INFO ] 11:20:51:20s: Solving impurity problem using IPT for beta = 60.991105, U = 2.460000
+[INFO ] 11:21:01:21s: Solving impurity problem using IPT for beta = 60.991105, U = 2.470000
+[INFO ] 11:21:11:21s: Solving impurity problem using IPT for beta = 60.991105, U = 2.480000
+[INFO ] 11:21:22:21s: Solving impurity problem using IPT for beta = 60.991105, U = 2.490000
+[INFO ] 11:21:32:21s: Solving impurity problem using IPT for beta = 60.991105, U = 2.500000
+[INFO ] 11:21:42:21s: Solving impurity problem using IPT for beta = 60.991105, U = 2.510000
+[INFO ] 11:21:52:21s: Solving impurity problem using IPT for beta = 60.991105, U = 2.520000
+[INFO ] 11:22:02:22s: Solving impurity problem using IPT for beta = 60.991105, U = 2.530000
+[INFO ] 11:22:12:22s: Solving impurity problem using IPT for beta = 60.991105, U = 2.540000
+[INFO ] 11:22:22:22s: Solving impurity problem using IPT for beta = 60.991105, U = 2.550000
+[INFO ] 11:22:32:22s: Solving impurity problem using IPT for beta = 60.991105, U = 2.560000
+[INFO ] 11:22:42:22s: Solving impurity problem using IPT for beta = 60.991105, U = 2.570000
+[INFO ] 11:22:52:22s: Solving impurity problem using IPT for beta = 60.991105, U = 2.580000
+[INFO ] 11:23:02:23s: Solving impurity problem using IPT for beta = 60.991105, U = 2.590000
+[INFO ] 11:23:12:23s: Solving impurity problem using IPT for beta = 60.991105, U = 2.600000
+[INFO ] 11:23:22:23s: Solving impurity problem using IPT for beta = 60.991105, U = 2.610000
+[INFO ] 11:23:32:23s: Solving impurity problem using IPT for beta = 60.991105, U = 2.620000
+[INFO ] 11:23:42:23s: Solving impurity problem using IPT for beta = 60.991105, U = 2.630000
+[INFO ] 11:23:53:23s: Solving impurity problem using IPT for beta = 60.991105, U = 2.640000
+[INFO ] 11:24:03:24s: Solving impurity problem using IPT for beta = 60.991105, U = 2.650000
+[INFO ] 11:24:13:24s: Solving impurity problem using IPT for beta = 60.991105, U = 2.660000
+[INFO ] 11:24:23:24s: Solving impurity problem using IPT for beta = 60.991105, U = 2.670000
+[INFO ] 11:24:33:24s: Solving impurity problem using IPT for beta = 60.991105, U = 2.680000
+[INFO ] 11:24:43:24s: Solving impurity problem using IPT for beta = 60.991105, U = 2.690000
+[INFO ] 11:24:53:24s: Solving impurity problem using IPT for beta = 60.991105, U = 2.700000
+[INFO ] 11:25:03:25s: Solving impurity problem using IPT for beta = 60.991105, U = 2.710000
+[INFO ] 11:25:13:25s: Solving impurity problem using IPT for beta = 60.991105, U = 2.720000
+[INFO ] 11:25:23:25s: Solving impurity problem using IPT for beta = 60.991105, U = 2.730000
+[INFO ] 11:25:33:25s: Solving impurity problem using IPT for beta = 60.991105, U = 2.740000
+[INFO ] 11:25:43:25s: Solving impurity problem using IPT for beta = 60.991105, U = 2.750000
+[INFO ] 11:25:53:25s: Solving impurity problem using IPT for beta = 60.991105, U = 2.760000
+[INFO ] 11:26:03:26s: Solving impurity problem using IPT for beta = 60.991105, U = 2.770000
+[INFO ] 11:26:13:26s: Solving impurity problem using IPT for beta = 60.991105, U = 2.780000
+[INFO ] 11:26:23:26s: Solving impurity problem using IPT for beta = 60.991105, U = 2.790000
+[INFO ] 11:26:33:26s: Solving impurity problem using IPT for beta = 60.991105, U = 2.800000
+[INFO ] 11:26:43:26s: Solving impurity problem using IPT for beta = 60.991105, U = 2.810000
+[INFO ] 11:26:52:26s: Solving impurity problem using IPT for beta = 60.991105, U = 2.820000
+[INFO ] 11:27:03:27s: Solving impurity problem using IPT for beta = 60.991105, U = 2.830000
+[INFO ] 11:27:13:27s: Solving impurity problem using IPT for beta = 60.991105, U = 2.840000
+[INFO ] 11:27:23:27s: Solving impurity problem using IPT for beta = 60.991105, U = 2.850000
+[INFO ] 11:27:33:27s: Solving impurity problem using IPT for beta = 60.991105, U = 2.860000
+[INFO ] 11:27:43:27s: Solving impurity problem using IPT for beta = 60.991105, U = 2.870000
+[INFO ] 11:27:53:27s: Solving impurity problem using IPT for beta = 60.991105, U = 2.880000
+[INFO ] 11:28:03:28s: Solving impurity problem using IPT for beta = 60.991105, U = 2.890000
+[INFO ] 11:28:14:28s: Solving impurity problem using IPT for beta = 60.991105, U = 2.900000
+[INFO ] 11:28:24:28s: Solving impurity problem using IPT for beta = 60.991105, U = 2.910000
+[INFO ] 11:28:34:28s: Solving impurity problem using IPT for beta = 60.991105, U = 2.920000
+[INFO ] 11:28:44:28s: Solving impurity problem using IPT for beta = 60.991105, U = 2.930000
+[INFO ] 11:28:54:28s: Solving impurity problem using IPT for beta = 60.991105, U = 2.940000
+[INFO ] 11:29:05:29s: Solving impurity problem using IPT for beta = 60.991105, U = 2.950000
+[INFO ] 11:29:15:29s: Solving impurity problem using IPT for beta = 60.991105, U = 2.960000
+[INFO ] 11:29:25:29s: Solving impurity problem using IPT for beta = 60.991105, U = 2.970000
+[INFO ] 11:29:35:29s: Solving impurity problem using IPT for beta = 60.991105, U = 2.980000
+[INFO ] 11:29:46:29s: Solving impurity problem using IPT for beta = 60.991105, U = 2.990000
+[INFO ] 11:29:56:29s: Solving impurity problem using IPT for beta = 60.991105, U = 3.000000
+[INFO ] 11:30:06:30s: Solving impurity problem using IPT for beta = 60.991105, U = 3.010000
+[INFO ] 11:30:16:30s: Solving impurity problem using IPT for beta = 60.991105, U = 3.020000
+[INFO ] 11:30:26:30s: Solving impurity problem using IPT for beta = 60.991105, U = 3.030000
+[INFO ] 11:30:36:30s: Solving impurity problem using IPT for beta = 60.991105, U = 3.040000
+[INFO ] 11:30:46:30s: Solving impurity problem using IPT for beta = 60.991105, U = 3.050000
+[INFO ] 11:30:57:30s: Solving impurity problem using IPT for beta = 60.991105, U = 3.060000
+[INFO ] 11:31:07:31s: Solving impurity problem using IPT for beta = 60.991105, U = 3.070000
+[INFO ] 11:31:17:31s: Solving impurity problem using IPT for beta = 60.991105, U = 3.080000
+[INFO ] 11:31:28:31s: Solving impurity problem using IPT for beta = 60.991105, U = 3.090000
+[INFO ] 11:31:38:31s: Solving impurity problem using IPT for beta = 60.991105, U = 3.100000
+[INFO ] 11:31:48:31s: Solving impurity problem using IPT for beta = 60.991105, U = 3.110000
+[INFO ] 11:31:58:31s: Solving impurity problem using IPT for beta = 60.991105, U = 3.120000
+[INFO ] 11:32:08:32s: Solving impurity problem using IPT for beta = 60.991105, U = 3.130000
+[INFO ] 11:32:18:32s: Solving impurity problem using IPT for beta = 60.991105, U = 3.140000
+[INFO ] 11:32:28:32s: Solving impurity problem using IPT for beta = 60.991105, U = 3.150000
+[INFO ] 11:32:39:32s: Solving impurity problem using IPT for beta = 60.991105, U = 3.160000
+[INFO ] 11:32:49:32s: Solving impurity problem using IPT for beta = 60.991105, U = 3.170000
+[INFO ] 11:32:59:32s: Solving impurity problem using IPT for beta = 60.991105, U = 3.180000
+[INFO ] 11:33:09:33s: Solving impurity problem using IPT for beta = 60.991105, U = 3.190000
+[INFO ] 11:33:19:33s: Solving impurity problem using IPT for beta = 60.991105, U = 3.200000
+[INFO ] 11:33:29:33s: Solving impurity problem using IPT for beta = 60.991105, U = 3.210000
+[INFO ] 11:33:39:33s: Solving impurity problem using IPT for beta = 60.991105, U = 3.220000
+[INFO ] 11:33:50:33s: Solving impurity problem using IPT for beta = 60.991105, U = 3.230000
+[INFO ] 11:34:00:34s: Solving impurity problem using IPT for beta = 60.991105, U = 3.240000
+[INFO ] 11:34:10:34s: Solving impurity problem using IPT for beta = 60.991105, U = 3.250000
+[INFO ] 11:34:20:34s: Solving impurity problem using IPT for beta = 60.991105, U = 3.260000
+[INFO ] 11:34:30:34s: Solving impurity problem using IPT for beta = 60.991105, U = 3.270000
+[INFO ] 11:34:40:34s: Solving impurity problem using IPT for beta = 60.991105, U = 3.280000
