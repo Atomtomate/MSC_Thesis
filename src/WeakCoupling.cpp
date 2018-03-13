@@ -31,7 +31,7 @@ namespace DMFT
 
     void WeakCoupling::computeImpGF(void)
     {
-        expOrdAcc.writeResults();
+        //expOrdAcc.writeResults();
         long binCount = itBinsUP.size();
         long itCount = gImp->getItGF().rows();
         long mfCount = gImp->getMGF().rows();
@@ -285,7 +285,8 @@ namespace DMFT
         //if(!sign) sign = lastSign;		    // update got rejected, use last sign
         //lastSign = sign;			    // remember last sign
         totalSign += 1;//sign;
-        expOrdAcc(M[0].rows());
+        expOrdAcc(M[0].rows(), 0 );
+        expOrdAcc(M[1].rows(), 1 );
 
         //TODO: tmp
         return;

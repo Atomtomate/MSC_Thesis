@@ -295,19 +295,20 @@ namespace DMFT
             const int D = 1.0;          // half bandwidth
             const RealT a	= 1.0;
             const RealT t	= D/2.0;
-            const int burnin = 10000;
+            const int burnin = 20000;
             const RealT zeroShift = 0.505;
-            const RealT beta    = 20;
+            const RealT beta    = 40;
 
             GFTail tail;
             tail.fitFct = &fit_sym_tail;
 
+            std::string descr = "CTINT"; 
+            std::string descrTMP = "tmp"; 
             const std::string solverType = "CT-INT";
             if(isGenerator)
             {
-                for(int U_l : {3})
+                for(RealT U_l : {1., 2.3, 4.})
                 {
-                    std::string descr = "CTINT/U" + std::to_string(static_cast<int>(U_l));
                     const RealT U       = U_l;
                     const RealT mu      = U/2.0;
                     DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType);
@@ -319,9 +320,19 @@ namespace DMFT
                     setBetheSemiCirc(*gImp, D, config);
 
                     LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator ;
+                    /*{
+                    DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
+                    DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descrTMP, config, 0.0, impSolver, g0, gImp, D, false);
+                    dmftSolver.solve(20, 700000, true, false);
+                    }
+                    {
+                    DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
+                    DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descrTMP, config, 0.0, impSolver, g0, gImp, D, false);
+                    dmftSolver.solve(10, 1000000, true, false);
+                    }*/
                     DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
                     DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, config, 0.0, impSolver, g0, gImp, D, false);
-                    dmftSolver.solve(1, 1000000, true);
+                    dmftSolver.solve(10, 5000000, true, true);
                     //(config.local.barrier)();
                     delete(g0);
                     delete(gImp);
@@ -526,12 +537,12 @@ namespace DMFT
             const RealT U_inc = 0.01;
             std::vector<RealT> betal(120);
             RealT T_max = 0.06;
-            RealT T_min = 0.0025; 
+            RealT T_min = 0.005; 
             RealT dt = (T_max - T_min)/120;
             for(int i = 0; i < 120; i++)
                 betal[i] = 1./(T_min + i*dt);
             RealT U = U_min;
-            for(int i = 4; i < betal.size(); i++)//
+            for(int i = 0; i < 15; i++)//
             {
                 RealT beta = betal[i];
                 LOG(INFO) << "starting hysteresis for beta = " << beta;
@@ -546,20 +557,29 @@ namespace DMFT
                     RealT mu    = U/2.;
                     DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType, descr);
                     setBetheSemiCirc(*gImp, D, config);
+                    setBetheSemiCirc(*g0, D, config);
                     auto ipt_solver = DMFT::IPT(descr, g0, gImp, config, D);
                     LOG(INFO) << "Solving impurity problem using IPT for beta = " +std::to_string(beta) + ", U = " + std::to_string(U);
-                    ipt_solver.solve(80, 200, false, false);
+                    ipt_solver.solve(800, 100, false, false);
                     U += U_inc;
-                    if((U>=(U_max - U_inc)))
-                    {
-                        (*gImp_bak) = (*gImp);
-                    }else{
+                    //if((U>=(U_max - U_inc)))
+                    //{
+                    //    (*gImp_bak) = (*gImp);
+                    //}else{
                         delete(gImp);
                         delete(g0);
-                    }
+                    //}
                 }
                 std::string descrB = "IPT_PD_Z_30";
-                LOG(INFO) << "Using converged solution as initial guess";
+                std::string descTMP = "tmp";
+                DMFT::GreensFct g0a(beta, true, true, tail);
+                DMFT::GreensFct gImpa(beta, true, true, tail);
+                DMFT::Config config(beta, 2., 4., D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType, descr);
+                setBetheSemiCirc(gImpa, D, config);
+                setBetheSemiCirc(g0a, D, config);
+                auto ipt_solver = DMFT::IPT(descTMP, &g0a, &gImpa, config, D);
+                ipt_solver.solve(1000, 0, false, false);
+                (*gImp_bak) = gImpa;
                 U = U_max;
                 while(U >= U_min)
                 {
@@ -570,7 +590,7 @@ namespace DMFT
                     DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType, descrB);
                     auto ipt_solver = DMFT::IPT(descrB, g0, gImp, config, D);
                     LOG(INFO) << "Solving impurity problem using IPT for beta = " +std::to_string(beta) + ", U = " + std::to_string(U) << " with IG in MI phase";
-                    ipt_solver.solve(80, 200, false, false);
+                    ipt_solver.solve(800, 100, false, false);
                     U -= U_inc;
                     delete(gImp);
                     delete(g0);

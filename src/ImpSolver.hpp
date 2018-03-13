@@ -2,6 +2,7 @@
 #define IMPSOLV_HPP_
 #include "Config.hpp"
 #include "GreensFct.hpp"
+#include "ExpOrderAcc.hpp"
 
 namespace DMFT
 {
@@ -19,8 +20,8 @@ class ImpSolver
 		inline void computeImpGF(void) 					const { 	this->impl().computeImpGF(); }
 		inline GreensFct *const getImpGF(void) 				const { return	this->impl().getImpGF(); }
         inline GreensFct *const getWeissGF(void)                              const { return	this->impl().getWeissGF(); }
-        inline int expansionOrder(void)                                 const { return  this->impl().expansionOrder(); }
-        inline RealT avgN(void)                                         const { return  this->impl().avgN(); }
+        inline ExpOrderAcc<_CONFIG_spins> avgN(void)          const { return  this->impl().expansionOrder(); }
+        inline RealT expansionOrder(void)                                         const { return  this->impl().avgN(); }
 
     protected:
 

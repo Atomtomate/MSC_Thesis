@@ -68,6 +68,8 @@ namespace DMFT
         
         GreensFctBase(const GreensFctBase& other): beta(other.beta), symmetric(other.symmetric), fit(other.fit), deltaIt(other.deltaIt), fft(other.beta)
         {
+            if((beta != other.beta) || (symmetric != other.symmetric) || (fit != other.fit) || (deltaIt != other.deltaIt))
+                throw std::logic_error("Cannot copy Greens function object with different temperatures.");
              tailFitted = other.tailFitted;
              g_it = other.g_it;
              g_wn = other.g_wn;
@@ -435,9 +437,11 @@ namespace DMFT
             {
                 std::vector<std::array<RealT,2> > expC;
                 fitTail();
+                //LOG(ERROR) << "a:";
                 for(int i = 0; i < expansionCoeffs[0].size(); i++)
                 {
                     expC.push_back({expansionCoeffs[0][i], expansionCoeffs[1][i]});
+                    //LOG(ERROR) << expansionCoeffs[0][i] << ", " << expansionCoeffs[1][i];
                 }
                 fft.transformMtoT(g_wn, target, expC, symmetric);
             }

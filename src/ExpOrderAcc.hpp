@@ -34,12 +34,23 @@ class ExpOrderAcc
     typedef boost::iterator_range<std::vector<std::pair<RealT, RealT> >::iterator > HistogramT;
 
     public:
-        ExpOrderAcc(const Config *const c): c(c), ioh(*c), expansionOrderAcc(FLAVORS, HistAccT(boost::accumulators::tag::density::num_bins = 20, boost::accumulators::tag::density::cache_size = 10000)) 
+        ExpOrderAcc(const Config *c): c(c), ioh(*c), expansionOrderAcc(FLAVORS, HistAccT(boost::accumulators::tag::density::num_bins = 20, boost::accumulators::tag::density::cache_size = 10000)) 
         {}
         
         inline void operator()(RealT val, unsigned int f = 0)
         {
             expansionOrderAcc[f](val);
+        }
+
+        std::vector<RealT> get_stat(const int f)
+        {
+            if(f >= FLAVORS) LOG(ERROR) << "Invalid flavor!";
+            std::vector<RealT> res(4);
+            res[0] = boost::accumulators::mean(expansionOrderAcc[f]);
+            res[1] = boost::accumulators::variance(expansionOrderAcc[f]);
+            res[2] = boost::accumulators::skewness(expansionOrderAcc[f]);
+            res[3] = boost::accumulators::kurtosis(expansionOrderAcc[f]);
+            return res;
         }
 
         void writeResults(std::string name = "")
@@ -79,7 +90,7 @@ class ExpOrderAcc
         }
 
     private:
-        const Config * const c;
+        const Config * c;
         IOhelper ioh;
         std::vector<HistAccT> expansionOrderAcc;
 
