@@ -56,7 +56,7 @@ namespace DMFT
             const RealT n_fac = symmetric ? 2 : 1;
             const RealT loc_fft_wmin = mFreqS( n_min, _beta);
             for(int s=0;s<2;s++){
-                if(std::abs(tail_coeff[1][s] - 1.0) > 0.1) LOG(WARNING) << "unexpected tail coefficient, only symmetric GF tested! Expected 1, got " << tail_coeff[1][s];
+                if(std::abs(tail_coeff[1][s] - 1.0) > 0.1) LOG(WARNING) << "unexpected tail coefficient (Self energy flag not set?), only symmetric GF tested! Expected 1, got " << tail_coeff[1][s];
                 // preparing fftw input
                 memset(fftw3_input, 0, tBins*sizeof(fftw_complex));
                 for(int n = n_min; n < n_max; n++)          // construct negative wn for symmetric GF

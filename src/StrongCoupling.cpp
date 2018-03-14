@@ -2,7 +2,7 @@
 #include <iostream>
 
 #define _CONFIG_USE_LEGENDRE_P 0
-#define _CONFIG_HYB_DEBUG 0
+#define _CONFIG_HYB_DEBUG 1
 #define _CONFIG_HYB_USE_MMEAS 0
 namespace  DMFT
 {
@@ -336,8 +336,6 @@ namespace  DMFT
             unsigned int n = M[f].rows() - segments.hasFullLine(f);
             expOrd(n, f);
         }
-        //TODO: tmp
-        return;
         for(int f = 0; f < _CONFIG_spins; f++)
         {
             unsigned int n = M[f].rows() - segments.hasFullLine(f);
@@ -370,11 +368,11 @@ namespace  DMFT
                     {
                         for(int n =0; n < _CONFIG_maxMatsFreq; n++)
                         {
-                            mfBins[f][n] -= std::exp(ComplexT(0., mFreqS(n,conf->beta)*tp))*std::abs(M[f](i,j));
+                            mfBins[f][n] -= s*std::exp(ComplexT(0., mFreqS(n,conf->beta)*tp))*M[f](i,j);
                         }
                     }else{
                         if(index == _CONFIG_maxTBins || index < 0) LOG(WARNING) << "invalid accumulation index";
-                        itBins[f].at(index)(-std::abs(M[f](i,j)));//
+                        itBins[f].at(index)(-s*M[f](i,j));//
                     }
                 }
             }
@@ -616,7 +614,7 @@ namespace  DMFT
                 throw std::logic_error("Determinant ratio incorrect");
             }
             //perm_sign[f]*
-            if((2*(fullDet[f] >= 0) - 1.) != lastSign)
+            if( perm_sign[f]*(2*(fullDet[f] >= 0) - 1.) != lastSign)
             {
                 //LOG(ERROR) << segments.print_segments();
                 //for(int i =0; i<M[f].rows();i++) LOG(INFO) << segments.getTimeOrdered(i,f).first << " to " << segments.getTimeOrdered(i,f).second << " =" <<  hybCall(segments.getTimeOrdered(i,f).first, segments.getTimeOrdered(i,f).second, f);

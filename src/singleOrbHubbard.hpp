@@ -21,6 +21,8 @@ namespace DMFT{
 namespace examples{
 
 
+
+   void _test_FFT(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator);
    int _test_hyb(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator);
    void _test_IPT(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator);
    void _IPT_PD(const boost::mpi::communicator local, const boost::mpi::communicator world, const bool isGenerator);

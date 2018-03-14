@@ -327,14 +327,23 @@ namespace DMFT
             std::stringstream res;
             if(spin == -1)
             {
-                res << std::fixed << std::setw(24)<< "\t mFreq \tSpin UP Re \t Spin UP Im \t Spin DOWN Re \t Spin DOWN Im \tSpin UP Re Err \t Spin UP Im Err \t Spin DOWN Re Err \t Spin DOWN Im Err \n";
+                res<< "# beta: " << beta << std::endl << "# symmetric storage: " << symmetric << std::endl;
+                for(int f = 0; f < SPINS; f++)
+                {
+                    res << "# Tail " << f << ":" << std::endl;
+                    for(int i = 0; i < TAIL_ORDER; i++){
+                        res << expansionCoeffs[f][i] << "\t";
+                    }
+                    res << std::endl;
+                }
+                res  << std::fixed << std::setw(24) << "#\t mFreq \tSpin UP Re \t Spin UP Im \t Spin DOWN Re \t Spin DOWN Im \tSpin UP Re Err \t Spin UP Im Err \t Spin DOWN Re Err \t Spin DOWN Im Err \n";
                 for(int n=0; n < MAX_M_FREQ; n++)
                 {
                     RealT wn = symmetric ? mFreqS(n, beta) : mFreq(n, beta);
                     ComplexT errU = (g_wn_std(n,UP) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,UP);
                     ComplexT errD = (g_wn_std(n,DOWN) == ComplexT(0.0,0.0)) ? ComplexT(1.0/(2.0*(n*n+10.0)), 1.0/(2.0*(n*n+10.0))) : g_wn_std(n,DOWN);
                     res << std::setprecision(24) << wn << "\t" <<  g_wn(n,UP).real() << "\t" << g_wn(n,UP).imag() << "\t" << g_wn(n,DOWN).real() << "\t" << g_wn(n,DOWN).imag() << "\t"\
-                        << 0. << "\t" << errU.imag() << "\t" << 0. << "0." << errD.imag() << "\n";
+                        << errU.real() << "\t" << errU.imag() << "\t" << errD.real() << "\t" << errD.imag() << "\n";
                 }
                 return res.str();
             }

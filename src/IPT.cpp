@@ -28,8 +28,6 @@ namespace DMFT
             }
             g0->markMSet();
             g0->transformMtoT();
-            
-            
             for(int f = 0; f < _CONFIG_spins; f++){
             for(unsigned int it = 0; it < _CONFIG_maxTBins; it++)
             {
