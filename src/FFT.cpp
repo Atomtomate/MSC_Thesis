@@ -110,9 +110,10 @@ namespace DMFT
             const RealT loc_fft_wmin = mFreqS( minMF, _beta);
             for(int s=0;s<2;s++){
                 memset(fftw3_input, 0, tBins*sizeof(fftw_complex));
+                const RealT hf = -from(0,s); // For GF: - (g(0)-g(beta))/2
                 for(int n=0;n<tBins;n++){
                     const RealT tau_k = loc_fft_dt*n + loc_fft_tmin;
-                    ComplexT input_tmp = f1*std::exp( ComplexT(0.0,loc_fft_wmin * tau_k))*(from(n,s) + 0.5);
+                    ComplexT input_tmp = f1*std::exp( ComplexT(0.0,loc_fft_wmin * tau_k))*(from(n,s) + hf);
                     // ( t1(tail_coeff1,0.,tau_k) );
                     fftw3_input[n][0] = input_tmp.real();
                     fftw3_input[n][1] = input_tmp.imag();
@@ -123,7 +124,7 @@ namespace DMFT
                 for(int n=0;n<_CONFIG_maxMatsFreq;n++){
                     RealT mf =  mFreqS(n,_beta);
                     ComplexT tmp = (ComplexT(fftw3_output[n][0],fftw3_output[n][1]));
-                    to(n,s) = (tmp +1.0/ComplexT(0.,mf));
+                    to(n,s) = (tmp + hf*2.0/ComplexT(0.,mf));
                     //*std::exp(ComplexT(0.0,loc_fft_tmin*(mf-loc_fft_wmin)));
                 }
             }

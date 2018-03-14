@@ -7,6 +7,7 @@
 #include "IOhelper.hpp"
 #include "ImpSolver.hpp"
 #include "integrals.hpp"
+#include "StatAcc.hpp"
 
 namespace DMFT
 {
@@ -17,7 +18,7 @@ class DMFT_BetheLattice
     public:
         DMFT_BetheLattice(std::string& outDir, const Config config, RealT mixing, ImpSolver& solver, GreensFct* G0, GreensFct * GImp, const RealT D, bool useHyb = false):
             config(config), mixing(mixing), iSolver(solver), useHyb(useHyb), \
-            g0(G0), g0Info( useHyb ? "Hyb" : "G0" ), gImp(GImp), gImpInfo("GImp"), selfE(config.beta, true, false), seLInfo("SelfE"),\
+            g0(G0), g0Info( useHyb ? "Hyb" : "G0" ), gImp(GImp), gImpInfo("GImp_b"+std::to_string(config.beta)+"_U" + std::to_string(config.U)), selfE(config.beta, true, true), seLInfo("SelfE_b"+std::to_string(config.beta)+"_U" + std::to_string(config.U)),\
             ioh(outDir, config), D(D)
         {
             std::string tmp( useHyb ? "Hyb_Guess" : "G0_Guess");
@@ -27,7 +28,7 @@ class DMFT_BetheLattice
             ioh.addGF(selfE, seLInfo);
         }
 
-        void solve(const unsigned int iterations, const unsigned long long updates, bool symmetricG0 = false)
+        void solve(const unsigned int iterations, const unsigned long long updates, bool symmetricG0 = false, bool writeOut = true)
         {
             if(config.isGenerator)
             {
@@ -73,34 +74,38 @@ class DMFT_BetheLattice
                         //only for WeakCoupling., this is now in update itself
                         sImp = (g0->getMGF().cwiseInverse() - gImp->getMGF().cwiseInverse());
                         selfE.setByMFreq(sImp);
-                        selfE.setParaMagnetic();
-                        g0->shift(config.U/2.0);
-                        g0->markMSet();
-                        g0->transformMtoT();
+                        //selfE.setParaMagnetic();
+                        //g0->shift(config.U/2.0);
+                        //g0->markMSet();
+                        //g0->transformMtoT();
                     }
                     selfE.markMSet();
+                    //LOG(ERROR) << "a2";
                     selfE.transformMtoT();
+                    //exit(0);
                     if(dmftIt == 1)
                     {
                         ioh.setIteration(0);
-                        ioh.writeToFile();
+                        //ioh.writeToFile();
                     }
                     
                     //IOhelper::plot(gImp, config.beta, "before measure gImp Function " + std::to_string(dmftIt));
 
                     //TODO improve this naive loop
-                    for(long unsigned int i=1; i <= 20; i++){
-                        iSolver.update(updates/20.0);
-                        LOG(INFO) << "MC Walker [" << config.world.rank() << "] at "<< " (" << (5*i) << "%) of iteration " << dmftIt << ". expansion order: " << iSolver.expansionOrder();
+                    for(long unsigned int i=1; i <= 5; i++){
+                        iSolver.update(updates/5.0);
+                        LOG(INFO) << "MC Walker [" << config.world.rank() << "] at "<< " (" << (20*i) << "%) of iteration " << dmftIt << ". expansion order: " << iSolver.expansionOrder();
                     }
-                    //g0->shift(config.U/2.0);
+                    g0->shift(config.U/2.0);
+                    g0->markMSet();
+                    g0->transformMtoT();
 
                     //IOhelper::plot(*g0, config.beta, "Weiss Function" + std::to_string(dmftIt));
 
                     ioh.setIteration(dmftIt);
                     if(config.local.rank() == 0)
                     {
-                        LOG(INFO) << "finished sampling. average expansion order: " << iSolver.avgN();
+                        LOG(INFO) << "finished sampling. average expansion order: " << iSolver.expansionOrder();
                         LOG(INFO) << "measuring impurity Greens function";
                     }
                     iSolver.computeImpGF();
@@ -113,10 +118,19 @@ class DMFT_BetheLattice
                     }
                     //
                     //TODO: even for cthyb?
-
-                    ioh.writeToFile();
+                    if(writeOut)
+                    {
+                        statAcc(*gImp);
+                        statAccSE(selfE);
+                        //ioh.writeToFile();
+                    }
 
                 }
+                iSolver.avgN().writeResults(gImpInfo.filename);
+                statAcc.setGF(*gImp);
+                statAccSE.setGF(selfE);
+                ioh.writeFinalToFile(*gImp, gImpInfo, false, config.U, false);
+                ioh.writeFinalToFile(selfE, seLInfo, true, config.U, false);
 
                 //config.world.send(0, static_cast<int>(MPI_MSG_TAGS::FINALIZE), 1 );
             }
@@ -128,6 +142,7 @@ class DMFT_BetheLattice
                 //TODO: compute new g0
                 //TODO: distribute g0 to generators
             }
+
 
         }
 
@@ -151,6 +166,8 @@ class DMFT_BetheLattice
         GreensFct*  g0;
         GreensFct*	gImp;
         GreensFct   selfE;
+        StatAcc<_CONFIG_spins, _CONFIG_maxMatsFreq, _CONFIG_maxTBins> statAcc;
+        StatAcc<_CONFIG_spins, _CONFIG_maxMatsFreq, _CONFIG_maxTBins> statAccSE;
 };
 } // end namespace DMFT
 #endif

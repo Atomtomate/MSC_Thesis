@@ -69,7 +69,7 @@ class StrongCoupling
          *  @param beta Inverse temperature
          */
         int update(const unsigned long int iterations = 1l);
-        RealT avgN(void)
+        RealT expansionOrder(void)
         {
             RealT res = 0;
             for(int f =0; f < _CONFIG_spins; f++)
@@ -78,11 +78,9 @@ class StrongCoupling
             }
             return res/_CONFIG_spins;
         }
-        int expansionOrder(void)
+        ExpOrderAcc<_CONFIG_spins> avgN(void)
         {
-            if(steps>burninSteps)
-                //return boost::accumulators::mean(expOrd[0]);
-            return 0;
+            return expOrd;
         }
 
         inline GreensFct * const getImpGF(void) {

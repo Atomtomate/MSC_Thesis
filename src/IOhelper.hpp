@@ -24,7 +24,8 @@
 namespace DMFT
 {
 
-struct LogInfos{
+struct LogInfos
+{
     LogInfos(std::string const & _filename): LogInfos(_filename, true, true) {}
     LogInfos(std::string const & _filename, bool printMF, bool printIT):
             filename(_filename), printMF(printMF), printIT(printIT) {}

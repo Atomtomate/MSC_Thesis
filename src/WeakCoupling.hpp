@@ -55,9 +55,9 @@ namespace DMFT
 
             virtual ~WeakCoupling();
 
-            inline int expansionOrder(void) {return M[0].rows();}
+            inline ExpOrderAcc<_CONFIG_spins> avgN(void) {return expOrdAcc;}
 
-            inline RealT avgN(void) {return static_cast<RealT>(-1)/(steps-burninSteps);};
+            inline RealT expansionOrder(void) {return n;};
 
 
             /*!	@brief	Updates the time ordered spin configuration and the inverse
@@ -190,7 +190,7 @@ namespace DMFT
             int lastSign;						// needed when proposal is rejected
             long totalSign;
             int n; 					// expansion order (number of used rows/cols)
-            ExpOrderAcc<1> expOrdAcc;
+            ExpOrderAcc<_CONFIG_spins> expOrdAcc;
             const RealT zeroShift;				// auxiliary ising shift
             std::array< AccT, _CONFIG_maxSBins> itBinsUP;
             std::array< AccT, _CONFIG_maxSBins> itBinsDOWN;
