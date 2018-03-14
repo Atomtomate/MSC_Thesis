@@ -531,7 +531,7 @@ namespace DMFT
             for(int i = 0; i < 120; i++)
                 betal[i] = 1./(T_min + i*dt);
             RealT U = U_min;
-            for(int i = 4; i < betal.size(); i++)//
+            for(int i = 54; i < betal.size(); i++)//
             {
                 RealT beta = betal[i];
                 LOG(INFO) << "starting hysteresis for beta = " << beta;

@@ -18,6 +18,8 @@ import re
 import linecache
 mpl.style.use('seaborn')
 sns.set_style("white")
+mpl.rcParams['text.usetex'] = True
+mpl.rcParams['text.latex.unicode'] = True
 cmap = mpl.cm.GnBu
 
 use_pade = False
@@ -130,11 +132,13 @@ def read_A(path):
 
 
 se_data_to = read_se(se32_str,1)#se40_str, 1)
+#se_data_to = read_se(se40_str, 1)
 
 #data_from = read_A(me_FROM0_str)
 print("read from MI to metal")
 #data_to = read_A(me_TO0_str)
 se_data_from = read_se(se23_str,1)#se04_str, 1)
+#se_data_from = read_se(se04_str, 1)
 print("read from metal to MI")
 
 
@@ -144,21 +148,21 @@ def plotZ():
     se40_data = read_se(se40_str)
     Z04list = comp_Z0(se04_data)
     Z40list = comp_Z0(se40_data)
-    y04 = np.clip(Z04list[:,1],a_min=0.0001, a_max=None)
-    y40 = np.clip(Z40list[:,1],a_min=0.0001, a_max=None)
+    y04 = np.clip(Z04list[:,1],a_min=0.01, a_max=None)
+    y40 = np.clip(Z40list[:,1],a_min=0.01, a_max=None)
     #pti = np.argmax(y < 0.0001)
     #yerr = np.clip(Zlist[:,2], a_min=0.,a_max=1.)
     #yerr[pti:] = 0.
     #y[pti:] = 0.
-    plt.semilogy(Z40list[:,0], y40, "o-", ms=3.0, markevery=4, label="init U = 4")
-    plt.semilogy(Z04list[:,0], y04, 'o-', alpha=0.4, ms=4.0, markevery=4, label="init U = 0")
-    plt.xlabel(r"U")
+    plt.semilogy(Z40list[:,0], y40, "o-", ms=3.0, markevery=2, label="init U = 4")
+    plt.semilogy(Z04list[:,0], y04, 'o-', alpha=0.4, ms=4.0, markevery=2, label="init U = 0")
+    plt.xlabel(r"U/D")
     plt.ylabel(r"Z")
     plt.legend()
-    plt.show() 
-    plt.plot(Z40list[:,0], y40, "o", ms=3.0, label="init U = 4")
-    plt.plot(Z04list[:,0], y04, 'o', alpha=0.4, ms=4.0, label="init U = 0")
-    plt.xlabel(r"U")
+    plt.show()
+    plt.plot(Z40list[:,0], y40, "o-", ms=3.0, label="init U = 4")
+    plt.plot(Z04list[:,0], y04, 'o-', alpha=0.4, ms=4.0, label="init U = 0")
+    plt.xlabel(r"U/D")
     plt.ylabel(r"Z")
     plt.legend()
     plt.show()
@@ -169,11 +173,11 @@ def tmp():
 	blist = np.unique(data[:,0])
 	ptl = []
 	for beta in blist:
-	    bi = np.where(data[:, 0] == beta)
-	    dat = np.squeeze(data[bi,:])
-	    dat = dat[dat[:,1].argsort()]
-	    pti = (dat[:,2] != 0.).argmax()
-	    ptl.append([beta, dat[pti,1]])
+            bi = np.where(data[:, 0] == beta)
+            dat = np.squeeze(data[bi,:])
+            dat = dat[dat[:,1].argsort()]
+            pti = (dat[:,2] != 0.).argmax()
+            ptl.append([beta, dat[pti,1]])
 	ptl = np.array(ptl)
 	invalid = 4#(ptl[:, 1] == 2.).argmin()
 	fig, ax = plt.subplots()
@@ -187,11 +191,11 @@ def tmp():
 	blist = np.unique(data[:,0])
 	ptl = []
 	for beta in blist:
-	    bi = np.where(data[:, 0] == beta)
-	    dat = np.squeeze(data[bi,:])
-	    dat = dat[dat[:,1].argsort()]
-	    pti = (dat[:,2] != 0.).argmax()
-	    ptl.append([beta, dat[pti,1]])
+            bi = np.where(data[:, 0] == beta)
+            dat = np.squeeze(data[bi,:])
+            dat = dat[dat[:,1].argsort()]
+            pti = (dat[:,2] != 0.).argmax()
+            ptl.append([beta, dat[pti,1]])
 	ptl = np.array(ptl)
 	invalid = 4#(ptl[:, 1] == 2.).argmin()
 
@@ -204,9 +208,9 @@ def tmp():
     The values of the imeginary part for the self energy are obtained by a
     polynomial fit of order 4 to the lowest nPoints Matsubara frequencies
 """
-def checkLF(nPoints= 6, eps = 0.001, eps2 = 0.05):
-    seT = read_se(se40_str, 6)
-    seF = read_se(se04_str, 6)
+def checkFL(nPoints= 6, eps = 0.001, eps2 = 0.05):
+    seT = read_se(se32_str, 6)
+    seF = read_se(se23_str, 6)
     res_BU = []
     for data in [seT, seF]:
 	nb = np.unique(data[:,0]).shape[0]
@@ -230,31 +234,32 @@ def checkLF(nPoints= 6, eps = 0.001, eps2 = 0.05):
     res_BU = np.array(res_BU)
     fig, axarr = plt.subplots(2,2)
     fig.subplots_adjust(wspace=.4, hspace=0.3)
-    d = np.clip(res_BU[0,:,:,0],None, 0.) #clip unphysical negative values, they are noise from simulation
-    vmax = np.max(d) + 0.01
-    cax1 = axarr[0,0].imshow(-d+vmax, norm=colors.LogNorm(vmin=-np.min(d)+vmax, vmax=-np.max(d)+vmax), interpolation='None', cmap=cmap, aspect='auto')
-    axarr[0,0].set_title(r"$\log(-Im(\Sigma(0)))$, IG $U=4$")
+    if(np.max(res_BU[0,:,:,0]) > 0.1):
+        print("WARNING: invalid data for plot encountered, adjust manually")
+    d = np.clip(-res_BU[0,:,:,0],None, 2.) #clip unphysical negative values, they are noise from simulation
 
-    vmin = np.min(res_BU[0,:,:,0]) + 0.01
-    cax2 = axarr[0,1].imshow(res_BU[0,:,:,1]-vmin, norm=colors.LogNorm(vmin=np.min(res_BU[0,:,:,1])-vmin, vmax=np.max(res_BU[0,:,:,1])-vmin), interpolation='None', cmap=cmap, aspect='auto')
-    axarr[0,1].set_title(r"$\frac{\partial\, Im[\Sigma(\omega)]}{\partial \omega}$, IG $U=4$")
+    cax1 = axarr[0,0].imshow(d, interpolation='None', cmap=cmap, aspect='auto')#, norm=colors.LogNorm(vmin=np.min(d), vmax=np.max(d))
+    axarr[0,0].set_title(r"$-Im(\Sigma(0))$, initial guess $U=4$")
 
-    d = np.clip(res_BU[1,:,:,0],None, 0.) #clip unphysical negative values, they are noise from simulation
-    vmax = np.max(d) + 0.01
-    cax3 = axarr[1,0].imshow(-d+vmax, norm=colors.LogNorm(vmin=-np.min(d)+vmax, vmax=-np.max(d)+vmax), interpolation='None', cmap=cmap, aspect='auto')
-    axarr[1,0].set_title(r"$\log(-Im(\Sigma(0)))$, IG $U=0$")
+    d = np.clip(np.abs(res_BU[0,:,:,1]), None, 1.)
+    cax2 = axarr[0,1].imshow(d, interpolation='None', cmap=cmap, aspect='auto')#, norm=colors.LogNorm(vmin=np.min(d), vmax=np.max(d))
+    axarr[0,1].set_title(r"$\Big|\frac{\partial\, Im[\Sigma(\omega)]}{\partial \omega}\big|_{\omega=0}\Big|$, initial guess $U=4$")
 
-    vmin = np.min(res_BU[1,:,:,0]) + 0.01
-    cax4 = axarr[1,1].imshow(res_BU[1,:,:,1]-vmin, norm=colors.LogNorm(vmin=np.min(res_BU[1,:,:,1])-vmin, vmax=np.max(res_BU[1,:,:,1])-vmin), interpolation='None', cmap=cmap, aspect='auto')
-    axarr[1,1].set_title(r"$\frac{\partial\, Im[\Sigma(\omega)]}{\partial \omega}$, IG $U=0$")
+    d = np.clip(-res_BU[1,:,:,0],None, 2.) #clip unphysical negative values, they are noise from simulation
+    cax3 = axarr[1,0].imshow(d, interpolation='None', cmap=cmap, aspect='auto') #, norm=colors.LogNorm(vmin=np.min(d), vmax=np.max(d))
+    axarr[1,0].set_title(r"$-Im(\Sigma(0))$, initial guess $U=0$")
+
+    d = np.clip(np.abs(res_BU[1,:,:,1]), None, 1.)
+    cax4 = axarr[1,1].imshow(d, interpolation='None', cmap=cmap, aspect='auto')#, norm=colors.LogNorm(vmin=np.min(d), vmax=np.max(d))
+    axarr[1,1].set_title(r"$\Big|\frac{\partial\, Im[\Sigma(\omega)]}{\partial \omega}\big|_{\omega=0}\Big|$, initial guess $U=0$")
     for i in range(axarr.shape[0]):
-	    for ax in axarr[i,:]:
+        for ax in axarr[i,:]:
 		ax.set_yticks(np.arange(0,len(blist),5))
 		ax.set_yticklabels(blist[::5].astype(np.int))
 		ax.set_xticks(np.arange(0,len(ulist),6))
 		ax.set_xticklabels(ulist[::6])
-		ax.set_xlabel("U")
-		ax.set_ylabel(r"$\beta$")
+		ax.set_xlabel("U/D")
+		ax.set_ylabel(r"$\beta D$")
     divider = make_axes_locatable(axarr[0,0])
     cax = divider.append_axes('right', size=0.2, pad=0.05)
     fig.colorbar(cax1, cax=cax, orientation='vertical')
@@ -269,27 +274,26 @@ def checkLF(nPoints= 6, eps = 0.001, eps2 = 0.05):
     fig.colorbar(cax4, cax=cax, orientation='vertical')
     tikz_save("FL_check1.pgf")
     fig,axarr = plt.subplots(1,2)
-    axarr[0].imshow(-res_BU[0,:,:,2], cmap=mpl.cm.binary, interpolation='spline36', aspect='auto')
+    axarr[0].imshow(-res_BU[0,:,:,2], cmap=mpl.cm.binary, interpolation='None', aspect='auto')
     axarr[0].set_title(r"Valid LF, initial guess $U=4$")
     axarr[0].set_yticks(np.arange(0,len(blist),5))
     axarr[0].set_yticklabels(blist[::5].astype(np.int))
     axarr[0].set_xticks(np.arange(0,len(ulist),6))
     axarr[0].set_xticklabels(ulist[::6])
-    axarr[0].set_xlabel("U")
-    axarr[0].set_ylabel(r"$\beta$")
-    axarr[1].imshow(-res_BU[1,:,:,2], cmap=mpl.cm.binary, interpolation='spline36', aspect='auto')
+    axarr[0].set_xlabel("U/D")
+    axarr[0].set_ylabel(r"$\beta D$")
+    axarr[1].imshow(-res_BU[1,:,:,2], cmap=mpl.cm.binary, interpolation='None', aspect='auto')
     axarr[1].set_title(r"Valid LF, initial guess $U=0$")
     axarr[1].set_yticks(np.arange(0,len(blist),5))
     axarr[1].set_yticklabels(blist[::5].astype(np.int))
     axarr[1].set_xticks(np.arange(0,len(ulist),6))
     axarr[1].set_xticklabels(ulist[::6])
-    axarr[1].set_xlabel("U")
-    axarr[1].set_ylabel(r"$\beta$")
+    axarr[1].set_xlabel("U/D")
+    axarr[1].set_ylabel(r"$\beta D$")
     plt.show()
     tikz_save("FL_check2.pgf")
     #plt.savefig("FL_check2.pgf")
     return res_BU
-		
 
 def plotPD():
 	data_to0=se_data_to
@@ -332,20 +336,19 @@ def plotPD():
 	#imdiff = np.ma.masked_where(imdiff < 0.01, imdiff)
 	#imt0 = np.ma.masked_where(imt0.T < 0.01, imt0.T)
 	#imf0 = np.ma.masked_where(imf0.T < 0.01, imf0.T)
-	 
 
 	fig,ax = plt.subplots(1,2)
 	iax = ax[0].imshow(imt0, interpolation='nearest', cmap=cmap, aspect='auto')
 	divider = make_axes_locatable(ax[1])
- 	cax = divider.append_axes('right', size=0.2, pad=0.05)
+	cax = divider.append_axes('right', size=0.2, pad=0.05)
 	fig.colorbar(iax, cax=cax, orientation='vertical')
 	ax[0].set_yticks(np.arange(0,len(blist),3))
 	ax[0].set_yticklabels(blist[::3].astype(np.int))
 	ax[0].set_xticks(np.arange(0,len(ulist),3))
 	ax[0].set_xticklabels(ulist[::3])
-	ax[0].set_xlabel("U")
-	ax[0].set_ylabel(r"$\beta$")
-	ax[0].set_title(r"$Z(\beta, U)$, initial guess $U=0$")
+	ax[0].set_xlabel("U/D")
+	ax[0].set_ylabel(r"$\beta D$")
+	ax[0].set_title(r"$Z(\beta, U)$, initial guess $U/D=0$")
 
 	#fig,ax = plt.subplots()
 	iax = ax[1].imshow(imf0, interpolation='nearest', cmap=cmap, aspect='auto')
@@ -355,11 +358,11 @@ def plotPD():
 	ax[1].set_xticks(np.arange(0,len(ulist),3))
 	ax[1].set_xticklabels(ulist[::3])
 	divider = make_axes_locatable(ax[1])
- 	cax = divider.append_axes('right', size=0.2, pad=0.05)
+        cax = divider.append_axes('right', size=0.2, pad=0.05)
 	fig.colorbar(iax, cax=cax, orientation='vertical')
-	ax[1].set_xlabel("U")
-	ax[1].set_ylabel(r"$\beta$")
-	ax[1].set_title(r"$Z(\beta, U)$, initial guess $U=4$")
+	ax[1].set_xlabel("U/D")
+	ax[1].set_ylabel(r"$\beta D$")
+	ax[1].set_title(r"$Z(\beta, U)$, initial guess $U/D=4$")
 
 	fig,ax = plt.subplots()
 	cax = ax.imshow(imdiff, interpolation='nearest', cmap=cmap)
@@ -369,11 +372,18 @@ def plotPD():
 	ax.set_xticks(np.arange(0,len(ulist),3))
 	ax.set_xticklabels(ulist[::3])
 	#divider = make_axes_locatable(ax)
- 	#iax = divider.append_axes('right', size=0.2, pad=0.05)
-	#fig.colorbar(iax, cax=cax, orientation='vertical')
-	ax.set_xlabel("U")
-	ax.set_ylabel(r"$\beta$")
+	#iax = divider.append_axes('right', size=0.2, pad=0.05)
+	fig.colorbar(cax, orientation='vertical')
+	ax.set_xlabel("U/D")
+	ax.set_ylabel(r"$\beta D$")
 	ax.set_title(r"$Z(\beta, U)$ hysteresis")
 	plt.show()
-	
+        uc_of_b = np.zeros((nb,3))
+        bi = 0
+        for line in imdiff:
+            uc0 = ulist[np.argmax(t1 > 0.01)]
+            uc1 = ulist[-np.argmax(line[::-1] > 0.01) - 1]
+            uc_of_b[bi,:] = [blist[bi] ,uc0, uc1]
+            bi += 1
+        return uc_of_b
 
