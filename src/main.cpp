@@ -43,7 +43,7 @@ int main(int argc,char **argv)
     //DMFT::Config config(beta, mu, U, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, );
 
     
-    //DMFT::examples::_test_SOH(local, world, isGenerator);
+    DMFT::examples::_test_SOH(local, world, isGenerator);
     //DMFT::examples::_test_PT(local, world, isGenerator, true, 0.0);
     //DMFT::examples::_test_hysteresis(local, world, isGenerator);
     //
@@ -52,7 +52,7 @@ int main(int argc,char **argv)
     //DMFT::examples::_IPT_Z(local, world, isGenerator);
     //DMFT::examples::_test_average_PO(local, world, isGenerator);
     //
-    DMFT::examples::_test_hyb(local, world, isGenerator);
+    //DMFT::examples::_test_hyb(local, world, isGenerator);
 
     //Config conf(beta,mu,U,_CONFIG_maxMatsFreq);
     /*if (!sc)

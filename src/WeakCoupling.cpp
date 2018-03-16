@@ -6,7 +6,7 @@ namespace DMFT
 
     WeakCoupling::WeakCoupling(
             GreensFct *const g0, GreensFct * const gImp, const Config *const config, const RealT zeroShift, const unsigned int burninSteps):
-        config(config), g0(g0), gImp(gImp), zeroShift(zeroShift), burninSteps(burninSteps), expOrdAcc(config)
+        config(config), g0(g0), gImp(gImp), zeroShift(zeroShift), burninSteps(burninSteps), expOrdAcc(*config)
     {
         n 		= 0;
         steps 		= 0;
@@ -29,24 +29,28 @@ namespace DMFT
     {
     }
 
+    void WeakCoupling::writeExpOrder(IOhelper ioh)
+    {
+        expOrdAcc.writeResults(ioh);
+    }
+
     void WeakCoupling::computeImpGF(void)
     {
-        //expOrdAcc.writeResults();
-        long binCount = itBinsUP.size();
-        long itCount = gImp->getItGF().rows();
-        long mfCount = gImp->getMGF().rows();
+        RealT binCount = itBinsUP.size();
+        RealT itCount = gImp->getItGF().rows();
+        RealT mfCount = gImp->getMGF().rows();
         ImTG g_it = ImTG::Zero(itCount, 2);
         MatG g_wn = MatG::Zero(mfCount, 2);
         for(long j = 0; j< binCount; j++)
         {
-            RealT tp = j*config->beta/binCount;
+            RealT tp = j*config->beta/(binCount);
             const RealT bValUP = boost::accumulators::sum(itBinsUP[j]);
             const RealT bValDOWN = boost::accumulators::sum(itBinsDOWN[j]);
             if(bValUP)
             {
                 for(long i=0; i<itCount; i++)
                 {
-                    RealT t = i*config->beta/itCount;
+                    RealT t = i*config->beta/(itCount);
                     g_it(i,UP) += (*g0)(t-tp,UP)*bValUP;
                 }
 #ifdef MATSUBARA_MEASUREMENT
@@ -61,8 +65,8 @@ namespace DMFT
             {
                 for(long i=0; i<itCount; i++)
                 {
-                    RealT t = i*config->beta/itCount;
-                    g_it(i,UP) += (*g0)(t-tp,DOWN)*bValDOWN;
+                    RealT t = i*config->beta/(itCount);
+                    g_it(i,DOWN) += (*g0)(t-tp,DOWN)*bValDOWN;
                 }
 #ifdef MATSUBARA_MEASUREMENT
                 for(long k=0; k<mfCount;k++)
@@ -77,12 +81,34 @@ namespace DMFT
         gImp->setByT(g_it);
 #ifndef MATSUBARA_MEASUREMENT
         gImp->transformTtoM();
-#endif
+#else
         g_wn = g0->getMGF() - g0->getMGF()*g_wn/totalSign;
         gImp->setByMFreq(g_wn);
+        //gImp->transformMtoT();
+#endif
+        //gImp->transformMtoT();
+        reset();
     }
 
-
+    void WeakCoupling::reset()
+    {
+        n = 0;
+        totalSign = 0;
+        lastSign = 1;
+        steps = 0;
+        MatrixT tmp;
+        VectorT tmp2;
+        for(int s = 0; s< _CONFIG_maxSBins; s++)
+        {
+            itBinsUP[s] = AccT();
+            itBinsDOWN[s] = AccT();
+        }
+        M[UP] = tmp;
+        M[DOWN] = tmp;
+        gfCache[UP] = tmp2;
+        gfCache[DOWN] = tmp2;
+        expOrdAcc.reset();
+    }
 
     //TODO:	do this properly: accumulator, overflow, kahan, SBin not *beta, mats != tbins 
     void WeakCoupling::computeImpGF_OLD(void)
@@ -201,20 +227,32 @@ namespace DMFT
                 if ( zetap < A){                    					//compute A(n-1 <- n) (8.37) (8.44) - WeakCoupling::acceptanceR
                     // TODO: loop over spins
                     VLOG(3) << "Accepted";
-
-                    for(int s=DOWN; s < 2; s++){			                 	// compute acceptance rate
-                        if(rndConfPos < n-1){
-                            M[s].row(rndConfPos).swap(M[s].row(n-1));
-                            M[s].col(rndConfPos).swap(M[s].col(n-1));
+                    if(n == 1)
+                    {
+                        MatrixT tmp;
+                        VectorT tmp2;
+                        for(int s=DOWN; s < 2; s++){
+                            M[s] = tmp;
+                            gfCache[s] = tmp2;
                         }
-                        M[s].topLeftCorner(n-1,n-1) = (M[s].topLeftCorner(n-1,n-1) - M[s].topRightCorner(n-1,1)
-                                * M[s].bottomLeftCorner(1,n-1) / M[s](n-1,n-1)).eval();	//M = P-Q*R/S (8.45)
-                        M[s].conservativeResize(n-1,n-1);
+                        n = 0;
                     }
-                    swapConfigs(rndConfPos, n-1);    								// swap the same configs as in Ms
-                    popConfig();			   									// pop last one 
-                    //sign = 2*(A>0)-1;
-                    n -= 1;
+                    else
+                    {
+                        for(int s=DOWN; s < 2; s++){			                 	// compute acceptance rate
+                            if(rndConfPos < n-1){
+                                M[s].row(rndConfPos).swap(M[s].row(n-1));
+                                M[s].col(rndConfPos).swap(M[s].col(n-1));
+                            }
+                            M[s].topLeftCorner(n-1,n-1) = (M[s].topLeftCorner(n-1,n-1) - M[s].topRightCorner(n-1,1)
+                                    * M[s].bottomLeftCorner(1,n-1) / M[s](n-1,n-1)).eval();	//M = P-Q*R/S (8.45)
+                            M[s].conservativeResize(n-1,n-1);
+                        }
+                        swapConfigs(rndConfPos, n-1);    								// swap the same configs as in Ms
+                        popConfig();			   									// pop last one 
+                        //sign = 2*(A>0)-1;
+                        n -= 1;
+                    }
                 }
             }
 
@@ -288,8 +326,6 @@ namespace DMFT
         expOrdAcc(M[0].rows(), 0 );
         expOrdAcc(M[1].rows(), 1 );
 
-        //TODO: tmp
-        return;
         if(!n) return;
 #ifdef MEASUREMENT_SHIFT
         const RealT zeta = config->beta*u(r_shift);
@@ -306,7 +342,6 @@ namespace DMFT
         }
         tmpUP = M[UP]*tmpUP;
         tmpDOWN = M[DOWN]*tmpDOWN;
-        //TODO: accumulator with arbitrary precision
         for(int k=0;k<n;k++){		    // itBins(t)   = G0(t-t_k) * A_k
             RealT tau = std::get<0>(confs[k]) - zeta;
             const int sign2 = 2*(tau>0)-1;

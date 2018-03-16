@@ -18,7 +18,7 @@
 #include <algorithm>
 
 #define MEASUREMENT_SHIFT 1
-#define MATSUBARA_MEASUREMENT 1
+//#define MATSUBARA_MEASUREMENT 1
 #define FULL_STATISTICS 1
 
 namespace DMFT
@@ -59,6 +59,8 @@ namespace DMFT
 
             inline RealT expansionOrder(void) {return n;};
 
+            void writeExpOrder(IOhelper ioh);
+            void reset();
 
             /*!	@brief	Updates the time ordered spin configuration and the inverse
              *  		Weiss Greens function M by inserting or removing one configuration.
@@ -198,12 +200,13 @@ namespace DMFT
             void updateContribution(int sign);
             void updateContribution_OLD(int sign);
 
+
             /*! Call Weiss function G0(t1-t2, spin) - alpha(s_ext)_{t1-t2}
              */
             inline RealT g0Call(const RealT t1, const int spin, const int s_ext, const RealT t2) const
             {
                 const RealT t = t1-t2;
-                if(t != 0.0) return (*g0)(t,spin);
+                if(t != 0.0) return -(*g0)(t,spin);
                 return -(*g0)(0.0,spin) - (0.5 + (2*(s_ext==spin)-1)*zeroShift);
             }
             inline RealT g0Call_od(const RealT t1,const int spin,const RealT t2) const

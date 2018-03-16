@@ -34,7 +34,7 @@ class ExpOrderAcc
     typedef boost::iterator_range<std::vector<std::pair<RealT, RealT> >::iterator > HistogramT;
 
     public:
-        ExpOrderAcc(const Config *c): c(c), ioh(*c), expansionOrderAcc(FLAVORS, HistAccT(boost::accumulators::tag::density::num_bins = 20, boost::accumulators::tag::density::cache_size = 10000)) 
+        ExpOrderAcc(const Config c): c(c), expansionOrderAcc(FLAVORS, HistAccT(boost::accumulators::tag::density::num_bins = 20, boost::accumulators::tag::density::cache_size = 10000)) 
         {}
         
         inline void operator()(RealT val, unsigned int f = 0)
@@ -53,7 +53,7 @@ class ExpOrderAcc
             return res;
         }
 
-        void writeResults(std::string name = "")
+        void writeResults(IOhelper ioh, std::string name = "")
         {
             std::array<HistogramT, FLAVORS> histL;
             RealT mean = 0, var = 0, skew = 0, kurt = 0;
@@ -79,7 +79,7 @@ class ExpOrderAcc
                     i1 += 1; i+=1;
             }
             std::stringstream ss;
-            std::string filename = name + "ExpansionOrder_U"+std::to_string(c->U);
+            std::string filename = name + "ExpansionOrderb_"+std::to_string(c.beta)+"_U"+std::to_string(c.U);
             ss << "# mean\tvariance\tskewness\tkurtosis" << std::endl << mean << "\t" << var << "\t" << skew << "\t" << kurt << std::endl; 
             ss << "# l bound\tcount" << std::endl;
             for(int i =0; i < histOut.size(); i++)
@@ -89,9 +89,16 @@ class ExpOrderAcc
             ioh.writeToFile(ss.str(), filename);
         }
 
+        void reset()
+        {
+            for(int f = 0; f < FLAVORS; f++)
+            {
+                expansionOrderAcc[f] = HistAccT(boost::accumulators::tag::density::num_bins = 20, boost::accumulators::tag::density::cache_size = 10000);
+            }
+        }
+
     private:
-        const Config * c;
-        IOhelper ioh;
+        const Config c;
         std::vector<HistAccT> expansionOrderAcc;
 
 };

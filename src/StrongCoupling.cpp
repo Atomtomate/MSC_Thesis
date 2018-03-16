@@ -7,7 +7,7 @@
 namespace  DMFT
 {
     StrongCoupling::StrongCoupling(GreensFct* const hyb, GreensFct* const gImp, Config const * const config, const unsigned int burninSteps):
-    hyb(hyb), gImp(gImp), conf(config), burninSteps(burninSteps), segments(config), gImpLPoly(gImp, config), expOrd{config}
+    hyb(hyb), gImp(gImp), conf(config), burninSteps(burninSteps), segments(config), gImpLPoly(gImp, config), expOrd{*config}
     {
         //TODO: check for correct initialization of totN and totalSign
         steps 		= 0;
@@ -422,7 +422,7 @@ namespace  DMFT
 
     void StrongCoupling::computeImpGF(void)
     {
-        expOrd.writeResults();
+        //expOrd.writeResults();
         const long itCount = gImp->getItGF().rows();
         ImTG g_it = ImTG::Zero(_CONFIG_maxTBins, _CONFIG_spins);
         MatG g_mf = MatG::Zero(_CONFIG_maxMatsFreq, _CONFIG_spins);

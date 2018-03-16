@@ -22,6 +22,7 @@ class ImpSolver
         inline GreensFct *const getWeissGF(void)                              const { return	this->impl().getWeissGF(); }
         inline ExpOrderAcc<_CONFIG_spins> avgN(void)          const { return  this->impl().expansionOrder(); }
         inline RealT expansionOrder(void)                                         const { return  this->impl().avgN(); }
+        inline void reset(void)                                         const {  this->impl().reset(); }
 
     protected:
 

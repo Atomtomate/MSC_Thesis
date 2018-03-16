@@ -3,6 +3,9 @@ IPT*/
 CTINT*/
 obj/
 logs/
+tmp/
+bak/
+*bak*
 *.out
 *.in
 *.o

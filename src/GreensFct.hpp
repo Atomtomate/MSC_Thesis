@@ -53,7 +53,7 @@ namespace DMFT
 
         public:
             GreensFctBase(const RealT beta, const bool symmetric = false, bool fitTail = false, GFTail gft = GFTail()):
-                symmetric(symmetric), beta(beta), fft(beta), deltaIt(static_cast<RealT>(MAX_T_BINS)/beta), fit(fitTail), tailFitted(false), gft(gft)
+                symmetric(symmetric), beta(beta), fft(beta), deltaIt(static_cast<RealT>(MAX_T_BINS+1)/beta), fit(fitTail), tailFitted(false), gft(gft)
             {
                 g_it = ImTG::Zero(MAX_T_BINS, SPINS);
                 g_wn = MatG::Zero(MAX_M_FREQ, SPINS);
@@ -66,6 +66,24 @@ namespace DMFT
 
         virtual ~GreensFctBase(){}
         
+        bool compare(const GreensFctBase& other, const RealT eps = 0.1)
+        {
+        /*    if( (beta != other.beta) || (symmetric != other.symmetric)) return false;
+            for(int s = 0; s < SPINS; s++)
+            {
+                for(int i = 0; i < MAX_T_BINS; i ++)
+                {
+                    if (std::norm(g_it(i,s) - other.g_it(i,s)) > eps) return false;    
+                }
+                for(int n = 0; n < MAX_M_FREQ; n ++)
+                {
+                    if (std::norm(g_mf(n,s) - other.g_mf(n,s)) > eps) return false;    
+                }
+            }
+            LOG(INFO) << "equal";
+            return true;
+        */ return false;}
+
         GreensFctBase(const GreensFctBase& other): beta(other.beta), symmetric(other.symmetric), fit(other.fit), deltaIt(other.deltaIt), fft(other.beta)
         {
             if((beta != other.beta) || (symmetric != other.symmetric) || (fit != other.fit) || (deltaIt != other.deltaIt))
@@ -261,9 +279,10 @@ namespace DMFT
         {
             //REMARK: this implies that G(0) == G(0^-) 
             //if(t == 0.0) return g_it(1, spin);
-            const int sgn = 2*((t >= 0) && (t < beta))-1;
+            int sgn = 2*(t >= 0 )-1;
+            sgn = sgn*(2*(t < beta) - 1);
             //if(t<0){ t+=beta; return -1.0*g_it(tIndex(t), spin);}
-            return sgn*g_it( tIndex( t + (t<0)*beta ), spin);
+            return sgn*g_it( tIndex(t), spin);
         }
 
         inline VectorT operator() (const VectorT t, const int spin) const
@@ -330,7 +349,7 @@ namespace DMFT
                 res<< "# beta: " << beta << std::endl << "# symmetric storage: " << symmetric << std::endl;
                 for(int f = 0; f < SPINS; f++)
                 {
-                    res << "# Tail " << f << ":" << std::endl;
+                    res << "# Tail " << f << ":" << std::endl << "# : ";
                     for(int i = 0; i < TAIL_ORDER; i++){
                         res << expansionCoeffs[f][i] << "\t";
                     }
@@ -638,8 +657,10 @@ namespace DMFT
          *
          *  @return index for lookup in g_it
          */
-        inline int tIndex(const RealT t) const {
-            return ((static_cast<int>(t*deltaIt))%_CONFIG_maxTBins);
+        inline int tIndex(RealT t) const {
+            if(t < 0)
+                t += beta;
+            return ((static_cast<int>(t*deltaIt))%(_CONFIG_maxTBins-1));
             //if(symmetric && res >= _CONFIG_maxTBins/2)
             //    res = _CONFIG_maxTBins - res -1;
         }

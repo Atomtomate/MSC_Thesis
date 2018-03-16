@@ -354,47 +354,89 @@ namespace DMFT
         const RealT a	= 1.0;
         const RealT t	= D/2.0;
         const int burnin = 20000;
-        const RealT zeroShift = 0.505;
-        const RealT beta    = 40;
+        const RealT zeroShift = 0.510;
+        //const RealT beta    = 20;
+        LOG(ERROR) << "tttt";
 
         GFTail tail;
         tail.fitFct = &fit_sym_tail;
 
-        std::string descr = "CTINT"; 
+        std::string descr_IG_M = "CTINT_PD_IG_M"; 
+        std::string descr_IG_I = "CTINT_PD_IG_I"; 
         std::string descrTMP = "tmp"; 
         const std::string solverType = "CT-INT";
         if(isGenerator)
         {
-            for(RealT U_l : {1., 2.3, 4.})
+            for(RealT beta : {100, 110})// 80, 90}) //20, 25, 45, 50, 60, 70,})//, 
             {
-                const RealT U       = U_l;
-                const RealT mu      = U/2.0;
-                DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType);
-
-                DMFT::GreensFct* g0 = new DMFT::GreensFct(beta, true, true, tail);
-                DMFT::GreensFct* gImp = new DMFT::GreensFct(beta, true, true, tail);
-                DMFT::GreensFct* gLoc = new DMFT::GreensFct(beta, true, true, tail);
-                setBetheSemiCirc(*g0, D, config);
-                setBetheSemiCirc(*gImp, D, config);
-
-                LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator ;
-                /*{
-                DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
-                DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descrTMP, config, 0.0, impSolver, g0, gImp, D, false);
-                dmftSolver.solve(20, 700000, true, false);
-                }
+                DMFT::GreensFct* g0_bak = new DMFT::GreensFct(beta, true, true, tail);
+                DMFT::GreensFct* gImp_bak = new DMFT::GreensFct(beta, true, true, tail);
+                for(RealT U : {1.5,1.8,1.9,2.0,2.1, 2.2, 2.3, 2.4, 2.5, 2.6,2.7, 2.8, 3.0})
                 {
-                DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
-                DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descrTMP, config, 0.0, impSolver, g0, gImp, D, false);
-                dmftSolver.solve(10, 1000000, true, false);
-                }*/
-                DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
-                DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr, config, 0.0, impSolver, g0, gImp, D, false);
-                dmftSolver.solve(10, 5000000, true, true);
-                //(config.local.barrier)();
-                delete(g0);
-                delete(gImp);
-                delete(gLoc);
+                    const RealT mu      = U/2.0;
+                    DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType, descr_IG_M);
+
+                    DMFT::GreensFct* g0 = new DMFT::GreensFct(beta, true, true, tail);
+                    DMFT::GreensFct* gImp = new DMFT::GreensFct(beta, true, true, tail);
+                    DMFT::GreensFct* gLoc = new DMFT::GreensFct(beta, true, true, tail);
+                    setBetheSemiCirc(*g0, D, config);
+                    setBetheSemiCirc(*gImp, D, config);
+
+                    LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator ;
+                    /*{
+                        DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
+                        DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descrTMP, config, 0.0, impSolver, g0, gImp, D, false);
+                        dmftSolver.solve(20, 700000, true, false);
+                        impSolver.reset();
+                    }
+                    {
+                        DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
+                        DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descrTMP, config, 0.0, impSolver, g0, gImp, D, false);
+                        dmftSolver.solve(10, 1000000, true, false);
+                        impSolver.reset();
+                    }*/
+                    {
+                        DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
+                        DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr_IG_I, config, 0.0, impSolver, g0, gImp, D, false);
+                        dmftSolver.solve(70, 4000000, true, true);
+                        impSolver.reset();
+                    }
+                    //(config.local.barrier)();
+                    if(U == 3.0)
+                    {
+                        (*g0_bak) = (*g0);
+                        (*gImp_bak) = (*gImp);
+                    }
+                    delete(g0);
+                    delete(gImp);
+                    delete(gLoc);
+                }
+                for(RealT U : {1.5,1.8,1.9,2.0,2.1, 2.2, 2.3, 2.4, 2.5, 2.6,2.7, 2.8, 3.0})
+                {
+                    const RealT mu      = U/2.0;
+                    DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType, descr_IG_I);
+
+                    DMFT::GreensFct* g0 = g0_bak;
+                    DMFT::GreensFct* gImp = gImp_bak;
+                    setBetheSemiCirc(*g0, D, config);
+                    setBetheSemiCirc(*gImp, D, config);
+
+                    LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator ;
+                    {
+                        DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
+                        DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr_IG_I, config, 0.0, impSolver, g0, gImp, D, false);
+                        dmftSolver.solve(70, 4000000, true, true);
+                        impSolver.reset();
+                    }
+                    //(config.local.barrier)();
+                    if(U == 3.0)
+                    {
+                        (*g0_bak) = (*g0);
+                        (*gImp_bak) = (*gImp);
+                    }
+                    delete(g0);
+                    delete(gImp);
+                }
             }
         }
     }

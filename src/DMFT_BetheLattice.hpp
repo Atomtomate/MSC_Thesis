@@ -27,45 +27,55 @@ class DMFT_BetheLattice
             ioh.addGF(*g0,   g0Info);
             ioh.addGF(*gImp, gImpInfo);
             ioh.addGF(selfE, seLInfo);
+            wn_grid = MatG::Zero(_CONFIG_maxMatsFreq, _CONFIG_spins);
+            for(int n = 0; n < _CONFIG_maxMatsFreq; n++)
+            {
+                wn_grid(n,0) = ComplexT(0., mFreqS(n,config.beta));
+                wn_grid(n,1) = ComplexT(0., mFreqS(n,config.beta));
+            }
         }
 
         void solve(const unsigned int iterations, const unsigned long long updates, bool symmetricG0 = false, bool writeOut = true)
         {
             if(config.isGenerator)
             {
+                bool converged = false;
                 //IOhelper::plot(*g0, config.beta, "Weiss Function");
                 //TODO: move IO from generator to accumulators
-                for(unsigned int dmftIt = 1;dmftIt < iterations+1; dmftIt++)
+                for(unsigned int dmftIt = 1; dmftIt < iterations+1; dmftIt++)
                 {  
+                    ioh.setIteration(dmftIt);
+                    iSolver.reset();
                     for(long unsigned int i=1; i <= 5; i++){
                         iSolver.update(updates/5.0);
                         LOG(INFO) << "MC Walker [" << config.world.rank() << "] at "<< " (" << (20*i) << "%) of iteration " << dmftIt << ". expansion order: " << iSolver.expansionOrder();
                     }
-                    ioh.setIteration(dmftIt);
                     if(config.local.rank() == 0)
                     {
                         LOG(INFO) << "finished sampling. average expansion order: " << iSolver.expansionOrder();
                         LOG(INFO) << "measuring impurity Greens function";
                     }
+
+                    DMFT::GreensFct* gImp_bak = new DMFT::GreensFct(config.beta, true, true);
+                    /*(*gImp_bak) = (*gImp);
+                    if(gImp->compare(*gImp_bak)) 
+                        converged = true;
+                    */
                     iSolver.computeImpGF();
+                    gImp->setParaMagnetic();
                     if(config.local.rank() == 0)
                     {
                         LOG(INFO) << "forcing paramagnetic solution";
                         LOG(INFO) << "Writing results";
                     }
-                    if(!useHyb)
-                    {
-                        g0->shift(config.U/2.0);
-                        g0->markMSet();
-                        g0->transformMtoT();
-                    }
-                    if(config.local.rank() == 0) LOG(INFO) << "Computing new Weiss Green's function";
-                    //TODO: vectorize
-                    MatG tmpG0(_CONFIG_maxTBins,2);
+                    //gImp->setParaMagnetic();
                     MatG sImp(_CONFIG_maxMatsFreq, _CONFIG_spins);
-                    ImTG sImp_it(_CONFIG_maxTBins, _CONFIG_spins);
-                    IOhelper::plot(*gImp, config.beta, "Imp GF iteration " + std::to_string(dmftIt));
-                    exit(0);
+                    sImp = (g0->getMGF().cwiseInverse() - gImp->getMGF().cwiseInverse());
+                    //sImp = (wn_grid - (D/2.)*(D/2.)*gImp->getMGF() - gImp->getMGF().cwiseInverse() );
+                    selfE.setByMFreq(sImp);
+                    selfE.transformMtoT();
+                    //IOhelper::plot(*gImp, config.beta, "Imp GF iteration " + std::to_string(dmftIt));
+                    //IOhelper::plot(selfE, config.beta, "SE iteration " + std::to_string(dmftIt));
                     // DMFT equation
                     for(int n=0;n<_CONFIG_maxMatsFreq;n++){
                         const int n_g0 = n + ((int)g0->isSymmetric() - 1)*_CONFIG_maxMatsFreq/2;
@@ -83,59 +93,53 @@ class DMFT_BetheLattice
                                 if(n > 20)
                                     exit(0);
                                     */
-                                selfE.setByMFreq(n_se, s, iwn_se -  (D*D)*gImp->getByMFreq(n_se, s)/(4.0) - 1.0/gImp->getByMFreq(n_se, s) );
                             }
+                            //selfE.setByMFreq(n_se, s, iwn_se -  (D*D)*gImp->getByMFreq(n_se, s)/(4.0) - 1.0/gImp->getByMFreq(n_se, s) );
                             ComplexT tmp = ComplexT(0., mFreqS(n_g0, config.beta)) - (D/2.0)*(D/2.0)*gImp->getByMFreq(n_g0, s);
                             VLOG(5) << n << "=> "<< n_g0 << ": " << ComplexT(config.mu, mFreqS(n_g0,config.beta)) << " - " << (D/2.0)*(D/2.0)*gImp->getByMFreq(n_g0,s) << " = " << tmp;
                             g0->setByMFreq(n_g0, s, 1.0/tmp );
                         }
                     }
-                    g0->setParaMagnetic();
-                    if(useHyb)
+                    g0->markMSet();
+                    g0->transformMtoT();
+                    if(false && !useHyb)
                     {
-                        LOG(INFO) << "tf g0";
+                        g0->shift(config.U/2.0);
                         g0->markMSet();
                         g0->transformMtoT();
-                        selfE.markMSet();
-                        selfE.transformMtoT();
                     }
-                    else
-                    {
                         //only for WeakCoupling., this is now in update itself
-                        sImp = (g0->getMGF().cwiseInverse() - gImp->getMGF().cwiseInverse());
-                        selfE.setByMFreq(sImp);
-                        selfE.markMSet();
-                        selfE.transformMtoT();
                         //g0->shift(config.U/2.0);
                         //g0->markMSet();
                         //g0->transformMtoT();
-                    }
                     if(dmftIt == 1)
                     {
                         ioh.setIteration(0);
                         //ioh.writeToFile();
                     }
                     
-                    IOhelper::plot(*g0, config.beta, "Hyb Fct iteration " + std::to_string(dmftIt));
-                    IOhelper::plot(selfE, config.beta, "Self Energy iteration " + std::to_string(dmftIt));
-                    exit(0);
+                    //IOhelper::plot(*g0, config.beta, "Hyb Fct iteration " + std::to_string(dmftIt));
+                    //IOhelper::plot(selfE, config.beta, "Self Energy iteration " + std::to_string(dmftIt));
+                    //exit(0);
                     //
                     if(writeOut)
                     {
                         ioh.writeToFile();
                     }
-                    if(dmftIt == iterations)
+                    if((dmftIt > iterations-7 ) || converged)
                     {
                         statAcc(*gImp);
                         statAccSE(selfE);
                     }
-
+                    if(converged) break;
                 }
-                iSolver.avgN().writeResults(gImpInfo.filename);
                 statAcc.setGF(*gImp);
                 statAccSE.setGF(selfE);
-                ioh.writeFinalToFile(*gImp, gImpInfo, false, config.U, false);
-                ioh.writeFinalToFile(selfE, seLInfo, true, config.U, false);
+                LogInfos finalGI_info("GImp_b"+std::to_string(config.beta)+"_U" + std::to_string(config.U));
+                LogInfos finalSE_info("SelfE_b" +std::to_string(config.beta)+"_U" + std::to_string(config.U));
+                iSolver.avgN().writeResults(ioh, "");
+                ioh.writeFinalToFile(*gImp, finalGI_info, false, config.U, false);
+                ioh.writeFinalToFile(selfE, finalSE_info, true, config.U, false);
 
                 //config.world.send(0, static_cast<int>(MPI_MSG_TAGS::FINALIZE), 1 );
             }
@@ -164,6 +168,7 @@ class DMFT_BetheLattice
         const bool useHyb;
         RealT mixing;
 
+        MatG wn_grid;
         ImpSolver& iSolver;
         LogInfos	g0Info;
         LogInfos	gImpInfo;

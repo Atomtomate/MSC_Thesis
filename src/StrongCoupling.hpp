@@ -59,6 +59,8 @@ class StrongCoupling
         StrongCoupling(GreensFct* const hybr, GreensFct* const gImp, const Config *const config, const unsigned int burninSteps);
         virtual ~StrongCoupling();
 
+        void reset()
+        {}
 
         /**     Updates the time ordered spin configuration and the inverse
          *  weiss greens function M by inserting or removing one configuration.
