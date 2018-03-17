@@ -62,6 +62,7 @@ class DMFT_BetheLattice
                         converged = true;
                     */
                     iSolver.computeImpGF();
+                    iSolver.avgN().writeResults(ioh, "");
                     gImp->setParaMagnetic();
                     if(config.local.rank() == 0)
                     {
@@ -137,7 +138,6 @@ class DMFT_BetheLattice
                 statAccSE.setGF(selfE);
                 LogInfos finalGI_info("GImp_b"+std::to_string(config.beta)+"_U" + std::to_string(config.U));
                 LogInfos finalSE_info("SelfE_b" +std::to_string(config.beta)+"_U" + std::to_string(config.U));
-                iSolver.avgN().writeResults(ioh, "");
                 ioh.writeFinalToFile(*gImp, finalGI_info, false, config.U, false);
                 ioh.writeFinalToFile(selfE, finalSE_info, true, config.U, false);
 

@@ -207,7 +207,7 @@ namespace DMFT
             {
                 const RealT t = t1-t2;
                 if(t != 0.0) return -(*g0)(t,spin);
-                return -(*g0)(0.0,spin) - (0.5 + (2*(s_ext==spin)-1)*zeroShift);
+                return -(*g0)(0.0,spin) - (0.5 + (2*(s_ext==spin)-1)*(0.5+zeroShift));
             }
             inline RealT g0Call_od(const RealT t1,const int spin,const RealT t2) const
             {

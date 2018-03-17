@@ -26,6 +26,7 @@ class ExpOrderAcc
 {
     using HistAccT = boost::accumulators::accumulator_set< RealT,
           boost::accumulators::features< 
+            boost::accumulators::tag::count,
             boost::accumulators::tag::mean,
             boost::accumulators::tag::variance,
             boost::accumulators::tag::skewness,
@@ -36,9 +37,14 @@ class ExpOrderAcc
     public:
         ExpOrderAcc(const Config c): c(c), expansionOrderAcc(FLAVORS, HistAccT(boost::accumulators::tag::density::num_bins = 20, boost::accumulators::tag::density::cache_size = 10000)) 
         {}
+
+        virtual ~ExpOrderAcc(){
+            //LOG(ERROR) << "destroying exp order acc";
+        }
         
         inline void operator()(RealT val, unsigned int f = 0)
         {
+            //LOG(ERROR) << boost::accumulators::count(expansionOrderAcc[f]) << ", " << val << " : " << f;
             expansionOrderAcc[f](val);
         }
 
@@ -46,6 +52,8 @@ class ExpOrderAcc
         {
             if(f >= FLAVORS) LOG(ERROR) << "Invalid flavor!";
             std::vector<RealT> res(4);
+            LOG(ERROR) << "deactivated";
+            return res;
             res[0] = boost::accumulators::mean(expansionOrderAcc[f]);
             res[1] = boost::accumulators::variance(expansionOrderAcc[f]);
             res[2] = boost::accumulators::skewness(expansionOrderAcc[f]);
@@ -55,42 +63,30 @@ class ExpOrderAcc
 
         void writeResults(IOhelper ioh, std::string name = "")
         {
-            std::array<HistogramT, FLAVORS> histL;
-            RealT mean = 0, var = 0, skew = 0, kurt = 0;
-            for(int f = 0; f < FLAVORS; f++)
-            {
-                histL[f] = boost::accumulators::density(expansionOrderAcc[f]);
-                mean += boost::accumulators::mean(expansionOrderAcc[f]);
-                var += boost::accumulators::variance(expansionOrderAcc[f]);
-                skew += boost::accumulators::skewness(expansionOrderAcc[f]);
-                kurt += boost::accumulators::kurtosis(expansionOrderAcc[f]);
-            }
-            //TODO: this is a workaround, assuming <n_up> ~ <n_down> and
-            //FLAVORS == 2
-            if(FLAVORS > 2) LOG(WARNING) << "histogram computation for more than two flavors not yet implemented";
-            var /= FLAVORS; skew /= FLAVORS; kurt /= FLAVORS;
-
-            int i1 = 0, i2 = 0;
-            int i = 0;
-            std::vector<std::pair<RealT, RealT>> histOut;
-            while(i < histL[0].size())
-            {
-                    histOut.push_back(std::make_pair(histL[0][i1].first, histL[0][i1].second));
-                    i1 += 1; i+=1;
-            }
             std::stringstream ss;
             std::string filename = name + "ExpansionOrderb_"+std::to_string(c.beta)+"_U"+std::to_string(c.U);
-            ss << "# mean\tvariance\tskewness\tkurtosis" << std::endl << mean << "\t" << var << "\t" << skew << "\t" << kurt << std::endl; 
-            ss << "# l bound\tcount" << std::endl;
-            for(int i =0; i < histOut.size(); i++)
+            for(int f = 0; f < FLAVORS; f++)
             {
-                ss << histOut[i].first << "\t" << histOut[i].second << std::endl;
+                HistogramT histL = boost::accumulators::density(expansionOrderAcc[f]);
+                RealT mean = boost::accumulators::mean(expansionOrderAcc[f]);
+                RealT var = boost::accumulators::variance(expansionOrderAcc[f]);
+                RealT skew = boost::accumulators::skewness(expansionOrderAcc[f]);
+                RealT kurt = boost::accumulators::kurtosis(expansionOrderAcc[f]);
+                std::vector<std::pair<RealT, RealT>> histOut;
+                ss << "# Flavor: " << f << std::endl;
+                ss << "# mean\tvariance\tskewness\tkurtosis" << std::endl << mean << "\t" << var << "\t" << skew << "\t" << kurt << std::endl; 
+                ss << "# l bound\tcount" << std::endl;
+                for(int i =0; i < histL.size(); i++)
+                {
+                    ss << histL[i].first << "\t" << histL[i].second << std::endl;
+                }
             }
             ioh.writeToFile(ss.str(), filename);
         }
 
         void reset()
         {
+           // LOG(WARNING) << "resetting expansion order accumulator";
             for(int f = 0; f < FLAVORS; f++)
             {
                 expansionOrderAcc[f] = HistAccT(boost::accumulators::tag::density::num_bins = 20, boost::accumulators::tag::density::cache_size = 10000);

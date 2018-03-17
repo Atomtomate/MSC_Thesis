@@ -87,7 +87,6 @@ namespace DMFT
         //gImp->transformMtoT();
 #endif
         //gImp->transformMtoT();
-        reset();
     }
 
     void WeakCoupling::reset()
@@ -323,8 +322,9 @@ namespace DMFT
         //if(!sign) sign = lastSign;		    // update got rejected, use last sign
         //lastSign = sign;			    // remember last sign
         totalSign += 1;//sign;
-        expOrdAcc(M[0].rows(), 0 );
-        expOrdAcc(M[1].rows(), 1 );
+
+        expOrdAcc(n, 0 );
+        expOrdAcc(n, 1 );
 
         if(!n) return;
 #ifdef MEASUREMENT_SHIFT
