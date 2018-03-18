@@ -18,7 +18,7 @@
 #include <algorithm>
 
 #define MEASUREMENT_SHIFT 1
-//#define MATSUBARA_MEASUREMENT 1
+#define MATSUBARA_MEASUREMENT 1
 #define FULL_STATISTICS 1
 
 namespace DMFT

@@ -78,6 +78,7 @@ class DMFT_BetheLattice
                     //IOhelper::plot(*gImp, config.beta, "Imp GF iteration " + std::to_string(dmftIt));
                     //IOhelper::plot(selfE, config.beta, "SE iteration " + std::to_string(dmftIt));
                     // DMFT equation
+                    RealT distance = 0.;
                     for(int n=0;n<_CONFIG_maxMatsFreq;n++){
                         const int n_g0 = n + ((int)g0->isSymmetric() - 1)*_CONFIG_maxMatsFreq/2;
                         const int n_se = n + ((int)selfE.isSymmetric() - 1)*_CONFIG_maxMatsFreq/2;
@@ -98,11 +99,21 @@ class DMFT_BetheLattice
                             //selfE.setByMFreq(n_se, s, iwn_se -  (D*D)*gImp->getByMFreq(n_se, s)/(4.0) - 1.0/gImp->getByMFreq(n_se, s) );
                             ComplexT tmp = ComplexT(0., mFreqS(n_g0, config.beta)) - (D/2.0)*(D/2.0)*gImp->getByMFreq(n_g0, s);
                             VLOG(5) << n << "=> "<< n_g0 << ": " << ComplexT(config.mu, mFreqS(n_g0,config.beta)) << " - " << (D/2.0)*(D/2.0)*gImp->getByMFreq(n_g0,s) << " = " << tmp;
-                            g0->setByMFreq(n_g0, s, 1.0/tmp );
+                            tmp = 1./tmp;
+                            ComplexT old = g0->getByMFreq(n_g0,s);
+                            if(n < 128)
+                                distance += std::abs(tmp-old);
+                            g0->setByMFreq(n_g0, s,  (1-mixing)*tmp+mixing*old );
                         }
                     }
                     g0->markMSet();
                     g0->transformMtoT();
+                    LOG(INFO) << "distance: " << distance;
+                    if(distance < 0.00001 && dmftIt > 3)
+                    {
+                        converged = true;
+                        LOG(INFO) << "converged in iteration " << dmftIt;
+                    }
                     if(false && !useHyb)
                     {
                         g0->shift(config.U/2.0);

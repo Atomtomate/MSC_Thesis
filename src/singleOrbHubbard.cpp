@@ -354,9 +354,8 @@ namespace DMFT
         const RealT a	= 1.0;
         const RealT t	= D/2.0;
         const int burnin = 20000;
-        const RealT zeroShift = 0.015;
+        const RealT zeroShift = 0.1;
         //const RealT beta    = 20;
-        LOG(ERROR) << "tttt";
 
         GFTail tail;
         tail.fitFct = &fit_sym_tail;
@@ -365,13 +364,16 @@ namespace DMFT
         std::string descr_IG_IN = "da_CTINT_PD_IG_I"; 
         std::string descrTMP = "tmp"; 
         const std::string solverType = "CT-INT";
+        std::vector Ulist = {3.0, 1.0, 1.2, 2.8, 1.4, 2.6, 1.6, 2.0 ,1.8, 2.2};
+        //std::vector Ulist = {2.8, 1.0,2.6, 2.0 ,2.4, 2.2};
+        //std::vector Ulist = {1.0, 3.0, 1.4, 2.6, 1.8, 2.2};
         if(isGenerator)
         {
-            for(RealT beta : {30, 55})// 80, 90}) //20, 25, 45, 50, 60, 70,})//, 
+            for(RealT beta : {100})// 80, 90}) //20, 25, 45, 50, 60, 70,})//, 
             {
                 DMFT::GreensFct* g0_bak = new DMFT::GreensFct(beta, true, true, tail);
                 DMFT::GreensFct* gImp_bak = new DMFT::GreensFct(beta, true, true, tail);
-                for(RealT U : {1.0, 3.0, 1.2, 2.8, 1.4, 2.6, 1.6, 2.4, 1.8, 2.0, 2.2})
+                for(RealT U : Ulist)
                 {
                     const RealT mu      = U/2.0;
                     DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType, descr_IG_ME);
@@ -382,7 +384,7 @@ namespace DMFT
                     setBetheSemiCirc(*g0, D, config);
                     setBetheSemiCirc(*gImp, D, config);
 
-                    LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator ;
+                    LOG(INFO) << "running beta = " << beta << ", U = " << U << ", initial guess metal";
                     /*{
                         DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
                         DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descrTMP, config, 0.0, impSolver, g0, gImp, D, false);
@@ -397,8 +399,8 @@ namespace DMFT
                     }*/
                     {
                         DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
-                        DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr_IG_ME, config, 0.0, impSolver, g0, gImp, D, false);
-                        dmftSolver.solve(60, 4000000, true, true);
+                        DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr_IG_ME, config, 0.7, impSolver, g0, gImp, D, false);
+                        dmftSolver.solve(50, 2000000, true, true);
                         impSolver.reset();
                     }
                     //(config.local.barrier)();
@@ -411,7 +413,7 @@ namespace DMFT
                     delete(gImp);
                     delete(gLoc);
                 }
-                for(RealT U : {1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0})
+                for(RealT U : Ulist)
                 {
                     const RealT mu      = U/2.0;
                     DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType, descr_IG_IN);
@@ -423,11 +425,11 @@ namespace DMFT
                     setBetheSemiCirc(*g0, D, config);
                     setBetheSemiCirc(*gImp, D, config);
 
-                    LOG(INFO) << "initializing rank " << config.world.rank() << ". isGenerator ==" << config.isGenerator ;
+                    LOG(INFO) << "running beta = " << beta << ", U = " << U << ", initial guess insulator";
                     {
                         DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
-                        DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr_IG_IN, config, 0.0, impSolver, g0, gImp, D, false);
-                        dmftSolver.solve(60, 4000000, true, true);
+                        DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr_IG_IN, config, 0.7, impSolver, g0, gImp, D, false);
+                        dmftSolver.solve(50, 2000000, true, true);
                         impSolver.reset();
                     }
                     //(config.local.barrier)();

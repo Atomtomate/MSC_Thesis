@@ -84,7 +84,7 @@ namespace DMFT
 #else
         g_wn = g0->getMGF() - g0->getMGF()*g_wn/totalSign;
         gImp->setByMFreq(g_wn);
-        //gImp->transformMtoT();
+        gImp->transformMtoT();
 #endif
         //gImp->transformMtoT();
     }
