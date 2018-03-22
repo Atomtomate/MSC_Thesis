@@ -5,6 +5,7 @@
 #include "GreensFct.hpp"
 #include "ImpSolver.hpp"
 #include "ExpOrderAcc.hpp"
+#include "FastMatrixUpdate.hpp"
 
 #include <boost/serialization/vector.hpp>
 #include <boost/accumulators/accumulators.hpp>
@@ -20,6 +21,8 @@
 #define MEASUREMENT_SHIFT 1
 #define MATSUBARA_MEASUREMENT 1
 #define FULL_STATISTICS 1
+#define _CONFIG_INT_DEBUG 0
+
 
 namespace DMFT
 {
@@ -130,48 +133,47 @@ namespace DMFT
                 inline bool operator()(const SConfig& lhs, const SConfig& rhs) const {
                     return std::get<0>(lhs) < std::get<0>(rhs);}
             };
-            typedef std::set<SConfig, compare> SConfigTOL;  				// Time orderer list (set)
+            typedef std::set<SConfig, compare> SCo2nfigTOL;  				// Time orderer list (set)
             typedef std::vector<SConfig> SConfigSOL; 						// Ordered by time of generation
 #ifdef TIME_ORDERED_CONFIG_LIST
-            typedef SConfigTOL SConfigL; 								// TODO: switch to Boost::set
+            /*typedef SConfigTOL SConfigL; 								// TODO: switch to Boost::set
             inline void pushConfig(const SConfig& c){
                 confs.insert(c);
             }
             inline void deleteConfig(const int pos){
                 auto sConfIt = confs.begin();
                 std::advance(sConfIt, pos);
-            }
+            }*/
 #else															// TODO: reseve size
             typedef SConfigSOL SConfigL;
             inline void pushConfig(const SConfig& c){
                 confs.push_back(c);
-                const auto gfSize = gfCache[UP].size();
-                gfCache[UP].conservativeResize(gfSize+1);
-                gfCache[UP](gfSize) = (*g0)(std::get<0>(c),UP);
-                gfCache[DOWN].conservativeResize(gfSize+1);
-                gfCache[DOWN](gfSize) = (*g0)(std::get<0>(c),DOWN);
+                //const auto gfSize = gfCache[UP].size();
+                //gfCache[UP].conservativeResize(gfSize+1);
+                //gfCache[UP](gfSize) = (*g0)(std::get<0>(c),UP);
+                //gfCache[DOWN].conservativeResize(gfSize+1);
+                //gfCache[DOWN](gfSize) = (*g0)(std::get<0>(c),DOWN);
             }
             //TODO: erase requires non const lvalue, implement cache
             inline void deleteConfig(const int pos){
                 confs.erase(confs.begin() + pos);
-                LOG(WARNING) << "delete cache not implemented yet";
             }
             inline void popConfig(void){
                 confs.pop_back();
-                const auto gfSize = gfCache[UP].size();
-                gfCache[UP].conservativeResize(gfSize-1);
-                gfCache[DOWN].conservativeResize(gfSize-1);
+                //const auto gfSize = gfCache[UP].size();
+                //gfCache[UP].conservativeResize(gfSize-1);
+                //gfCache[DOWN].conservativeResize(gfSize-1);
             }
 
             inline void swapConfigs(const int pos1, const int pos2){
                 std::swap(confs[pos1], confs[pos2]);
-                RealT tmp;
+                /*RealT tmp;
                 tmp = gfCache[UP](pos1);
                 gfCache[UP](pos1) = gfCache[UP](pos2);
                 gfCache[UP](pos2) = tmp;
                 tmp = gfCache[DOWN](pos1);
                 gfCache[DOWN](pos1) = gfCache[DOWN](pos2);
-                gfCache[DOWN](pos2) = tmp;
+                gfCache[DOWN](pos2) = tmp;*/
             }
 #endif
             trng::yarn2 r_time, r_spin, r_insert, r_accept, r_shift; // random number engines
@@ -184,12 +186,12 @@ namespace DMFT
 
             const Config * const config;
             std::array<MatrixT,2> M;
-            std::array<VectorT,2> gfCache;	                // cached access to Weiss GF at current vertex points
+            //std::array<VectorT,2> gfCache;	                // cached access to Weiss GF at current vertex points
             SConfigL confs;
 
             unsigned long steps;					// number of updates
             const unsigned int burninSteps;		// throw away some steps at the start
-            int lastSign;						// needed when proposal is rejected
+            int currentSign;						// needed when proposal is rejected
             long totalSign;
             int n; 					// expansion order (number of used rows/cols)
             ExpOrderAcc<_CONFIG_spins> expOrdAcc;

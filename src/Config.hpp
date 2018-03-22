@@ -46,10 +46,10 @@ namespace DMFT
     // redundancy
     static constexpr int _CONFIG_maxLPoly = 20;
     static constexpr int _CONFIG_tailOrder = 6;
-    static constexpr int _CONFIG_maxMatsFreq = 4200;//4096;//4096;		// frequencies go from maxMatsFreq/2 to maxMatsFreq/2 - 1
+    static constexpr int _CONFIG_maxMatsFreq = 4096;//4096;		// frequencies go from maxMatsFreq/2 to maxMatsFreq/2 - 1
     static constexpr int _CONTIG_minMF    = -static_cast<int>(_CONFIG_maxMatsFreq/2.0);
     static constexpr int _CONFIG_maxTBins =	2*_CONFIG_maxMatsFreq;//1024; 		// (default default 131072, 65536) powers of 2 make fft faster, both bins need to be equal for FFT
-    static constexpr int _CONFIG_maxSBins = 3*8192;//16384;
+    static constexpr int _CONFIG_maxSBins = 4*8192;//16384;
     static constexpr int _CONFIG_spins = 2;
     enum SPIN {DOWN = 0, UP = 1};
     enum class MPI_MSG_TAGS: char {SAMPLING_END = 0, DATA = 1, BROADCAST = 2, FINALIZE = 3};

@@ -11,7 +11,7 @@ namespace DMFT
         n 		= 0;
         steps 		= 0;
         totalSign	= 0;
-        lastSign	= 1;
+        currentSign	= 1;
         r_time.split(5, 0);
         r_spin.split(5, 1);
         r_insert.split(5, 2);
@@ -41,6 +41,7 @@ namespace DMFT
         RealT mfCount = gImp->getMGF().rows();
         ImTG g_it = ImTG::Zero(itCount, 2);
         MatG g_wn = MatG::Zero(mfCount, 2);
+        RealT intFac = config->beta/binCount;
         for(long j = 0; j< binCount; j++)
         {
             RealT tp = j*config->beta/(binCount);
@@ -48,52 +49,53 @@ namespace DMFT
             const RealT bValDOWN = boost::accumulators::sum(itBinsDOWN[j]);
             if(bValUP)
             {
-                for(long i=0; i<itCount; i++)
-                {
-                    RealT t = i*config->beta/(itCount);
-                    g_it(i,UP) += (*g0)(t-tp,UP)*bValUP;
-                }
 #ifdef MATSUBARA_MEASUREMENT
                 for(long k=0; k<mfCount;k++)
                 {
                     RealT mfreq = gImp->isSymmetric() ? mFreqS(k,config->beta) : mFreq(k, config->beta);
                     g_wn(k,UP) += std::exp(ComplexT(0.0,mfreq*tp))*bValUP;
                 }
+#else
+                for(long i=0; i<itCount; i++)
+                {
+                    RealT t = i*config->beta/(itCount);
+                    g_it(i,UP) += (*g0)(t-tp,UP)*bValUP;
+                }
 #endif
             }
             if(bValDOWN)
             {
-                for(long i=0; i<itCount; i++)
-                {
-                    RealT t = i*config->beta/(itCount);
-                    g_it(i,DOWN) += (*g0)(t-tp,DOWN)*bValDOWN;
-                }
 #ifdef MATSUBARA_MEASUREMENT
                 for(long k=0; k<mfCount;k++)
                 {
                     RealT mfreq = gImp->isSymmetric() ? mFreqS(k,config->beta) : mFreq(k, config->beta);
                     g_wn(k,DOWN) += std::exp(ComplexT(0.0,mfreq*tp))*bValDOWN;
                 }
+#else
+                for(long i=0; i<itCount; i++)
+                {
+                    RealT t = i*config->beta/(itCount);
+                    g_it(i,DOWN) += (*g0)(t-tp,DOWN)*bValDOWN;
+                }
 #endif
             }
         }
-        g_it = g0->getItGF() - g_it/totalSign;
-        gImp->setByT(g_it);
-#ifndef MATSUBARA_MEASUREMENT
-        gImp->transformTtoM();
-#else
+#ifdef MATSUBARA_MEASUREMENT
         g_wn = g0->getMGF() - g0->getMGF()*g_wn/totalSign;
         gImp->setByMFreq(g_wn);
         gImp->transformMtoT();
+#else
+        g_it = g0->getItGF() - g_it/totalSign;
+        gImp->setByT(g_it);
+        gImp->transformTtoM();
 #endif
-        //gImp->transformMtoT();
     }
 
     void WeakCoupling::reset()
     {
         n = 0;
         totalSign = 0;
-        lastSign = 1;
+        currentSign = 1;
         steps = 0;
         MatrixT tmp;
         VectorT tmp2;
@@ -104,8 +106,9 @@ namespace DMFT
         }
         M[UP] = tmp;
         M[DOWN] = tmp;
-        gfCache[UP] = tmp2;
-        gfCache[DOWN] = tmp2;
+        confs.clear();
+        //gfCache[UP] = tmp2;
+        //gfCache[DOWN] = tmp2;
         expOrdAcc.reset();
     }
 
@@ -155,16 +158,16 @@ namespace DMFT
                     //const RealT alpha = 0.5 + (2*s-1)*s_n*(0.5 + zeroShift);	                        // for 0 shift: \in {0,1}
                     // g0Call(0.0, s, s_n, 0.0)
                     
-                    Sp[DOWN]  = g0Call(0.0, s_n, DOWN, 0.0);
-                    Sp[UP]    = g0Call(0.0, s_n, UP, 0.0);
+                    Sp[DOWN]  = g0Call(0.0, DOWN, s_n, 0.0);
+                    Sp[UP]    = g0Call(0.0, UP, s_n, 0.0);
                     A = -Sp[DOWN]*Sp[UP]*config->beta*config->U;                                          // -b*U*detRatio/(n+1)
-                    if(A < 0 && A < -0.01) LOG(WARNING) << "Acceptance rate for insertion negative. n = 0, A=" << A; //Sp[DOWN]: " << Sp[DOWN] << ", SP[UP]: " << Sp[UP];
                     VLOG(3) << "Acceptance rate: " << A;
                     if(zetap < A){			                		                // propose insertion
                         VLOG(3) << "accepted";
                         M[UP] = Eigen::MatrixXd::Zero(1,1); M[DOWN] = Eigen::MatrixXd::Zero(1,1);
-                        M[UP] << 1.0/Sp[UP];                M[DOWN] << 1.0/Sp[DOWN];
+                        M[UP](0,0) = 1.0/Sp[UP];                M[DOWN](0,0) = 1.0/Sp[DOWN];
                         pushConfig(std::make_tuple(t_n, s_n));
+                        currentSign = (2*(A>=0.)-1)*currentSign;
                         n = 1;
                         //sign = 2*(A>0)-1;
                     }
@@ -172,17 +175,19 @@ namespace DMFT
                     A = -config->beta*config->U/(static_cast<RealT>(n)+1);                                // -b*U*detRatio/(n+1)
                     RowVectorT R[2];
                     VectorT Q[2];
-                    RealT tmp;
-
-                    // assume down == 0 for performance
-                    for(int s=DOWN; s < 2; s++){			                 	        // compute acceptance rate
+                    for(int s=0; s < _CONFIG_spins; s++){			                 	        // compute acceptance rate
                         RealT r_data[n];
                         RealT q_data[n];
-                        for(int i=0; i<n;i++ ){
-                            const RealT tau = t_n - std::get<0>(confs[i]);
+                        for(int i=0; i<n; i++){
+                            RealT tau = t_n - std::get<0>(confs[i]);
+                            if(tau == 0.)
+                            {
+                                t_n += 0.00001;
+                                tau += 0.00001;
+                            }
                             //if(tau == 0.0) LOG(WARNING) << "off-diagonal G(0) sampled!";
-                            r_data[i] = g0Call_od(t_n, s, std::get<0>(confs[i]));		        // (8.34) Generate new elements for M from Weiss Greens fct
-                            q_data[i] = g0Call_od(std::get<0>(confs[i]), s,t_n);
+                            r_data[i] = g0Call(t_n, s, s_n, std::get<0>(confs[i]));		        // (8.34) Generate new elements for M from Weiss Greens fct
+                            q_data[i] = g0Call(std::get<0>(confs[i]), s, std::get<1>(confs[i]), t_n);
                         }
                         R[s] = Eigen::Map<RowVectorT>(r_data,n);
                         Q[s] = Eigen::Map<VectorT>(q_data,n);
@@ -190,24 +195,15 @@ namespace DMFT
                         Sp[s]= 1.0/tmp;	                                	// (8.39) 
                         A *= tmp;
                     }
-                    //if(A<0 && A < -0.01) LOG(WARNING) << "Acceptance rate for insertion negative. n = " << n << ", A = " << A;
-                    /*  if(A<0) LOG(WARNING) << "Acceptance rate for insertion negative. n = " << n << ", A = " << A << ", s_n: " << s_n
-                        << "\n (*g0)(0, DOWN): " << (*g0)(0.0,DOWN) << " -> " << (*g0)(0.0,DOWN) - (0.5 + (2*(s_n==DOWN)-1)*zeroShift) <<  ", tmp[down]: " << R[DOWN]*M[DOWN]*Q[DOWN]
-                        << "\n  (*g0)(0, UP): " << (*g0)(0.0,UP)  << " -> " << (*g0)(0.0,UP) - (0.5 + (2*(s_n==UP)-1)*zeroShift) << ", tmp[up]: " << R[UP]*M[UP]*Q[UP];
-                        */
                     VLOG(3) << "Acceptance rate: " << A;
                     if (zetap < A){ 		            	                	                // compute A(n+1 <- n) (8.36) (8.39)
                         VLOG(3) << "Accepted\n";
                         pushConfig(std::make_tuple(t_n, s_n));
-                        // assume down == 0 for performance
-                        for(int s=DOWN; s < 2; s++){			                 	        // compute acceptance rate
-                            M[s].conservativeResize(n+1,n+1);
-                            M[s](n,n)			         =  Sp[s];               				// (8.40)
-                            M[s].topRightCorner(n,1).noalias()	 = -(M[s].topLeftCorner(n,n)*Q[s])*Sp[s];		// (8.41)
-                            M[s].bottomLeftCorner(1,n).noalias() = -Sp[s]*(R[s]*M[s].topLeftCorner(n,n));
-                            M[s].topLeftCorner(n,n)		 += M[s].topRightCorner(n,1) * M[s].bottomLeftCorner(1,n)/Sp[s];
+                        for(int s=0; s < _CONFIG_spins; s++){			                 	        // compute acceptance rate
+                            util::MInc(&(M[s]), R[s], Q[s], Sp[s], 0, false);
                             //sign = 2*(A>0)-1;
                         }
+                        currentSign = (2*(A>=0.)-1)*currentSign;
                         n += 1;
                     }
                 }										// inserted SConfig
@@ -218,58 +214,59 @@ namespace DMFT
                 t_n *=n;
                 VLOG(2) << "Trying to remove configuration";
                 int rndConfPos = static_cast<int>(t_n);
-                RealT A = -static_cast<RealT>(n)/(config->beta*config->U);   //QUESTION: - missing here, go through proof again
+                RealT A = -static_cast<RealT>(n)/(config->beta*config->U);
                 Sp[DOWN] = M[DOWN](rndConfPos,rndConfPos);					// (8.37)
                 Sp[UP] = M[UP](rndConfPos,rndConfPos);						// (8.37)
                 A *= Sp[0]*Sp[1];
-                if(A<0 && A < -0.01) LOG(WARNING) << "Acceptance rate for insertion negative. n = " << n << ", A = " << A;
                 if ( zetap < A){                    					//compute A(n-1 <- n) (8.37) (8.44) - WeakCoupling::acceptanceR
                     // TODO: loop over spins
                     VLOG(3) << "Accepted";
                     if(n == 1)
                     {
-                        MatrixT tmp;
-                        VectorT tmp2;
                         for(int s=DOWN; s < 2; s++){
-                            M[s] = tmp;
-                            gfCache[s] = tmp2;
+                            M[s].resize(0, 0);
                         }
+                        deleteConfig(0);
                         n = 0;
                     }
                     else
                     {
                         for(int s=DOWN; s < 2; s++){			                 	// compute acceptance rate
-                            if(rndConfPos < n-1){
-                                M[s].row(rndConfPos).swap(M[s].row(n-1));
-                                M[s].col(rndConfPos).swap(M[s].col(n-1));
-                            }
-                            M[s].topLeftCorner(n-1,n-1) = (M[s].topLeftCorner(n-1,n-1) - M[s].topRightCorner(n-1,1)
-                                    * M[s].bottomLeftCorner(1,n-1) / M[s](n-1,n-1)).eval();	//M = P-Q*R/S (8.45)
-                            M[s].conservativeResize(n-1,n-1);
+                            util::MDec(&(M[s]), rndConfPos);
                         }
-                        swapConfigs(rndConfPos, n-1);    								// swap the same configs as in Ms
-                        popConfig();			   									// pop last one 
+                        deleteConfig(rndConfPos);
                         //sign = 2*(A>0)-1;
                         n -= 1;
                     }
+                    currentSign = (2*(A>=0.)-1)*currentSign;
                 }
+            }
+            if(A < 0)
+                LOG(WARNING) << "Acceptance rate negative. A = " << A << ", n = " << n << ", k -> " << 2*(zeta>0.5)-1;
+            if(n%50000 == 0)
+            {
+              for(int s=0;s<_CONFIG_spins;s++)
+                  M[s] = rebuildM(s);
             }
 
             VLOG(3) << "before updateContribution. n = " << n;;
-            /*#ifdef DEBUG_MODE
+            if(_CONFIG_INT_DEBUG)
+            {
               if(n>0){
-              acceptanceR();
               for(int s=0;s<_CONFIG_spins;s++){
-              LOG(DEBUG) << "rebuilt M: " << rebuildM(s);
-              LOG(DEBUG) << "actual M: " << Ms[s];
+                   auto Mr = rebuildM(s);
+                   if(!Mr.isApprox(M[s], 1.e-8))
+                   {
+                       //LOG(ERROR) << "expected \n" << Mr << " \n but got \n " << M[s] << "\n difference: \n" << Mr - M[s] << "\n\n\n\n" <<  (Mr - M[s]).maxCoeff();
+                       LOG(ERROR) <<"Fast matrix update failed in step " + std::to_string(steps);
+                       //throw std::logic_error("Fast matrix update failed in step " + std::to_string(steps));
+                   }
               }
-            //static_assert( (Ms[0] - rebuildM(0)).norm() < 0.001, "Ms[0] matrix not equal to explicit inverse");
-            //static_assert( (Ms[1] - rebuildM(1)).norm() < 0.001, "Ms[1] matrix not equal to explicit inverse");
             }
-#endif*/
+            }
 
-            //updateContribution_OLD(1); //TODO: for now assume no sign problem
-            updateContribution(1); //TODO: for now assume no sign problem
+            //updateContribution_OLD(1);
+            updateContribution(1);
 
 
         }
@@ -283,8 +280,6 @@ namespace DMFT
     {
         if(steps < burninSteps) return;	    // return while still in burn in period
         //TODO: tmp sign 
-        if(!sign) sign = lastSign;
-        lastSign = sign;
         if(!n)
         {
             std::vector<RealT> tmpVec = {static_cast<RealT>(sign)};
@@ -319,9 +314,8 @@ namespace DMFT
         VLOG(3) << "entering update";
         if(steps < burninSteps) return;	    // return while still in burn in period
 
-        //if(!sign) sign = lastSign;		    // update got rejected, use last sign
-        //lastSign = sign;			    // remember last sign
-        totalSign += 1;//sign;
+        currentSign = sign*currentSign;			    // remember last sign
+        totalSign += 1;//currentSign;
 
         expOrdAcc(n, 0 );
         expOrdAcc(n, 1 );
@@ -344,7 +338,7 @@ namespace DMFT
         tmpDOWN = M[DOWN]*tmpDOWN;
         for(int k=0;k<n;k++){		    // itBins(t)   = G0(t-t_k) * A_k
             RealT tau = std::get<0>(confs[k]) - zeta;
-            const int sign2 = 2*(tau>0)-1;
+            const int sign2 = 2*(tau>=0.)-1;
             const int index = static_cast<int>(_CONFIG_maxSBins * (tau + (tau<0)*config->beta)/config->beta );
             itBinsDOWN[index](sign2*sign*tmpDOWN(k));
             itBinsUP[index](sign2*sign*tmpUP(k));
@@ -354,7 +348,7 @@ namespace DMFT
 
     MatrixT WeakCoupling::rebuildM(int spin)
     {
-        LOG(DEBUG) << "manually rebuilding M matrix";
+        //LOG(DEBUG) << "manually rebuilding M matrix";
         MatrixT Minv(n,n);
         for(int i=0;i<n;i++){
             //const RealT alpha = 0.5 + (2*spin-1)*std::get<1>(confs[i])*(0.5 + zeroShift);

@@ -68,13 +68,14 @@ class ExpOrderAcc
             for(int f = 0; f < FLAVORS; f++)
             {
                 HistogramT histL = boost::accumulators::density(expansionOrderAcc[f]);
+                RealT nSampl = boost::accumulators::count(expansionOrderAcc[f]);
                 RealT mean = boost::accumulators::mean(expansionOrderAcc[f]);
                 RealT var = boost::accumulators::variance(expansionOrderAcc[f]);
                 RealT skew = boost::accumulators::skewness(expansionOrderAcc[f]);
                 RealT kurt = boost::accumulators::kurtosis(expansionOrderAcc[f]);
                 std::vector<std::pair<RealT, RealT>> histOut;
                 ss << "# Flavor: " << f << std::endl;
-                ss << "# mean\tvariance\tskewness\tkurtosis" << std::endl << mean << "\t" << var << "\t" << skew << "\t" << kurt << std::endl; 
+                ss << "# samples\tmean\tvariance\tskewness\tkurtosis" << std::endl << nSampl <<"\t" << mean  <<"\t" << var << "\t" << skew << "\t" << kurt << std::endl; 
                 ss << "# l bound\tcount" << std::endl;
                 for(int i =0; i < histL.size(); i++)
                 {

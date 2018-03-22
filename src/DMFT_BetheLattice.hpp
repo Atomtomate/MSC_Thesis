@@ -12,13 +12,15 @@
 namespace DMFT
 {
 
+enum Mixing {nothing = 0, mixing, bad_broyden, good_broyden };
+
 template<class ImpSolver>
 class DMFT_BetheLattice
 {
     //"GImp_b"+std::to_string(config.beta)+"_U" + std::to_string(config.U)   _b"+std::to_string(config.beta)+"_U" + std::to_string(config.U)
     public:
-        DMFT_BetheLattice(std::string& outDir, const Config config, RealT mixing, ImpSolver& solver, GreensFct* G0, GreensFct * GImp, const RealT D, bool useHyb = false):
-            config(config), mixing(mixing), iSolver(solver), useHyb(useHyb), \
+        DMFT_BetheLattice(std::string& outDir, const Config config, ImpSolver& solver, GreensFct* G0, GreensFct * GImp, const RealT D, bool useHyb = false, Mixing mixing = Mixing::nothing, const RealT start_mixing = 0.):
+            config(config), mixing(mixing), start_mixing(start_mixing), iSolver(solver), useHyb(useHyb), useBroyden(useBroyden), \
             g0(G0), g0Info( useHyb ? "Hyb" : "G0" ), gImp(GImp), gImpInfo("GImp"), selfE(config.beta, true, true), seLInfo("SelfE"),\
             ioh(outDir, config), D(D)
         {
@@ -35,84 +37,106 @@ class DMFT_BetheLattice
             }
         }
 
-        void solve(const unsigned int iterations, const unsigned long long updates, bool symmetricG0 = false, bool writeOut = true)
+        void solve(const unsigned int iterations, const unsigned long long avg_updates, GreensFct* compareTo, bool symmetricG0 = true, bool writeOut = true) {}
+        void solve(const unsigned int iterations, const unsigned long long avg_updates, bool symmetricG0 = true, bool writeOut = true)
         {
             if(config.isGenerator)
             {
+
+                CMatrixT iJ = -start_mixing*Eigen::MatrixXcd::Identity(_CONFIG_maxMatsFreq, _CONFIG_maxMatsFreq);
                 bool converged = false;
-                //IOhelper::plot(*g0, config.beta, "Weiss Function");
-                //TODO: move IO from generator to accumulators
+                RealT distance = 999.;
+                CVectorT old_F = g0->g_wn.col(0);
+                CVectorT oldG0_in = g0->g_wn.col(0);
+                RealT conv_dist = 99;
                 for(unsigned int dmftIt = 1; dmftIt < iterations+1; dmftIt++)
                 {  
                     ioh.setIteration(dmftIt);
                     iSolver.reset();
+                    RealT updates = avg_updates;
+                    /*if(conv_dist > 1 && (updates <= avg_updates))
+                    {
+                        updates = avg_updates;
+                    }
+                    else if((conv_dist < 0.5) && conv_dist > 0.05 && (updates <= 3*avg_updates))
+                    {
+                        updates = 3*avg_updates;
+                    }
+                    else if(conv_dist < 0.005 && dmftIt > 2)
+                    {
+                        updates = 5*avg_updates;
+                    }*/
                     for(long unsigned int i=1; i <= 5; i++){
                         iSolver.update(updates/5.0);
                         LOG(INFO) << "MC Walker [" << config.world.rank() << "] at "<< " (" << (20*i) << "%) of iteration " << dmftIt << ". expansion order: " << iSolver.expansionOrder();
                     }
                     if(config.local.rank() == 0)
                     {
-                        LOG(INFO) << "finished sampling. average expansion order: " << iSolver.expansionOrder();
-                        LOG(INFO) << "measuring impurity Greens function";
+                        //LOG(INFO) << "finished sampling. average expansion order: " << iSolver.expansionOrder();
+                        LOG(INFO) << "measuring impurity Green's function";
                     }
 
                     DMFT::GreensFct* gImp_bak = new DMFT::GreensFct(config.beta, true, true);
-                    /*(*gImp_bak) = (*gImp);
-                    if(gImp->compare(*gImp_bak)) 
-                        converged = true;
-                    */
+                    (*gImp_bak) = (*gImp);
                     iSolver.computeImpGF();
                     iSolver.avgN().writeResults(ioh, "");
                     gImp->setParaMagnetic();
                     if(config.local.rank() == 0)
                     {
-                        LOG(INFO) << "forcing paramagnetic solution";
-                        LOG(INFO) << "Writing results";
+                        //LOG(INFO) << "forcing paramagnetic solution and calculating new input";
                     }
-                    //gImp->setParaMagnetic();
                     MatG sImp(_CONFIG_maxMatsFreq, _CONFIG_spins);
                     sImp = (g0->getMGF().cwiseInverse() - gImp->getMGF().cwiseInverse());
                     //sImp = (wn_grid - (D/2.)*(D/2.)*gImp->getMGF() - gImp->getMGF().cwiseInverse() );
                     selfE.setByMFreq(sImp);
                     selfE.transformMtoT();
-                    //IOhelper::plot(*gImp, config.beta, "Imp GF iteration " + std::to_string(dmftIt));
-                    //IOhelper::plot(selfE, config.beta, "SE iteration " + std::to_string(dmftIt));
                     // DMFT equation
-                    RealT distance = 0.;
+                    CVectorT G0_out(_CONFIG_maxMatsFreq);
+                    CVectorT G0_in = g0->g_wn.col(0);
                     for(int n=0;n<_CONFIG_maxMatsFreq;n++){
                         const int n_g0 = n + ((int)g0->isSymmetric() - 1)*_CONFIG_maxMatsFreq/2;
-                        const int n_se = n + ((int)selfE.isSymmetric() - 1)*_CONFIG_maxMatsFreq/2;
-                        const ComplexT iwn_se(0., mFreqS(n_se, config.beta));
-                        for(int s=0;s<_CONFIG_spins;s++){
-                            if(useHyb)
-                            {
-                                /*if(s == 0){
-                                LOG(ERROR) << n << ": " << iwn_se << " - " <<  (D*D)*gImp->getByMFreq(n_se, s)/(4.0)<< " - " << 1.0/gImp->getByMFreq(n_se, s) << \
-                                    " = " << iwn_se -  (D*D)*gImp->getByMFreq(n_se, s)/(4.0) - 1.0/gImp->getByMFreq(n_se, s);
-                                LOG(ERROR) << "AL: " << mFreqS(n_se, config.beta) << " - " << ((D*D)*gImp->getByMFreq(n_se, s)/(4.0)).imag() << " + " << 1.0/((gImp->getByMFreq(n_se, s)).imag()) \
-                                    << " = " << ComplexT(0., mFreqS(n_se, config.beta) - ((D*D)*gImp->getByMFreq(n_se, s)/(4.0)).imag() + 1.0/((gImp->getByMFreq(n_se, s)).imag()));
-                                }
-                                if(n > 20)
-                                    exit(0);
-                                    */
-                            }
-                            //selfE.setByMFreq(n_se, s, iwn_se -  (D*D)*gImp->getByMFreq(n_se, s)/(4.0) - 1.0/gImp->getByMFreq(n_se, s) );
-                            ComplexT tmp = ComplexT(0., mFreqS(n_g0, config.beta)) - (D/2.0)*(D/2.0)*gImp->getByMFreq(n_g0, s);
-                            VLOG(5) << n << "=> "<< n_g0 << ": " << ComplexT(config.mu, mFreqS(n_g0,config.beta)) << " - " << (D/2.0)*(D/2.0)*gImp->getByMFreq(n_g0,s) << " = " << tmp;
-                            tmp = 1./tmp;
-                            ComplexT old = g0->getByMFreq(n_g0,s);
-                            if(n < 128)
-                                distance += std::abs(tmp-old);
-                            g0->setByMFreq(n_g0, s,  (1-mixing)*tmp+mixing*old );
-                        }
+                        //for(int s=0;s<_CONFIG_spins;s++){ //no need for distinction in paramagnetic solution
+                            ComplexT tmp = ComplexT(0., mFreqS(n_g0, config.beta)) - (D/2.0)*(D/2.0)*gImp->getByMFreq(n_g0, 0);
+                            //LOG(ERROR) << tmp << "=" << ComplexT(0., mFreqS(n_g0, config.beta)) << "-" << (D/2.0)*(D/2.0)*gImp->getByMFreq(n_g0, 0);
+                            G0_out(n) = 1./(tmp); // force paramagnetic solution
+                        //}
                     }
+                     
+                    G0_out.real() = G0_out.real()*0.;
+                    //Broyden's method. for normal mixing, deactivate iJ update
+                    CVectorT new_F = G0_out - G0_in;
+                    CVectorT deltaG0 = (G0_in - oldG0_in); //.imag();
+                    if(dmftIt > 1){
+                        CVectorT delta_F = (new_F - old_F);//.imag();
+                        distance = delta_F.norm();
+                        //good:
+                        //iJ = iJ + ((deltaG0 - iJ*delta_F)/(deltaG0.transpose()*iJ*delta_F))*(deltaG0.transpose()*iJ);
+                        if(mixing == 3)
+                        {
+                            iJ = iJ + ((deltaG0 - iJ*delta_F)/(deltaG0.conjugate().transpose()*iJ*delta_F))*(deltaG0.conjugate().transpose()*iJ);
+                        }
+                        if(mixing == 2)
+                            iJ = iJ + ((deltaG0 - iJ*delta_F)/(distance*distance))*(delta_F.conjugate().transpose());  // for complex use conjugate().transpose()
+                    }
+                    if(mixing != Mixing::nothing) 
+                    {
+                        G0_out = G0_in - iJ*new_F;
+                    }
+            
+                    // set paramagnetic
+                    g0->g_wn.col(0) = G0_out;
+                    g0->g_wn.col(1) = G0_out;
+                    old_F = new_F;
+                    oldG0_in = G0_in;
+                    // end of broyden's method
                     g0->markMSet();
                     g0->transformMtoT();
-                    LOG(INFO) << "distance: " << distance;
-                    if(distance < 0.00001 && dmftIt > 3)
+                    conv_dist = deltaG0.head(50).norm();
+                    LOG(INFO) << "distance: " << conv_dist;
+                    if(conv_dist < 0.0010 && dmftIt > 3)
                     {
                         converged = true;
-                        LOG(INFO) << "converged in iteration " << dmftIt;
+                        LOG(INFO) << "converged after iteration " << dmftIt;
                     }
                     if(false && !useHyb)
                     {
@@ -120,25 +144,16 @@ class DMFT_BetheLattice
                         g0->markMSet();
                         g0->transformMtoT();
                     }
-                        //only for WeakCoupling., this is now in update itself
-                        //g0->shift(config.U/2.0);
-                        //g0->markMSet();
-                        //g0->transformMtoT();
-                    if(dmftIt == 1)
-                    {
-                        ioh.setIteration(0);
-                        //ioh.writeToFile();
-                    }
                     
-                    //IOhelper::plot(*g0, config.beta, "Hyb Fct iteration " + std::to_string(dmftIt));
-                    //IOhelper::plot(selfE, config.beta, "Self Energy iteration " + std::to_string(dmftIt));
-                    //exit(0);
-                    //
+                    //CVectorT tmp_dif = compareTo->g_wn.col(1)-g0->g_wn.col(1);
+                    //    LOG(INFO) << "Absolute convergence: " << tmp_dif.norm();
+
                     if(writeOut)
                     {
+                        //LOG(INFO) << "Writing results";
                         ioh.writeToFile();
                     }
-                    if((dmftIt > iterations-7 ) || converged)
+                    if((dmftIt > iterations-3 ) || converged)
                     {
                         statAcc(*gImp);
                         statAccSE(selfE);
@@ -177,7 +192,9 @@ class DMFT_BetheLattice
         // TODO separate class
         RealT D;
         const bool useHyb;
-        RealT mixing;
+        const bool useBroyden;
+        Mixing mixing;
+        const RealT start_mixing;
 
         MatG wn_grid;
         ImpSolver& iSolver;
