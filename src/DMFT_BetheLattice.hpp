@@ -38,8 +38,9 @@ class DMFT_BetheLattice
         }
 
         void solve(const unsigned int iterations, const unsigned long long avg_updates, GreensFct* compareTo, bool symmetricG0 = true, bool writeOut = true) {}
-        void solve(const unsigned int iterations, const unsigned long long avg_updates, bool symmetricG0 = true, bool writeOut = true)
+        void solve(unsigned int iterations, const unsigned long long avg_updates, bool symmetricG0 = true, bool writeOut = true)
         {
+            bool inc_flag = false;
             if(config.isGenerator)
             {
 
@@ -66,9 +67,9 @@ class DMFT_BetheLattice
                     {
                         updates = 5*avg_updates;
                     }*/
-                    for(long unsigned int i=1; i <= 5; i++){
-                        iSolver.update(updates/5.0);
-                        LOG(INFO) << "MC Walker [" << config.world.rank() << "] at "<< " (" << (20*i) << "%) of iteration " << dmftIt << ". expansion order: " << iSolver.expansionOrder();
+                    for(long unsigned int i=1; i <= 10; i++){
+                        iSolver.update(updates/10.0);
+                        LOG(INFO) << "MC Walker [" << config.world.rank() << "] at "<< " (" << (10*i) << "%) of iteration " << dmftIt << ". expansion order: " << iSolver.expansionOrder();
                     }
                     if(config.local.rank() == 0)
                     {
@@ -113,6 +114,7 @@ class DMFT_BetheLattice
                         //iJ = iJ + ((deltaG0 - iJ*delta_F)/(deltaG0.transpose()*iJ*delta_F))*(deltaG0.transpose()*iJ);
                         if(mixing == 3)
                         {
+                            LOG(INFO) << "using broyden";
                             iJ = iJ + ((deltaG0 - iJ*delta_F)/(deltaG0.conjugate().transpose()*iJ*delta_F))*(deltaG0.conjugate().transpose()*iJ);
                         }
                         if(mixing == 2)
@@ -120,6 +122,7 @@ class DMFT_BetheLattice
                     }
                     if(mixing != Mixing::nothing) 
                     {
+                        LOG(INFO) << "using mixing";
                         G0_out = G0_in - iJ*new_F;
                     }
             
@@ -131,11 +134,12 @@ class DMFT_BetheLattice
                     // end of broyden's method
                     g0->markMSet();
                     g0->transformMtoT();
-                    conv_dist = deltaG0.head(50).norm();
+                    conv_dist = deltaG0.norm();
                     LOG(INFO) << "distance: " << conv_dist;
-                    if(conv_dist < 0.0010 && dmftIt > 3)
+                    if(conv_dist < 0.00001 && dmftIt > 3)
                     {
-                        converged = true;
+                        dmftIt = iterations-5;
+                        //converged = true;
                         LOG(INFO) << "converged after iteration " << dmftIt;
                     }
                     if(false && !useHyb)
@@ -153,8 +157,12 @@ class DMFT_BetheLattice
                         //LOG(INFO) << "Writing results";
                         ioh.writeToFile();
                     }
-                    if((dmftIt > iterations-3 ) || converged)
+                    if((dmftIt >= iterations-4 ) || converged)
                     {
+                        if(!inc_flag && distance > 0.8){
+                            iterations += 2;
+                            inc_flag = true;
+                        }
                         statAcc(*gImp);
                         statAccSE(selfE);
                     }
@@ -164,8 +172,8 @@ class DMFT_BetheLattice
                 statAccSE.setGF(selfE);
                 LogInfos finalGI_info("GImp_b"+std::to_string(config.beta)+"_U" + std::to_string(config.U));
                 LogInfos finalSE_info("SelfE_b" +std::to_string(config.beta)+"_U" + std::to_string(config.U));
-                ioh.writeFinalToFile(*gImp, finalGI_info, false, config.U, false);
-                ioh.writeFinalToFile(selfE, finalSE_info, true, config.U, false);
+                ioh.writeFinalToFile(*gImp, finalGI_info, false, config.U, true);
+                ioh.writeFinalToFile(selfE, finalSE_info, true, config.U, true);
 
                 //config.world.send(0, static_cast<int>(MPI_MSG_TAGS::FINALIZE), 1 );
             }

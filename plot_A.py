@@ -13,12 +13,16 @@ import re
 import linecache
 
 mpl.style.use('seaborn')
+mpl.rcParams['text.usetex'] = True
+mpl.rcParams['text.latex.unicode'] = True
+mpl.rcParams['xtick.labelsize'] = 18
+mpl.rcParams['ytick.labelsize'] = 18
 sns.set_style("whitegrid")
 regU = r"U([0-9]+\_[0-9]+)"
 regb = r"b([0-9]+\_[0-9]+)"
 data = []
 
-file_list = ["me_GImp_b133_000000_U2_550000conf.out.avspec.dat","me_GImp_b133_000000_U2_600000conf.out.avspec.dat", "me_GImp_b133_000000_U2_650000conf.out.avspec.dat","me_GImp_b133_000000_U2_700000conf.out.avspec.dat"]
+file_list =["me_GImp_b50_000000_U2_390000conf.out.avspec.dat", "me_GImp_b50_000000_U2_400000conf.out.avspec.dat", "me_GImp_b50_000000_U2_410000conf.out.avspec.dat", "me_GImp_b50_000000_U2_420000conf.out.avspec.dat", "me_GImp_b50_000000_U2_500000conf.out.avspec.dat", "me_GImp_b50_000000_U3_200000conf.out.avspec.dat"]
 plot_x = []
 plot_y = []
 for filename in file_list:
@@ -37,14 +41,16 @@ plot_y = np.array(plot_y).T
 z_x = np.zeros(plot_x.shape[1])
 
 #plt.ylim((0.,))
-plt.xlim([-3.5,3.5])
-plt.xlabel(r"$\omega$")
-plt.ylabel(r"$A(\omega)$")
-plt.legend()
+plt.xlim([-3.0,3.0])
+plt.xlabel(r"$\omega$", fontsize=18)
+plt.ylabel(r"$A(\omega)$", fontsize=18)
+plt.legend(fontsize=18)
 ax = plt.gca()
-axins = inset_axes(ax,1.2,1.2, loc=1, bbox_to_anchor=(0.39, 0.85), bbox_transform=ax.figure.transFigure)
-axins.set_xlim(-0.2,0.2)
-axins.set_ylim(0.0,0.002)
+axins = inset_axes(ax,1.8,1.8, loc=1, bbox_to_anchor=(0.28, 0.85), bbox_transform=ax.figure.transFigure)
+axins.set_xlim(-0.23,0.23)
+axins.set_ylim(0.0,0.0035)
 plt.plot(plot_x, plot_y, label="U/D = "+str(U))
-mark_inset(ax, axins, loc1=1, loc2=3, fc="none", ec="0.5")
+box, c1, c2 = mark_inset(ax, axins, loc1=1, loc2=3, fc="none", ec="0.5")
+plt.setp([c1, c2], color="#4a4a4a", linewidth=1.2, linestyle=":")
+plt.setp(box, linewidth=1, color="#4a4a4a", linestyle=":")
 plt.show()

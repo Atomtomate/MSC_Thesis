@@ -208,27 +208,38 @@ namespace DMFT
 
     void IOhelper::readFromFile(GreensFct& gf, const std::string files_it, const std::string files_mf) const
     {
-        boost::filesystem::path file_mf;
-        boost::filesystem::path file_it;
+        boost::filesystem::path file_mf = outDir;
+        boost::filesystem::path file_it = outDir;
+        file_mf	/= boost::filesystem::path(files_mf);
+        file_it	/= boost::filesystem::path(files_it);
         boost::filesystem::ifstream fs;
         fs.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
         if(!c.isGenerator || c.local.rank() != 0) return ;
-        if(!files_mf.empty())
+        LOG(INFO) << "reading file: " << file_mf;
+        try
         {
-            file_mf = boost::filesystem::path(files_mf);
-            try
+            fs.open(file_mf);
+            int n = 0;
+            RealT mf,val, err;
+            while(fs >> mf >> val >> err)
             {
-                fs.open(file_mf);
-                int n = 0;
-                ComplexT up,down;
-                fs.close();
+                gf.setByMFreq(n,0,val, err);
+                gf.setByMFreq(n,1,val, err);
+                //TODO: fix this
+                if(n == 127)
+                {
+                    LOG(INFO) << "read all possible MFreq inputs";
+                        break;
+                }
+                n += 1;
             }
-            catch (boost::filesystem::ofstream::failure e)
-            {
-                LOG(ERROR) << "Error while reading Matsubara Green\'s function from file: " << e.what();
-            }
+            fs.close();
         }
-        if(!files_it.empty())
+        catch (boost::filesystem::ofstream::failure e)
+        {
+            LOG(ERROR) << "Error while reading Matsubara Green\'s function from file: " << e.what();
+        }
+        /*if(!files_it.empty())
         {
             file_it = boost::filesystem::path(files_it);
             try
@@ -243,7 +254,7 @@ namespace DMFT
             {
                 LOG(ERROR) << "Error while reading Green\'s function from file: " << e.what();
             }
-        }
+        }*/
     }
 
 

@@ -259,6 +259,44 @@ namespace DMFT
             }
         }*/
         
+        void FFT::hilbert_trafo(const MatG& from, MatG& to, const RealT startGrid, const RealT endGrid)
+        {
+            //fft_dt   = _beta/(tBins+2);
+            //fft_tmin =  0.5*_beta/tBins;
+            
+            //TODO: this is a stupid workaround because the plan creation is not thread safe
+            //TODO: for symmetric storage 2*nMF == tBins should be enforced
+            const int bins = from.rows();
+            fftw_complex fftw3_output[bins];
+            fftw_complex fftw3_input[bins];
+            fftw_complex fftw3_output2[bins];
+            fftw_complex fftw3_input2[bins];
+            const RealT dx = (endGrid-startGrid)/bins;
+            for(int i = 0; i < bins; i++){
+                fftw3_input2[i][0] = (1. - std::cos(M_PIl*i))/(M_PIl*i*dx);
+                fftw3_input2[i][1] = 0.;
+            }
+            for(int i = 0; i< bins; i++){
+                fftw3_input[i][0] = from(i).real();
+                fftw3_input[i][1] = from(i).imag();
+            }
+            auto plan1 = fftw_plan_dft_1d(bins,fftw3_input,fftw3_output,FFTW_FORWARD,FFTW_ESTIMATE);
+            auto plan2 = fftw_plan_dft_1d(bins,fftw3_input2,fftw3_output2,FFTW_FORWARD,FFTW_ESTIMATE);
+            fftw_execute(plan1);
+            fftw_execute(plan2);
+            for(int i = 0; i< bins; i++){
+                ComplexT res1(fftw3_output[i][0], fftw3_output[i][1]);
+                ComplexT res2(fftw3_output2[i][0], fftw3_output2[i][1]);
+                fftw3_input[i][0] = (res1*res2).real();
+                fftw3_input[i][1] = (res1*res2).imag();
+            }
+            auto plan3 = fftw_plan_dft_1d(bins,fftw3_input,fftw3_output,FFTW_BACKWARD,FFTW_ESTIMATE);
+            fftw_execute(plan3);
+            for(int i = 0; i< bins; i++){
+                ComplexT res(fftw3_output[i][0], fftw3_output[i][1]);
+                to(i) = res;
+            }
+        }
         /*void FFT::transformMtoT_naive(GreensFct* gf) const
         { 
             LOG(WARNING) << "debug function, use transformMtoT instead";

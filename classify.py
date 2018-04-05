@@ -18,8 +18,9 @@ import re
 import linecache
 mpl.style.use('seaborn')
 sns.set_style("white")
-mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.unicode'] = True
+#mpl.rcParams['text.usetex'] = True
+#mpl.rcParams['text.latex.unicode'] = True
+#mpl.rcParams.update({"pgf.texsystem": "pdflatex"})
 cmap = mpl.cm.GnBu
 
 use_pade = False
@@ -29,12 +30,16 @@ regb = r"b([0-9]+\_[0-9]+)"
 regSeMe = r"f_SelfE(.+)[0-9]+\.out$"
 data = []
 pade_str = r'*pade.cont'
-me_FROM0_str = r'IPT_Bethe_PD_from_0/*avspec.dat'
-me_TO0_str = r'IPT_Bethe_PD_to_0/*avspec.dat'
-se04_str = r'IPT_Bethe_PD_from_0/f_SelfE*0.out'
-se40_str = r'IPT_Bethe_PD_to_0/f_SelfE*0.out'
-se23_str = r'IPT_PD_Z_03/f_SelfE*0.out'
-se32_str = r'IPT_PD_Z_30/f_SelfE*0.out'
+#me_FROM0_str = r'IPT_Bethe_PD_from_0/*avspec.dat'
+#me_TO0_str = r'IPT_Bethe_PD_to_0/*avspec.dat'
+#se04_str = r'IPT_Bethe_PD_from_0/f_SelfE*0.out'
+#se40_str = r'IPT_Bethe_PD_to_0/f_SelfE*0.out'
+#se23_str = r'IPT_PD_Z_03/f_SelfE*0.out'
+#se32_str = r'IPT_PD_Z_30/f_SelfE*0.out'
+me_from_metal_str = r'CTINT_PD_IG_M/*avspec.dat'
+me_to_metal_str = r'CTINT_PD_IG_I/*avspec.dat'
+se_from_metal_str = r'CTINT_PD_IG_M/f_SelfE*0.out'
+se_to_metal_str = r'CTINT_PD_IG_I/f_SelfE*0.out'
 
 """ returns the width of suppress spectral weight around the fermi level
 """
@@ -131,21 +136,27 @@ def read_A(path):
     return np.array(data)
 
 
-se_data_to = read_se(se32_str,1)#se40_str, 1)
+se_data_to = read_se(se_from_metal_str,1)#se32_str,1)#se40_str, 1)
 #se_data_to = read_se(se40_str, 1)
 
 #data_from = read_A(me_FROM0_str)
 print("read from MI to metal")
 #data_to = read_A(me_TO0_str)
-se_data_from = read_se(se23_str,1)#se04_str, 1)
+se_data_from = read_se(se_to_metal_str,1)#se23_str,1)#se04_str, 1)
 #se_data_from = read_se(se04_str, 1)
 print("read from metal to MI")
 
+se04_data = read_se(se_from_metal_str)
+se40_data = read_se(se_to_metal_str)
+Z04list = comp_Z(se04_data)
+Z40list = comp_Z(se40_data)
 
 
 def plotZ():
-    se04_data = read_se(se04_str)
-    se40_data = read_se(se40_str)
+    se04_data = read_se(se_from_metal_str)
+    se40_data = read_se(se_to_metal_str)
+    se04_data[se04_data[:,0] == 20]
+    se40_data[se40_data[:,0] == 20]
     Z04list = comp_Z0(se04_data)
     Z40list = comp_Z0(se40_data)
     y04 = np.clip(Z04list[:,1],a_min=0.01, a_max=None)
@@ -154,7 +165,7 @@ def plotZ():
     #yerr = np.clip(Zlist[:,2], a_min=0.,a_max=1.)
     #yerr[pti:] = 0.
     #y[pti:] = 0.
-    plt.semilogy(Z40list[:,0], y40, "o-", ms=3.0, markevery=2, label="init U = 4")
+    plt.semilogy(Z40list[:,0], y40, "o-", ms=3.0, markevery=2, label="init $U = 4, beta = $"+ str(Z40list))
     plt.semilogy(Z04list[:,0], y04, 'o-', alpha=0.4, ms=4.0, markevery=2, label="init U = 0")
     plt.xlabel(r"U/D")
     plt.ylabel(r"Z")

@@ -150,10 +150,10 @@ namespace DMFT
             RealT A	= 0.0;
 
             //if((s_n != 0) and (s_n != 1)) LOG(WARNING) << "wrong aux spin value!";
-            VLOG(2) << "Updating Configuration, current size: " << n << ", zetap: " << zetap;
+            //VLOG(2) << "Updating Configuration, current size: " << n << ", zetap: " << zetap;
             if (zeta < 0.5) {						    	                        // try to insert spin
                 t_n *= config->beta;
-                VLOG(3) << "Trying to add configuration, t_n : " << t_n << ", s_n: " << s_n;
+                //VLOG(3) << "Trying to add configuration, t_n : " << t_n << ", s_n: " << s_n;
                 if(n == 0){						        	                // special treatment for empty M
                     //const RealT alpha = 0.5 + (2*s-1)*s_n*(0.5 + zeroShift);	                        // for 0 shift: \in {0,1}
                     // g0Call(0.0, s, s_n, 0.0)
@@ -161,9 +161,9 @@ namespace DMFT
                     Sp[DOWN]  = g0Call(0.0, DOWN, s_n, 0.0);
                     Sp[UP]    = g0Call(0.0, UP, s_n, 0.0);
                     A = -Sp[DOWN]*Sp[UP]*config->beta*config->U;                                          // -b*U*detRatio/(n+1)
-                    VLOG(3) << "Acceptance rate: " << A;
+                    //VLOG(3) << "Acceptance rate: " << A;
                     if(zetap < A){			                		                // propose insertion
-                        VLOG(3) << "accepted";
+                        //VLOG(3) << "accepted";
                         M[UP] = Eigen::MatrixXd::Zero(1,1); M[DOWN] = Eigen::MatrixXd::Zero(1,1);
                         M[UP](0,0) = 1.0/Sp[UP];                M[DOWN](0,0) = 1.0/Sp[DOWN];
                         pushConfig(std::make_tuple(t_n, s_n));
@@ -180,14 +180,16 @@ namespace DMFT
                         RealT q_data[n];
                         for(int i=0; i<n; i++){
                             RealT tau = t_n - std::get<0>(confs[i]);
-                            if(tau == 0.)
-                            {
-                                t_n += 0.00001;
-                                tau += 0.00001;
-                            }
+                            //if(tau == 0.)
+                            //{
+                            //    t_n += 0.00001;
+                            //    tau += 0.00001;
+                            //}
                             //if(tau == 0.0) LOG(WARNING) << "off-diagonal G(0) sampled!";
-                            r_data[i] = g0Call(t_n, s, s_n, std::get<0>(confs[i]));		        // (8.34) Generate new elements for M from Weiss Greens fct
-                            q_data[i] = g0Call(std::get<0>(confs[i]), s, std::get<1>(confs[i]), t_n);
+                            //r_data[i] = g0Call(t_n, s, s_n, std::get<0>(confs[i]));		        // (8.34) Generate new elements for M from Weiss Greens fct
+                            //q_data[i] = g0Call(std::get<0>(confs[i]), s, std::get<1>(confs[i]), t_n);
+                            r_data[i] = g0Call_od(t_n, s,std::get<0>(confs[i]));		        // (8.34) Generate new elements for M from Weiss Greens fct
+                            q_data[i] = g0Call_od(std::get<0>(confs[i]), s, t_n);
                         }
                         R[s] = Eigen::Map<RowVectorT>(r_data,n);
                         Q[s] = Eigen::Map<VectorT>(q_data,n);
@@ -195,9 +197,9 @@ namespace DMFT
                         Sp[s]= 1.0/tmp;	                                	// (8.39) 
                         A *= tmp;
                     }
-                    VLOG(3) << "Acceptance rate: " << A;
+                    //VLOG(3) << "Acceptance rate: " << A;
                     if (zetap < A){ 		            	                	                // compute A(n+1 <- n) (8.36) (8.39)
-                        VLOG(3) << "Accepted\n";
+                       // VLOG(3) << "Accepted\n";
                         pushConfig(std::make_tuple(t_n, s_n));
                         for(int s=0; s < _CONFIG_spins; s++){			                 	        // compute acceptance rate
                             util::MInc(&(M[s]), R[s], Q[s], Sp[s], 0, false);
@@ -207,12 +209,12 @@ namespace DMFT
                         n += 1;
                     }
                 }										// inserted SConfig
-                VLOG(4) << "After possible insertion";
+                //VLOG(4) << "After possible insertion";
             }
             else if ( n > 0 )
             {										// try to remove spin
                 t_n *=n;
-                VLOG(2) << "Trying to remove configuration";
+                //VLOG(2) << "Trying to remove configuration";
                 int rndConfPos = static_cast<int>(t_n);
                 RealT A = -static_cast<RealT>(n)/(config->beta*config->U);
                 Sp[DOWN] = M[DOWN](rndConfPos,rndConfPos);					// (8.37)
@@ -220,7 +222,7 @@ namespace DMFT
                 A *= Sp[0]*Sp[1];
                 if ( zetap < A){                    					//compute A(n-1 <- n) (8.37) (8.44) - WeakCoupling::acceptanceR
                     // TODO: loop over spins
-                    VLOG(3) << "Accepted";
+                    //VLOG(3) << "Accepted";
                     if(n == 1)
                     {
                         for(int s=DOWN; s < 2; s++){
@@ -241,14 +243,14 @@ namespace DMFT
                     currentSign = (2*(A>=0.)-1)*currentSign;
                 }
             }
-            if(A < 0)
-                LOG(WARNING) << "Acceptance rate negative. A = " << A << ", n = " << n << ", k -> " << 2*(zeta>0.5)-1;
-            if(n%50000 == 0)
+            //if(A < 0)
+            //    LOG(WARNING) << "Acceptance rate negative. A = " << A << ", n = " << n << ", k -> " << 2*(zeta>0.5)-1;
+            /*if(steps%100000 == 0)
             {
               for(int s=0;s<_CONFIG_spins;s++)
                   M[s] = rebuildM(s);
-            }
-
+            }*/
+/*
             VLOG(3) << "before updateContribution. n = " << n;;
             if(_CONFIG_INT_DEBUG)
             {
@@ -263,10 +265,11 @@ namespace DMFT
                    }
               }
             }
-            }
+            }*/
 
             //updateContribution_OLD(1);
-            updateContribution(1);
+            if(steps%80 == 0)
+                updateContribution(1);
 
 
         }

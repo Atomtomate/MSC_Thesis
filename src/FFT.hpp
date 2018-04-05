@@ -108,6 +108,10 @@ namespace DMFT
 
             void transformTtoM_naive(const ImTG &from, MatG &to);
             //void transformTtoM_naive(GreensFct* gf) const;
+            /*! Performs Saito's method for hilbert transforms
+             *
+             */
+            void hilbert_trafo(const MatG& from, MatG& to, const RealT startGrid, const RealT endGrid);
     };
 
 }   //end namespace DMFT

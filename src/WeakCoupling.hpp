@@ -191,9 +191,9 @@ namespace DMFT
 
             unsigned long steps;					// number of updates
             const unsigned int burninSteps;		// throw away some steps at the start
-            int currentSign;						// needed when proposal is rejected
+            unsigned long int currentSign;						// needed when proposal is rejected
             long totalSign;
-            int n; 					// expansion order (number of used rows/cols)
+            unsigned long int n; 					// expansion order (number of used rows/cols)
             ExpOrderAcc<_CONFIG_spins> expOrdAcc;
             const RealT zeroShift;				// auxiliary ising shift
             std::array< AccT, _CONFIG_maxSBins> itBinsUP;

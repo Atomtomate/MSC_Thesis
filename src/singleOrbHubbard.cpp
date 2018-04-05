@@ -439,21 +439,32 @@ namespace DMFT
         const int D = 1.0;          // half bandwidth
         const RealT t	= D/2.0;
         const int burnin = 50000;
-        const RealT zeroShift = 0.03;
-        const RealT mixing = 0.7;
+        const RealT zeroShift = 0.01;
+        const RealT mixing = 0.2;
         //const RealT beta    = 20;
+        constexpr bool readf = false;
+        constexpr bool run_ins = false;
 
         GFTail tail;
         tail.fitFct = &fit_sym_tail;
 
-        std::string descr_IG_ME = "2_CTINT_PD_IG_M"; 
-        std::string descr_IG_IN = "2_CTINT_PD_IG_I"; 
+        std::string descr_IG_ME = "50M_highmf_every100_m20_CTINT_PD_IG_M"; //"35M_b50_80mf_every120_gb_CTINT_PD_IG_M"; 
+        std::string descr_IG_IN = "50M_highmf_every100_m20_CTINT_PD_IG_I"; //"35M_b50_80mf_every120_gb_CTINT_PD_IG_I"; 
         std::string descrTMP = "tmp"; 
-        const long int mc_steps = 12000000;
+        const long int mc_steps = 30000000;
         const std::string solverType = "CT-INT";
-        //std::vector Ulist = {3.2, 2.8, 1.8 ,2.4, 1.0}; //,  3.6,2.4, //2.5,2.3,
-        std::vector Ulist = {4.0, 1.0, 2.9, 2.8, 2.7, 2.6, 2.5, 2.4, 2.3, 2.2, 2.1, 2.0, 1.9, 1.8};
-        //std::vector Ulist = {4.0, 2.8, 2.7, 2.6, 2.5, 2.4, 2.3, 2.2, 2.0, 1.0};
+        //std::vector Ulist = {4.0, 2.8, 2.2 ,2.4, 2.6}; //,  3.6,2.4, //2.5,2.3,
+        //std::vector Ulist = {4.0, 2.9, 2.8, 2.7, 2.6, 2.5, 2.4, 2.3, 2.2, 2.1, 2.0, 1.9, 1.8};
+        //std::vector Ulist = {4.0, 2.8, 2.7, 2.6, 2.5, 2.4, 2.3, 2.2, 2.0};
+
+        std::vector Ulist = {2.38, 2.37}; // for exp order
+        if(run_ins){
+            Ulist = {3.2, 2.390, 2.388, 2.392, 2.394, 2.396, 2.398, 2.402, 2.404}; //3.2, 2.38, 2.37, 2.39, 2.45, 2.40 for decreasing U
+        }else{
+            Ulist = {2.6, 2.5, 2.46, 2.47, 2.48, 2.49}; // beta == 80
+            //Ulist = {2.402, 2.404, 2.406, 2.408, 2.412, 2.414}; //  2.41, 2.42, 2.4,2.35, 2.5,  2.3 for increasing U
+            //Ulist = {  2.40,2.43, 2.42, 2.415, 2.425, 2.435,2.45, 2.5}; //  2.41, 2.42, 2.4,2.35, 2.5,  2.3 for increasing U
+        }
         if(isGenerator)
         {
             for(RealT beta : {70})// 80, 90}) //20, 25, 45, 50, 60, 70,})//, 
@@ -462,7 +473,8 @@ namespace DMFT
                 DMFT::GreensFct* gImp_bak = new DMFT::GreensFct(beta, true, true, tail);
                 for(RealT U : Ulist)
                 {
-                    //if(U != 4.0) continue;
+                    if((run_ins && U != 3.2) || (!run_ins && U == 3.2)) continue;
+                    //if(U == 3.2) continue;
                     const RealT mu      = U/2.0;
                     DMFT::Config config(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType, descr_IG_ME);
 
@@ -472,7 +484,7 @@ namespace DMFT
                     setBetheSemiCirc(*g0, D, config);
                     setBetheSemiCirc(*gImp, D, config);
 
-                    LOG(INFO) << "running beta = " << beta << ", U = " << U << ", initial guess metal";
+                    LOG(INFO) << "running beta = " << beta << ", U = " << U << ", initial guess metal. Delta = " << zeroShift << ", MC steps = " << mc_steps;
                     /*{
                         DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
                         DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descrTMP, config, impSolver, g0, gImp, D, false);
@@ -487,8 +499,8 @@ namespace DMFT
                     }*/
                     {
                         DMFT::WeakCoupling impSolver(g0, gImp, &config, zeroShift, burnin);
-                        DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr_IG_ME, config,impSolver, g0, gImp, D, false, DMFT::Mixing::good_broyden, mixing);
-                        dmftSolver.solve(40, mc_steps, true, true);
+                        DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr_IG_ME, config,impSolver, g0, gImp, D, false, DMFT::Mixing::mixing, mixing);
+                        dmftSolver.solve(50, mc_steps, true, true);
                         impSolver.reset();
                     }
                     //(config.local.barrier)();
@@ -503,19 +515,40 @@ namespace DMFT
                 }
                 for(RealT U : Ulist)
                 {
+                    if(!run_ins) continue;
                     const RealT mu      = U/2.0;
                     DMFT::Config config2(beta, mu, U, D, DMFT::_CONFIG_maxMatsFreq, DMFT::_CONFIG_maxTBins, local, world, isGenerator, solverType, descr_IG_IN);
-
                     DMFT::GreensFct* g02 =  new DMFT::GreensFct(beta, true, true, tail);
-                    (*g02) =    (*g0_bak);
                     DMFT::GreensFct* gImp2 =  new DMFT::GreensFct(beta, true, true, tail);
-                    (*gImp2) =    (*gImp_bak);
+                    if(readf)
+                    {
+                        std::string tmp = descr_IG_ME; //
+                        std::string tmp2 = "f_GImp_b50_000000_U3_200000.out";
+                        DMFT::IOhelper ioh(tmp, config2);
+                        ioh.readFromFile(*gImp2, tmp2,tmp2);
+
+                        CVectorT G0_out(_CONFIG_maxMatsFreq);
+                        for(int n=0;n<_CONFIG_maxMatsFreq;n++){
+                            const int n_g0 = n + ((int)g02->isSymmetric() - 1)*_CONFIG_maxMatsFreq/2;
+                            ComplexT tmp = ComplexT(0., mFreqS(n_g0, config2.beta)) - (D/2.0)*(D/2.0)*gImp2->getByMFreq(n_g0, 0);
+                            G0_out(n) = 1./(tmp);
+                        }
+                        G0_out.real() = G0_out.real()*0.;
+                        g02->g_wn.col(0) = G0_out;
+                        g02->g_wn.col(1) = G0_out;
+                        g02->markMSet();g02->transformMtoT();
+                    }else{
+                        (*g02) =    (*g0_bak);
+                        (*gImp2) =    (*gImp_bak);
+                    }
+                    if(U == 3.2) continue;
+
 
                     LOG(INFO) << "running beta = " << beta << ", U = " << U << ", initial guess insulator";
                     {
                         DMFT::WeakCoupling impSolver2(g02, gImp2, &config2, zeroShift, burnin);
-                        DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr_IG_IN, config2, impSolver2, g02, gImp2, D, false, DMFT::Mixing::good_broyden, mixing);
-                        dmftSolver.solve(40, mc_steps, true, true);
+                        DMFT::DMFT_BetheLattice<WeakCoupling> dmftSolver(descr_IG_IN, config2, impSolver2, g02, gImp2, D, false, DMFT::Mixing::mixing, mixing);
+                        dmftSolver.solve(50, mc_steps, true, true);
                         impSolver2.reset();
                     }
                     //(config.local.barrier)();

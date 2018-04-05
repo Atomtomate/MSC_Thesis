@@ -54,7 +54,7 @@ class IOhelper//: public mglDraw
 		int writeToFile(void) const;
         int writeToFile(const std::string& text, const std::string& file);
 
-        void writeFinalToFile(GreensFct& gf, const LogInfos& li, const bool selfE = false, const RealT U = 0., const bool it_out = false) const;
+        void writeFinalToFile(GreensFct& gf, const LogInfos& li, const bool selfE = false, const RealT U = 0., const bool it_out = true) const;
 
 		/*! Write specific Green's function to file.
 		 *  @param  [in]  handle obtained through addGF(const GreensFct* gf, LogInfos l); 

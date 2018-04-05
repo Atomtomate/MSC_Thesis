@@ -28,7 +28,8 @@ VPATH    := src:src/examples
 # ========== compiler flags, includes ========== 
 # TODO: remember to use  -guide and  -profile-loops=all 
 CXXFLAGS.DEBUG    := -O2 -pg -ggdb -Wextra -D EIGEN_NO_STATIC_ASSERT # -debug parallel  -ftrapuv -traceback -parallel
-CXXFLAGS.PROFILE  := -O3 -pg -D EIGEN_NO_STATIC_ASSERT #-xHost -fno-alias -profile-functions -profile-loops=all -profile-loops-report=2 
+#CXXFLAGS.PROFILE  := -O3 -pg -D EIGEN_NO_STATIC_ASSERT #-xHost -fno-alias -profile-functions -profile-loops=all -profile-loops-report=2 
+CXXFLAGS.PROFILE  := -O3 -march=native -D EIGEN_NO_DEBUG #-xHost -fno-alias -profile-functions -profile-loops=all -profile-loops-report=2 
 #-profile-functions -profile-loops=all -profile-loops-report=2 -guide -ipo -no-prec-div
 CXXFLAGS.PARALLEL := -O2 -Wall -fno-alias -parallel
 CXXFLAGS.FAST     := -O3 -parallel -g -xHost -ansi-alias -ipo -prof-use -D EIGEN_NO_DEBUG
